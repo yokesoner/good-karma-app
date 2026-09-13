@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ASSETS } from "@/lib/assets";
 import { CulturalAccent } from "@/components/CulturalAccent";
+import { GoldHairline } from "@/components/GoldHairline";
 
 export function ExperienceSections() {
   return (
@@ -25,7 +26,7 @@ export function ExperienceSections() {
 
         <div className="relative flex min-h-[520px] flex-col justify-between p-7 md:min-h-[610px] md:p-12 lg:p-16">
           <div className="flex items-center gap-3 text-[9.5px] font-bold uppercase tracking-[0.22em] text-[#F8F0EA]/65">
-            <span className="h-px w-8 bg-[#F8F0EA]/45" />
+            <GoldHairline width={32} />
             Открытая кухня · кухня без кулис
           </div>
 

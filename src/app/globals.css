@@ -358,8 +358,9 @@ html {
 }
 
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  /* Угол наклона теперь считает KarmaPass.tsx по позиции курсора (см.
+     onPointerMove) — здесь остаётся только тень, она не зависит от XY. */
   .karma-pass:hover {
-    transform: perspective(1200px) rotateX(2deg) rotateY(-3deg) translateY(-5px);
     box-shadow: 0 50px 100px -38px rgb(48 24 43 / 0.86);
   }
 

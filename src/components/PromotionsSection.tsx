@@ -5,6 +5,7 @@ import { formatMoney } from "@/lib/money";
 import { ASSETS } from "@/lib/assets";
 import { PromoCodeButton } from "@/components/PromoCodeButton";
 import { BackgroundFootage } from "@/components/BackgroundFootage";
+import { GoldHairline } from "@/components/GoldHairline";
 import { cn } from "@/lib/cn";
 
 export async function PromotionsSection({ compact = false }: { compact?: boolean }) {
@@ -43,7 +44,7 @@ export async function PromotionsSection({ compact = false }: { compact?: boolean
       {!compact && <article className="promo-hero group relative isolate grid overflow-hidden rounded-[32px] border border-gold/20 bg-paper-2 shadow-l lg:grid-cols-[1.05fr_1fr]">
         <div className="relative flex min-w-0 flex-col justify-center p-6 sm:p-9 lg:p-12">
           <div className="mb-5 flex items-center gap-3">
-            <span className="h-px w-9 bg-cherry/45" />
+            <GoldHairline width={36} />
             <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-cherry">
               Акции · Good Karma Club
             </span>

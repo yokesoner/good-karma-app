@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { BrandMark } from "@/components/BrandMark";
 import { LevelIcon } from "@/components/LevelIcon";
 import { cn } from "@/lib/cn";
@@ -30,9 +33,34 @@ export function KarmaPass({
   compact = false,
   preview = false,
 }: KarmaPassProps) {
+  // Наклон следует за курсором, а не фиксированный угол на :hover — эффект
+  // карты в Apple Wallet. JS включается только там, где уже разрешён CSS-
+  // вариант (мышь, наведение, no-preference): touch и reduced-motion молча
+  // получают статичную карту.
+  const [tilt, setTilt] = useState<{ x: number; y: number } | null>(null);
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
+    if (event.pointerType !== "mouse") return;
+    if (!window.matchMedia("(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)").matches) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const px = (event.clientX - rect.left) / rect.width;
+    const py = (event.clientY - rect.top) / rect.height;
+    setTilt({ x: (0.5 - py) * 10, y: (px - 0.5) * 14 });
+  };
+
   return (
     <article
       aria-label={preview ? "Образец карты Karma Club — баланс доступен в профиле" : `Карта Karma Club, уровень ${level}, ${points} баллов`}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={() => setTilt(null)}
+      style={
+        tilt
+          ? {
+              transform: `perspective(1200px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateY(-4px)`,
+              transition: "transform 80ms linear",
+            }
+          : undefined
+      }
       className={cn(
         "karma-pass group relative isolate w-full min-w-0 max-w-[560px] overflow-hidden rounded-[30px] border border-[#D6BA85]/40 p-5 text-[#FFF9F3] shadow-[0_38px_80px_-32px_rgba(48,24,43,.75)] md:p-8",
         compact && "max-w-[470px] rounded-[26px] p-5 md:p-6",
