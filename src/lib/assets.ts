@@ -7,12 +7,12 @@
  */
 export const ASSETS = {
   mascots: {
-    catIdle: "/assets/mascots/cat_idle.png",
-    catBowl: "/assets/mascots/cat_bowl.png",
-    catPaw: "/assets/mascots/cat_paw.png",
-    fox: "/assets/mascots/fox.png",
-    rabbit: "/assets/mascots/rabbit.png",
-    panda: "/assets/mascots/panda.png",
+    catIdle: "/assets/mascots-v2/cat_idle.png",
+    catBowl: "/assets/mascots-v2/cat_bowl.png",
+    catPaw: "/assets/mascots-v2/cat_paw.png",
+    fox: "/assets/mascots-v2/fox.png",
+    rabbit: "/assets/mascots-v2/rabbit.png",
+    panda: "/assets/mascots-v2/panda.png",
   },
   decor: {
     sakuraBranch: "/assets/decor/sakura_branch.png",
@@ -31,6 +31,7 @@ export const ASSETS = {
     menuEditorial: "/assets/backgrounds/menu_editorial_v2.png",
     wokSignature: "/assets/backgrounds/wok_signature_v2.png",
     heroTwoWorlds: "/assets/backgrounds/hero_two_worlds.png",
+    japanTable: "/assets/backgrounds/japan_table.webp",
     europeTable: "/assets/backgrounds/europe_table.png",
     openKitchenStory: "/assets/backgrounds/open_kitchen_story.png",
     deliveryRitual: "/assets/backgrounds/delivery_ritual.png",
@@ -50,25 +51,32 @@ export const ASSETS = {
     goldParticles: "/assets/animations/gold_particles_loop.webp",
     seigaihaShimmer: "/assets/animations/seigaiha_shimmer_loop.webp",
   },
-  // Ключи совпадают с id в WokSauce/WokProtein/WokBase (prisma/schema.prisma),
-  // чтобы соус/белок/основу из БД можно было найти в реестре напрямую по id,
-  // без отдельной карты соответствий. У bbq и sriracha пока нет изображения —
-  // сознательно не заводим для них ключ с плейсхолдером, чтобы TS сразу
-  // подсвечивал ASSETS.wok.bbq как несуществующее свойство, а не отдавал
-  // undefined втихую.
   wok: {
-    udon: "/assets/wok/udon.png",
-    funchoza: "/assets/wok/funchoza.png",
-    soba: "/assets/wok/soba.png",
-    rice: "/assets/wok/rice.png",
-    chicken: "/assets/wok/chicken.png",
-    pork: "/assets/wok/pork.png",
-    beef: "/assets/wok/beef.png",
-    shrimp: "/assets/wok/shrimp.png",
-    salmon: "/assets/wok/salmon.png",
-    teriyaki: "/assets/wok/teriyaki.png",
-    oyster: "/assets/wok/oyster.png",
-    chili: "/assets/wok/sweet_chili.png",
+    bowl: "/assets/wok-layers/bowl.png",
+    udon: "/assets/wok-layers/udon.png",
+    funchoza: "/assets/wok-layers/funchoza.png",
+    chicken: "/assets/wok-layers/chicken.png",
+    pork: "/assets/wok-layers/pork.png",
+    beef: "/assets/wok-layers/beef.png",
+    shrimp: "/assets/wok-layers/shrimp.png",
+    salmon: "/assets/wok-layers/salmon.png",
+    sauceMask: "/assets/wok-layers/sauce_mask.png",
+    // Все id соусов из БД намеренно ведут на одну перекрашиваемую маску.
+    teriyaki: "/assets/wok-layers/sauce_mask.png",
+    bbq: "/assets/wok-layers/sauce_mask.png",
+    oyster: "/assets/wok-layers/sauce_mask.png",
+    chili: "/assets/wok-layers/sauce_mask.png",
+    sriracha: "/assets/wok-layers/sauce_mask.png",
+  },
+  menu: {
+    misoSoup: "/assets/menu/miso-soup.webp",
+    shrimpGyoza: "/assets/menu/shrimp-gyoza.webp",
+    edamame: "/assets/menu/edamame.webp",
+    yuzuLemonade: "/assets/menu/yuzu-lemonade.webp",
+    matchaLatte: "/assets/menu/matcha-latte.webp",
+    strawberryMochi: "/assets/menu/strawberry-mochi.webp",
+    mangoCheesecake: "/assets/menu/mango-cheesecake.webp",
+    dragonRoll: "/assets/menu/dragon-roll.webp",
   },
   pizza: {
     pepperoni: "/assets/pizza/pepperoni.png",

@@ -272,7 +272,7 @@
       "weight": "300 г",
       "price": 249,
       "karma": 25,
-      "img": "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=900&q=80",
+      "img": "/assets/menu/miso-soup.webp",
       "type": "bowl",
       "art": [
         "#efe7d8",
@@ -297,7 +297,7 @@
       "weight": "6 шт · 210 г",
       "price": 389,
       "karma": 39,
-      "img": "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?auto=format&fit=crop&w=900&q=80",
+      "img": "/assets/menu/shrimp-gyoza.webp",
       "type": "dessert",
       "art": [
         "#f1e9dc",
@@ -322,7 +322,7 @@
       "weight": "150 г",
       "price": 249,
       "karma": 25,
-      "img": "https://images.unsplash.com/photo-1611143669185-af224c5e3252?auto=format&fit=crop&w=900&q=80",
+      "img": "/assets/menu/edamame.webp",
       "type": "dessert",
       "art": [
         "#eaeee0",
@@ -346,7 +346,7 @@
       "weight": "0,5 л",
       "price": 199,
       "karma": 20,
-      "img": "https://images.unsplash.com/photo-1621263764928-df1444c5e859?auto=format&fit=crop&w=900&q=80",
+      "img": "/assets/menu/yuzu-lemonade.webp",
       "type": "drink",
       "art": [
         "#f5efdd",
@@ -372,7 +372,7 @@
       "price": 279,
       "karma": 28,
       "badge": "new",
-      "img": "https://images.unsplash.com/photo-1541544181051-e46607bc22a4?auto=format&fit=crop&w=900&q=80",
+      "img": "/assets/menu/matcha-latte.webp",
       "type": "drink",
       "art": [
         "#e8eee2",
@@ -396,7 +396,7 @@
       "weight": "2 шт · 90 г",
       "price": 219,
       "karma": 20,
-      "img": "https://images.unsplash.com/photo-1631206753348-db44968fd440?auto=format&fit=crop&w=900&q=80",
+      "img": "/assets/menu/strawberry-mochi.webp",
       "type": "dessert",
       "art": [
         "#f6e8ea",
@@ -420,7 +420,7 @@
       "weight": "140 г",
       "price": 329,
       "karma": 33,
-      "img": "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=900&q=80",
+      "img": "/assets/menu/mango-cheesecake.webp",
       "type": "dessert",
       "art": [
         "#f7ecd9",
@@ -444,7 +444,7 @@
       "weight": "8 шт · 280 г",
       "price": 699,
       "karma": 70,
-      "img": "https://images.unsplash.com/photo-1580822184713-fc5400e7fe10?auto=format&fit=crop&w=900&q=80",
+      "img": "/assets/menu/dragon-roll.webp",
       "type": "roll",
       "art": [
         "#eee7d8",

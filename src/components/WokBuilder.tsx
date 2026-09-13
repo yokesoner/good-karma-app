@@ -59,6 +59,66 @@ const OPTION_TONES: Record<string, [string, string]> = {
 const priceDelta = (extraCents: number) =>
   extraCents === 0 ? "включено" : `+${formatMoney(extraCents)}`;
 
+const WOK_BASE_IMAGES: Record<string, string> = {
+  udon: ASSETS.wok.udon,
+  funchoza: ASSETS.wok.funchoza,
+};
+
+const WOK_PROTEIN_IMAGES: Record<string, string> = {
+  chicken: ASSETS.wok.chicken,
+  pork: ASSETS.wok.pork,
+  beef: ASSETS.wok.beef,
+  shrimp: ASSETS.wok.shrimp,
+  salmon: ASSETS.wok.salmon,
+};
+
+function WokComposition({
+  baseId,
+  proteinId,
+  sauceColor,
+  label,
+}: {
+  baseId: string;
+  proteinId: string;
+  sauceColor: string;
+  label: string;
+}) {
+  const baseImage = WOK_BASE_IMAGES[baseId] ?? ASSETS.wok.udon;
+  const proteinImage = WOK_PROTEIN_IMAGES[proteinId] ?? ASSETS.wok.chicken;
+  const maskUrl = `url("${ASSETS.wok.sauceMask}")`;
+
+  return (
+    <div role="img" aria-label={label} className="relative h-full w-full">
+      <Image src={ASSETS.wok.bowl} alt="" aria-hidden fill sizes="(min-width: 768px) 620px, 56px" className="object-contain" />
+      <Image src={baseImage} alt="" aria-hidden fill sizes="(min-width: 768px) 620px, 56px" className="object-contain" />
+      <span
+        aria-hidden
+        className="absolute inset-0 opacity-70 mix-blend-multiply"
+        style={{
+          backgroundColor: sauceColor,
+          WebkitMaskImage: maskUrl,
+          maskImage: maskUrl,
+          WebkitMaskPosition: "center",
+          maskPosition: "center",
+          WebkitMaskRepeat: "no-repeat",
+          maskRepeat: "no-repeat",
+          WebkitMaskSize: "contain",
+          maskSize: "contain",
+        }}
+      />
+      <Image src={proteinImage} alt="" aria-hidden fill sizes="(min-width: 768px) 620px, 56px" className="object-contain" />
+      <Image
+        src={ASSETS.wok.sauceMask}
+        alt=""
+        aria-hidden
+        fill
+        sizes="(min-width: 768px) 620px, 56px"
+        className="object-contain opacity-30 mix-blend-soft-light"
+      />
+    </div>
+  );
+}
+
 function FlavorGlyph({ kind, className = "h-8 w-8" }: { kind: number; className?: string }) {
   return (
     <svg aria-hidden viewBox="0 0 40 40" className={className} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
@@ -111,7 +171,7 @@ export function WokBuilder({
         : sauces;
   const selectedId = step === 0 ? baseId : step === 1 ? proteinId : sauceId;
   const currentStep = STEP_COPY[step]!;
-  const sauceTone = OPTION_TONES[sauce.id]?.[0] ?? sauce.colorHex ?? "#9A536E";
+  const sauceTone = sauce.colorHex ?? OPTION_TONES[sauce.id]?.[0] ?? "#9A536E";
 
   const selectOption = (id: string) => {
     if (step === 0) setBaseId(id);
@@ -154,14 +214,12 @@ export function WokBuilder({
       <div className="md:hidden">
         <div className="sticky top-16 z-20 -mx-5 bg-paper/95 px-5 pb-3 pt-2 backdrop-blur-xl">
           <div className="flex items-center gap-3 py-2">
-            <div className="relative h-14 w-14 flex-none overflow-hidden rounded-full border border-white/70 shadow-s">
-              <Image
-                src={ASSETS.backgrounds.wokSignature}
-                alt=""
-                aria-hidden
-                fill
-                sizes="56px"
-                className="object-cover"
+            <div className="relative h-14 w-14 flex-none rounded-full border border-white/70 bg-paper-2/70 shadow-s">
+              <WokComposition
+                baseId={baseId}
+                proteinId={proteinId}
+                sauceColor={sauceTone}
+                label={`Вок: ${base.name}, ${protein.name}, соус ${sauce.name}`}
               />
             </div>
             <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
@@ -341,15 +399,13 @@ export function WokBuilder({
           <div aria-hidden className="absolute inset-[12%] rounded-full bg-white/45 blur-2xl" />
           <div
             key={`${baseId}-${proteinId}-${sauceId}`}
-            className="wok-dish-swap absolute inset-[3%] overflow-hidden rounded-full drop-shadow-[0_32px_36px_rgba(65,34,45,.28)]"
+            className="wok-dish-swap absolute inset-[3%] drop-shadow-[0_32px_36px_rgba(65,34,45,.28)]"
           >
-            <Image
-              src={ASSETS.backgrounds.wokSignature}
-              alt={`Вок: ${base.name}, ${protein.name}, соус ${sauce.name}`}
-              fill
-              priority
-              sizes="(min-width: 1024px) 55vw, 100vw"
-              className="scale-[1.02] object-cover"
+            <WokComposition
+              baseId={baseId}
+              proteinId={proteinId}
+              sauceColor={sauceTone}
+              label={`Вок: ${base.name}, ${protein.name}, соус ${sauce.name}`}
             />
           </div>
           <div className="pointer-events-none absolute bottom-[7%] left-1/2 flex -translate-x-1/2 gap-2">
