@@ -7,12 +7,12 @@
  */
 export const ASSETS = {
   mascots: {
-    catIdle: "/assets/mascots-v2/cat_idle.png",
-    catBowl: "/assets/mascots-v2/cat_bowl.png",
-    catPaw: "/assets/mascots-v2/cat_paw.png",
-    fox: "/assets/mascots-v2/fox.png",
-    rabbit: "/assets/mascots-v2/rabbit.png",
-    panda: "/assets/mascots-v2/panda.png",
+    catIdle: "/assets/mascots/cat_idle.png",
+    catBowl: "/assets/mascots/cat_bowl.png",
+    catPaw: "/assets/mascots/cat_paw.png",
+    fox: "/assets/mascots/fox.png",
+    rabbit: "/assets/mascots/rabbit.png",
+    panda: "/assets/mascots/panda.png",
   },
   decor: {
     sakuraBranch: "/assets/decor/sakura_branch.png",
