@@ -79,7 +79,7 @@ export function ProductPurchasePanel({
                   />
                   {a.name}
                   <b className="text-[11.5px] font-bold text-cherry">
-                    {on ? "✓" : `+${a.priceCents / 100}`}
+                    {on ? "✓" : `+${formatMoney(a.priceCents)}`}
                   </b>
                 </button>
               );

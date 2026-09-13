@@ -50,6 +50,12 @@ export const ASSETS = {
     goldParticles: "/assets/animations/gold_particles_loop.webp",
     seigaihaShimmer: "/assets/animations/seigaiha_shimmer_loop.webp",
   },
+  // Ключи совпадают с id в WokSauce/WokProtein/WokBase (prisma/schema.prisma),
+  // чтобы соус/белок/основу из БД можно было найти в реестре напрямую по id,
+  // без отдельной карты соответствий. У bbq и sriracha пока нет изображения —
+  // сознательно не заводим для них ключ с плейсхолдером, чтобы TS сразу
+  // подсвечивал ASSETS.wok.bbq как несуществующее свойство, а не отдавал
+  // undefined втихую.
   wok: {
     udon: "/assets/wok/udon.png",
     funchoza: "/assets/wok/funchoza.png",
@@ -62,7 +68,7 @@ export const ASSETS = {
     salmon: "/assets/wok/salmon.png",
     teriyaki: "/assets/wok/teriyaki.png",
     oyster: "/assets/wok/oyster.png",
-    sweetChili: "/assets/wok/sweet_chili.png",
+    chili: "/assets/wok/sweet_chili.png",
   },
   pizza: {
     pepperoni: "/assets/pizza/pepperoni.png",

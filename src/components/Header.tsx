@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useCart, cartCount } from "@/lib/cart";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { BrandMark } from "@/components/BrandMark";
+import { NavIcon } from "@/components/NavIcon";
 import { cn } from "@/lib/cn";
 
 const NAV = [
@@ -65,20 +66,7 @@ export function Header({ onCartClick }: { onCartClick: () => void }) {
             aria-label={count > 0 ? `Корзина, товаров: ${count}` : "Корзина"}
             className="relative grid h-10 w-10 place-items-center rounded-full text-ink-2 transition hover:bg-hair-soft hover:text-ink"
           >
-            <svg
-              aria-hidden
-              viewBox="0 0 24 24"
-              className="h-[19px] w-[19px]"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M3 4.2h2.2l2.3 10.4h9.3l1.9-7.3H6.3" />
-              <circle cx="9.6" cy="18.6" r="1.4" />
-              <circle cx="16.8" cy="18.6" r="1.4" />
-            </svg>
+            <NavIcon name="cart" className="h-[19px] w-[19px]" strokeWidth={1.5} />
             {count > 0 && (
               <span className="absolute -right-0.5 top-0 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-cherry px-1 text-[9px] font-bold text-white">
                 {count}
