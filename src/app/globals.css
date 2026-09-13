@@ -271,6 +271,22 @@ html {
     animation: builder-step-in 420ms cubic-bezier(.2,.8,.2,1) both;
   }
 
+  .wok-card-pick {
+    animation: wok-card-pick 300ms cubic-bezier(.34,1.56,.64,1) both;
+  }
+
+  .wok-check-pop {
+    animation: wok-check-pop 260ms cubic-bezier(.34,1.56,.64,1) 40ms both;
+  }
+
+  .wok-value-in {
+    animation: wok-value-in 180ms cubic-bezier(.2,.8,.2,1) both;
+  }
+
+  .wok-toast-in {
+    animation: wok-toast-in 220ms ease-out both;
+  }
+
   .karma-pass__sheen {
     animation: karma-sheen 7s ease-in-out infinite;
   }
@@ -413,6 +429,28 @@ html {
 }
 
 @keyframes builder-step-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes wok-card-pick {
+  0% { transform: scale(1); }
+  20% { transform: scale(.97); }
+  55% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+@keyframes wok-check-pop {
+  from { opacity: 0; transform: scale(.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes wok-value-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes wok-toast-in {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
