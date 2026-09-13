@@ -1,0 +1,457 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Значения перенесены из прототипа (index.html :root и [data-theme="dark"]),
+   ОДНО отличие от прототипа: каждый цвет здесь — тройка "R G B" через
+   пробел, а не hex ("126 85 128", не "#7e5580").
+   Это обязательное требование Tailwind v3 для CSS-переменных, которые
+   должны поддерживать модификатор прозрачности (border-plum/30 и т.п.):
+   Tailwind не может вычислить альфа-канал для var(--x), если x — hex-строка,
+   он умеет это только для готовых RGB-компонент через rgb(var(--x) / <alpha-value>).
+   Проверено на состоянии сборки: с hex-значениями классы с "/NN" молча
+   пропадали из итогового CSS. См. tailwind.config.ts, где каждый цвет
+   обёрнут в rgb(var(--x) / <alpha-value>). */
+:root {
+  --paper: 245 240 232;
+  --paper-2: 250 247 241;
+  --paper-3: 237 229 217;
+  --ink: 42 32 41;
+  --ink-2: 109 98 108;
+  --ink-3: 138 126 136;
+  --hair: rgba(42, 32, 41, 0.14);
+  --hair-soft: rgba(42, 32, 41, 0.07);
+  --plum: 126 85 128;
+  --plum-deep: 58 35 56;
+  --cherry: 140 77 104;
+  --cherry-soft: 184 109 134;
+  --mint: 169 200 190;
+  --mint-deep: 111 145 132;
+  --gold: 184 154 98;
+  --t-sakura: 243 227 223;
+  --t-mint: 216 231 224;
+  --t-gold: 240 228 206;
+  --t-plum: 238 231 240;
+  --t-sky: 222 230 236;
+  --t-peach: 246 227 210;
+  --t-ivory: 245 240 232;
+  --t-cream: 250 247 241;
+  --t-beige: 237 229 217;
+  --t-lavender: 233 224 238;
+  --t-blush: 240 221 225;
+  --t-rose: 231 210 217;
+  --btn-bg: 58 36 54;
+  --btn-fg: 250 247 241;
+  --glass: rgba(250, 247, 241, 0.66);
+}
+
+[data-theme="dark"] {
+  --paper: 20 16 23;
+  --paper-2: 27 22 29;
+  --paper-3: 36 29 39;
+  --ink: 242 234 228;
+  --ink-2: 167 154 161;
+  --ink-3: 142 129 137;
+  --hair: rgba(242, 234, 228, 0.13);
+  --hair-soft: rgba(242, 234, 228, 0.06);
+  --plum: 181 143 181;
+  --plum-deep: 181 143 181;
+  --cherry: 196 120 143;
+  --cherry-soft: 201 128 153;
+  --mint: 127 160 143;
+  --mint-deep: 156 192 178;
+  --gold: 198 168 126;
+  --t-sakura: 62 42 51;
+  --t-mint: 38 54 45;
+  --t-gold: 59 50 39;
+  --t-plum: 51 43 63;
+  --t-sky: 38 50 59;
+  --t-peach: 60 46 39;
+  --t-ivory: 23 18 32;
+  --t-cream: 27 21 34;
+  --t-beige: 30 24 38;
+  --t-lavender: 51 43 63;
+  --t-blush: 60 42 49;
+  --t-rose: 58 42 48;
+  --btn-bg: 239 230 222;
+  --btn-fg: 27 22 29;
+  --glass: rgba(20, 16, 23, 0.6);
+}
+
+html {
+  background: rgb(var(--paper));
+  color-scheme: light;
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+body {
+  background: rgb(var(--paper));
+  color: rgb(var(--ink));
+  overflow-x: hidden;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background: rgb(var(--cherry) / 0.24);
+  color: rgb(var(--ink));
+}
+
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid rgb(var(--cherry) / 0.7);
+  outline-offset: 3px;
+}
+
+.site-canvas {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+}
+
+.site-canvas::before {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  content: "";
+  background:
+    radial-gradient(44vw 42vw at -8% 12%, rgb(var(--cherry) / 0.08), transparent 70%),
+    radial-gradient(42vw 46vw at 106% 34%, rgb(var(--mint) / 0.1), transparent 72%),
+    radial-gradient(36vw 38vw at 18% 92%, rgb(var(--gold) / 0.07), transparent 72%);
+}
+
+[data-theme="dark"] .site-canvas::before {
+  background:
+    radial-gradient(48vw 44vw at -8% 12%, rgb(var(--cherry) / 0.12), transparent 70%),
+    radial-gradient(46vw 48vw at 108% 30%, rgb(var(--mint) / 0.08), transparent 72%),
+    radial-gradient(38vw 40vw at 18% 94%, rgb(var(--plum) / 0.09), transparent 72%);
+}
+
+/* Тихие орнаменты живут в фоне и не конкурируют с фотографиями еды. */
+.menu-canvas,
+.promo-page,
+.wok-page,
+.profile-page,
+.product-page,
+.checkout-page {
+  position: relative;
+  isolation: isolate;
+}
+
+.wok-page::before,
+.profile-page::before,
+.product-page::before,
+.checkout-page::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: "";
+  background:
+    radial-gradient(ellipse at 82% 14%, rgb(var(--cherry) / 0.14), transparent 26%),
+    radial-gradient(ellipse at 10% 46%, rgb(var(--mint) / 0.14), transparent 28%),
+    radial-gradient(ellipse at 70% 88%, rgb(var(--gold) / 0.11), transparent 24%);
+}
+
+.profile-page::before {
+  background:
+    radial-gradient(ellipse at 12% 18%, rgb(var(--cherry) / 0.13), transparent 27%),
+    radial-gradient(ellipse at 92% 42%, rgb(var(--plum) / 0.11), transparent 27%),
+    radial-gradient(ellipse at 45% 92%, rgb(var(--mint) / 0.12), transparent 25%);
+}
+
+.product-page::before {
+  background:
+    radial-gradient(ellipse at 88% 20%, rgb(var(--cherry) / 0.13), transparent 28%),
+    radial-gradient(ellipse at 8% 72%, rgb(var(--gold) / 0.11), transparent 27%);
+}
+
+.checkout-page::before {
+  background:
+    radial-gradient(ellipse at 86% 12%, rgb(var(--mint) / 0.15), transparent 28%),
+    radial-gradient(ellipse at 12% 68%, rgb(var(--cherry) / 0.12), transparent 30%);
+}
+
+.menu-canvas::before,
+.promo-page::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: "";
+  background:
+    radial-gradient(circle at 12% 22%, rgb(var(--cherry) / 0.075) 0 1px, transparent 1.5px) 0 0 / 22px 22px,
+    radial-gradient(ellipse at 88% 34%, rgb(var(--mint) / 0.13), transparent 28%),
+    radial-gradient(ellipse at 15% 78%, rgb(var(--gold) / 0.1), transparent 26%);
+  mask-image: linear-gradient(to bottom, transparent 0, black 12%, black 88%, transparent 100%);
+}
+
+.promo-page::before {
+  background:
+    radial-gradient(circle at 82% 18%, rgb(var(--cherry) / 0.09) 0 1px, transparent 1.5px) 0 0 / 24px 24px,
+    radial-gradient(ellipse at 10% 50%, rgb(var(--mint) / 0.13), transparent 30%),
+    radial-gradient(ellipse at 88% 82%, rgb(var(--plum) / 0.08), transparent 28%);
+}
+
+.menu-category {
+  position: relative;
+  isolation: isolate;
+}
+
+.menu-category::before {
+  position: absolute;
+  inset: -24px -18px;
+  z-index: -1;
+  border-radius: 42px;
+  pointer-events: none;
+  content: "";
+  opacity: 0.6;
+}
+
+.menu-category-0::before {
+  background:
+    radial-gradient(circle at 95% 0%, rgb(var(--cherry) / 0.12), transparent 25%),
+    linear-gradient(135deg, rgb(var(--t-sakura) / 0.36), transparent 48%);
+}
+
+.menu-category-1::before {
+  background:
+    radial-gradient(circle at 4% 10%, rgb(var(--mint) / 0.16), transparent 25%),
+    linear-gradient(225deg, rgb(var(--t-mint) / 0.4), transparent 52%);
+}
+
+.menu-category-2::before {
+  background:
+    radial-gradient(circle at 90% 4%, rgb(var(--gold) / 0.12), transparent 25%),
+    linear-gradient(135deg, rgb(var(--t-lavender) / 0.38), transparent 52%);
+}
+
+.promo-rings {
+  border: 1px solid rgb(147 86 110 / 0.18);
+  border-radius: 999px;
+  box-shadow:
+    0 0 0 18px rgb(147 86 110 / 0.05),
+    0 0 0 38px rgb(147 86 110 / 0.035),
+    0 0 0 62px rgb(147 86 110 / 0.025);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .promo-rings {
+    animation: ornament-breathe 8s ease-in-out infinite;
+  }
+
+  .menu-canvas::before,
+  .promo-page::before,
+  .wok-page::before,
+  .profile-page::before,
+  .product-page::before,
+  .checkout-page::before {
+    animation: ornament-drift 24s ease-in-out infinite alternate;
+  }
+
+  .wok-page > *,
+  .profile-page > *,
+  .product-page > *,
+  .checkout-page > * {
+    animation: page-rise 620ms cubic-bezier(.2,.8,.2,1) both;
+  }
+
+  .wok-heat {
+    animation: wok-heat-pulse 5.5s ease-in-out infinite;
+  }
+
+  .wok-dish-swap {
+    animation: wok-dish-in 650ms cubic-bezier(.2,.8,.2,1) both;
+  }
+
+  .builder-step-enter {
+    animation: builder-step-in 420ms cubic-bezier(.2,.8,.2,1) both;
+  }
+
+  .karma-pass__sheen {
+    animation: karma-sheen 7s ease-in-out infinite;
+  }
+
+  .karma-pass__orb,
+  .profile-orbit {
+    animation: card-orbit 9s ease-in-out infinite alternate;
+  }
+
+  .cultural-accent--japan {
+    animation: lantern-float 6.5s ease-in-out infinite alternate;
+  }
+
+  .cultural-accent--europe {
+    animation: harvest-sway 8s ease-in-out infinite alternate;
+  }
+
+  .culture-marquee__track {
+    animation: culture-scroll 30s linear infinite;
+  }
+
+  .site-hero > div {
+    animation: hero-reveal 900ms cubic-bezier(.2,.8,.2,1) both;
+  }
+}
+
+.wok-stage::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: "";
+  background-image:
+    radial-gradient(circle at center, rgb(154 83 110 / 0.09) 0 1px, transparent 1.4px);
+  background-size: 21px 21px;
+  mask-image: linear-gradient(130deg, transparent 8%, black 55%, transparent 92%);
+}
+
+.karma-pass {
+  container-type: inline-size;
+  background:
+    radial-gradient(circle at 82% 15%, rgb(219 159 179 / 0.56), transparent 29%),
+    radial-gradient(circle at 8% 92%, rgb(125 168 149 / 0.34), transparent 34%),
+    linear-gradient(135deg, #241420 0%, #4b2c43 47%, #7c5068 100%);
+  transform: perspective(1200px) rotateX(0deg) rotateY(0deg) translateZ(0);
+  transform-style: preserve-3d;
+  transition: transform 700ms cubic-bezier(.2,.8,.2,1), box-shadow 700ms ease;
+}
+
+.club-showcase {
+  background-image:
+    radial-gradient(ellipse at 95% 10%, rgb(var(--gold) / 0.12), transparent 45%),
+    radial-gradient(ellipse at 5% 90%, rgb(var(--cherry) / 0.06), transparent 50%);
+}
+
+.club-reward::before {
+  position: absolute;
+  top: 0;
+  left: 24px;
+  width: 42px;
+  height: 2px;
+  content: "";
+  background: linear-gradient(90deg, transparent, rgb(var(--gold)), transparent);
+}
+
+.club-demo summary:focus-visible {
+  outline: 2px solid rgb(var(--cherry));
+  outline-offset: 5px;
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .karma-pass:hover {
+    transform: perspective(1200px) rotateX(2deg) rotateY(-3deg) translateY(-5px);
+    box-shadow: 0 50px 100px -38px rgb(48 24 43 / 0.86);
+  }
+
+  .club-reward {
+    transition: transform 400ms cubic-bezier(.2,.8,.2,1), box-shadow 400ms ease;
+  }
+
+  .club-reward:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 36px -22px rgb(var(--plum) / 0.35);
+  }
+}
+
+.karma-pass__mesh {
+  opacity: 0.35;
+  background-image:
+    radial-gradient(circle at center, rgb(255 255 255 / 0.14) 0 1px, transparent 1.4px),
+    linear-gradient(118deg, transparent 35%, rgb(255 255 255 / 0.06), transparent 64%);
+  background-size: 19px 19px, 100% 100%;
+  mask-image: linear-gradient(120deg, black, transparent 76%);
+}
+
+.karma-pass__orb {
+  background: radial-gradient(circle at 34% 34%, rgb(255 229 236 / 0.42), rgb(190 116 146 / 0.12) 48%, transparent 70%);
+  border: 1px solid rgb(255 255 255 / 0.12);
+  box-shadow:
+    inset 0 0 44px rgb(255 255 255 / 0.08),
+    0 0 70px rgb(214 142 165 / 0.16);
+}
+
+.cultural-accent {
+  filter: drop-shadow(0 24px 28px rgb(var(--plum) / 0.18));
+  transform-origin: 50% 12%;
+  will-change: transform;
+}
+
+.culture-marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+}
+
+.culture-marquee__track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+@keyframes ornament-breathe {
+  0%, 100% { transform: scale(0.96); opacity: 0.36; }
+  50% { transform: scale(1.04); opacity: 0.56; }
+}
+
+@keyframes ornament-drift {
+  from { transform: translate3d(0, -5px, 0); }
+  to { transform: translate3d(0, 8px, 0); }
+}
+
+@keyframes wok-heat-pulse {
+  0%, 100% { opacity: 0.48; transform: scale(0.98); }
+  50% { opacity: 0.75; transform: scale(1.025); }
+}
+
+@keyframes wok-dish-in {
+  from { opacity: 0.55; transform: scale(0.965) rotate(-1deg); filter: saturate(.8) blur(3px); }
+  to { opacity: 1; transform: scale(1) rotate(0); filter: saturate(1) blur(0); }
+}
+
+@keyframes builder-step-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes karma-sheen {
+  0%, 18% { transform: translateX(-160%) skewX(-18deg); opacity: 0; }
+  30% { opacity: 1; }
+  47%, 100% { transform: translateX(420%) skewX(-18deg); opacity: 0; }
+}
+
+@keyframes card-orbit {
+  from { transform: translate3d(-4px, -4px, 0) scale(.98); }
+  to { transform: translate3d(6px, 7px, 0) scale(1.035); }
+}
+
+@keyframes page-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes culture-scroll {
+  to { transform: translateX(-50%); }
+}
+
+@keyframes lantern-float {
+  from { transform: translate3d(-3px, -5px, 0) rotate(-1.5deg); }
+  to { transform: translate3d(5px, 8px, 0) rotate(2deg); }
+}
+
+@keyframes harvest-sway {
+  from { transform: translate3d(-4px, 2px, 0) rotate(-1deg); }
+  to { transform: translate3d(6px, -7px, 0) rotate(1.8deg); }
+}
+
+@keyframes hero-reveal {
+  from { opacity: 0; transform: translateY(10px) scale(.992); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}

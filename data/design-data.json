@@ -1,0 +1,480 @@
+{
+  "categoryMeta": {
+    "rolls": {
+      "theme": "sakura",
+      "accentTint": "sakura",
+      "pattern": "sakura",
+      "jp": "小さな幸せ",
+      "tag": "Нежность в каждом кусочке"
+    },
+    "wok": {
+      "theme": "ember",
+      "accentTint": "peach",
+      "pattern": "asanoha",
+      "jp": "強い火",
+      "tag": "Огонь, вок и три минуты"
+    },
+    "ramen": {
+      "theme": "calm",
+      "accentTint": "gold",
+      "pattern": "seigaiha",
+      "jp": "静かな夜",
+      "tag": "Бульон варим восемь часов"
+    },
+    "pizza": {
+      "theme": "fusion",
+      "accentTint": "peach",
+      "pattern": "kikko",
+      "jp": "融合",
+      "tag": "Японская интерпретация классики"
+    },
+    "soups": {
+      "theme": "calm",
+      "accentTint": "mint",
+      "pattern": "seigaiha",
+      "jp": "波の音",
+      "tag": "Тепло, которое согревает"
+    },
+    "snacks": {
+      "theme": "fusion",
+      "accentTint": "beige",
+      "pattern": "kikko",
+      "jp": "一口",
+      "tag": "Маленькое к большому"
+    },
+    "drinks": {
+      "theme": "fresh",
+      "accentTint": "sky",
+      "pattern": "shippo",
+      "jp": "涼しい",
+      "tag": "Свежесть и чайная церемония"
+    },
+    "desserts": {
+      "theme": "soft",
+      "accentTint": "plum",
+      "pattern": "sakura",
+      "jp": "花",
+      "tag": "Мягкий финал ужина"
+    }
+  },
+  "wokBases": [
+    {
+      "id": "udon",
+      "name": "Удон",
+      "priceCents": 0
+    },
+    {
+      "id": "funchoza",
+      "name": "Фунчоза",
+      "priceCents": 0
+    }
+  ],
+  "wokProteins": [
+    {
+      "id": "chicken",
+      "name": "Курица",
+      "priceCents": 0
+    },
+    {
+      "id": "pork",
+      "name": "Свинина",
+      "priceCents": 6000
+    },
+    {
+      "id": "beef",
+      "name": "Говядина",
+      "priceCents": 11000
+    },
+    {
+      "id": "shrimp",
+      "name": "Креветки",
+      "priceCents": 12000
+    },
+    {
+      "id": "salmon",
+      "name": "Лосось",
+      "priceCents": 15000
+    }
+  ],
+  "wokSauces": [
+    {
+      "id": "teriyaki",
+      "name": "Терияки",
+      "priceCents": 0,
+      "colorHex": "#6B4A22"
+    },
+    {
+      "id": "bbq",
+      "name": "Барбекю",
+      "priceCents": 0,
+      "colorHex": "#6C2F26"
+    },
+    {
+      "id": "oyster",
+      "name": "Устричный",
+      "priceCents": 2000,
+      "colorHex": "#4A3320"
+    },
+    {
+      "id": "chili",
+      "name": "Кисло-сладкий чили",
+      "priceCents": 0,
+      "colorHex": "#B34B2A"
+    },
+    {
+      "id": "sriracha",
+      "name": "Шрирача",
+      "priceCents": 2000,
+      "colorHex": "#A82D22"
+    }
+  ],
+  "karmaLevels": [
+    {
+      "key": "seed",
+      "name": "Seed",
+      "fromKarma": 0,
+      "toKarma": 500,
+      "icon": "seed",
+      "perk": "Первые шаги — 1 балл за каждые 10 ₽"
+    },
+    {
+      "key": "blossom",
+      "name": "Blossom",
+      "fromKarma": 500,
+      "toKarma": 1200,
+      "icon": "blossom",
+      "perk": "Напиток в подарок к каждому третьему заказу"
+    },
+    {
+      "key": "moon",
+      "name": "Moon",
+      "fromKarma": 1200,
+      "toKarma": 2500,
+      "icon": "moon",
+      "perk": "Приоритетная сборка и ранний доступ к новинкам"
+    },
+    {
+      "key": "karma",
+      "name": "Karma",
+      "fromKarma": 2500,
+      "toKarma": 6000,
+      "icon": "karma",
+      "perk": "Личный сет от шефа и двойные баллы весь год"
+    }
+  ],
+  "karmaRewards": [
+    {
+      "costPoints": 500,
+      "title": "Напиток в подарок",
+      "description": "Матча, юдзу-лимонад или чай"
+    },
+    {
+      "costPoints": 1000,
+      "title": "Десерт в подарок",
+      "description": "Моти, чизкейк или мороженое"
+    },
+    {
+      "costPoints": 1500,
+      "title": "Ролл Филадельфия",
+      "description": "Классика на лососе, 8 штук"
+    },
+    {
+      "costPoints": 2000,
+      "title": "Сет на выбор",
+      "description": "Любой сет из меню до 1 500 ₽"
+    },
+    {
+      "costPoints": 3000,
+      "title": "−20% на любой заказ",
+      "description": "Действует месяц с момента обмена"
+    }
+  ],
+  "deliveryZones": [
+    {
+      "zone": 1,
+      "maxDistanceKm": 4,
+      "priceCents": 25000,
+      "freeFromCents": 150000
+    },
+    {
+      "zone": 2,
+      "maxDistanceKm": 8,
+      "priceCents": 35000,
+      "freeFromCents": 250000
+    },
+    {
+      "zone": 3,
+      "maxDistanceKm": 12,
+      "priceCents": 45000,
+      "freeFromCents": 350000
+    },
+    {
+      "zone": 4,
+      "maxDistanceKm": 16,
+      "priceCents": 55000,
+      "freeFromCents": 450000
+    },
+    {
+      "zone": 5,
+      "maxDistanceKm": 20,
+      "priceCents": 65000,
+      "freeFromCents": 550000
+    }
+  ],
+  "nutritionBaseByCategory": {
+    "rolls": {
+      "kcal": 186,
+      "proteinG": 7.4,
+      "fatG": 6.2,
+      "carbsG": 24
+    },
+    "ramen": {
+      "kcal": 112,
+      "proteinG": 8.1,
+      "fatG": 4.3,
+      "carbsG": 10.5
+    },
+    "wok": {
+      "kcal": 164,
+      "proteinG": 9.6,
+      "fatG": 6.8,
+      "carbsG": 17.2
+    },
+    "pizza": {
+      "kcal": 248,
+      "proteinG": 11.2,
+      "fatG": 9.8,
+      "carbsG": 28.6
+    },
+    "soups": {
+      "kcal": 74,
+      "proteinG": 5.2,
+      "fatG": 3.1,
+      "carbsG": 6.4
+    },
+    "snacks": {
+      "kcal": 142,
+      "proteinG": 8.8,
+      "fatG": 5.4,
+      "carbsG": 13.1
+    },
+    "drinks": {
+      "kcal": 46,
+      "proteinG": 0.2,
+      "fatG": 0,
+      "carbsG": 11.4
+    },
+    "desserts": {
+      "kcal": 228,
+      "proteinG": 4.1,
+      "fatG": 9.2,
+      "carbsG": 32.5
+    }
+  },
+  "addons": [
+    {
+      "key": "pepperoni",
+      "name": "Пепперони",
+      "priceCents": 6000,
+      "colorHex": "#A63A2E"
+    },
+    {
+      "key": "ham",
+      "name": "Ветчина",
+      "priceCents": 5000,
+      "colorHex": "#D08A8A"
+    },
+    {
+      "key": "bacon",
+      "name": "Бекон",
+      "priceCents": 6000,
+      "colorHex": "#B05A46"
+    },
+    {
+      "key": "chicken",
+      "name": "Курица",
+      "priceCents": 5000,
+      "colorHex": "#D8B383"
+    },
+    {
+      "key": "tuna",
+      "name": "Тунец",
+      "priceCents": 5000,
+      "colorHex": "#C99A86"
+    },
+    {
+      "key": "mozzarella",
+      "name": "Моцарелла",
+      "priceCents": 5000,
+      "colorHex": "#F4EDE0"
+    },
+    {
+      "key": "parmesan",
+      "name": "Пармезан",
+      "priceCents": 4000,
+      "colorHex": "#EDDFC0"
+    },
+    {
+      "key": "tomatoes",
+      "name": "Томаты черри",
+      "priceCents": 4000,
+      "colorHex": "#C0392B"
+    },
+    {
+      "key": "mushrooms",
+      "name": "Грибы",
+      "priceCents": 4000,
+      "colorHex": "#C4AE93"
+    },
+    {
+      "key": "olives",
+      "name": "Оливки",
+      "priceCents": 3000,
+      "colorHex": "#3E3A2E"
+    },
+    {
+      "key": "jalapeno",
+      "name": "Халапеньо",
+      "priceCents": 3000,
+      "colorHex": "#5E8C4A"
+    },
+    {
+      "key": "onion",
+      "name": "Красный лук",
+      "priceCents": 3000,
+      "colorHex": "#9A6B93"
+    },
+    {
+      "key": "pepper",
+      "name": "Болгарский перец",
+      "priceCents": 3000,
+      "colorHex": "#D98032"
+    },
+    {
+      "key": "pineapple",
+      "name": "Ананас",
+      "priceCents": 3000,
+      "colorHex": "#E7C463"
+    },
+    {
+      "key": "arugula",
+      "name": "Руккола",
+      "priceCents": 4000,
+      "colorHex": "#6E8F55"
+    },
+    {
+      "key": "basil",
+      "name": "Базилик",
+      "priceCents": 3000,
+      "colorHex": "#537A45"
+    },
+    {
+      "key": "dbl",
+      "name": "Двойная порция мяса",
+      "priceCents": 15000,
+      "colorHex": "#B05A46"
+    },
+    {
+      "key": "veg",
+      "name": "Больше овощей",
+      "priceCents": 6000,
+      "colorHex": "#6E8F55"
+    },
+    {
+      "key": "sesame",
+      "name": "Кунжут",
+      "priceCents": 2000,
+      "colorHex": "#D8C08A"
+    },
+    {
+      "key": "unagi",
+      "name": "Соус унаги",
+      "priceCents": 4000,
+      "colorHex": "#6B4A22"
+    },
+    {
+      "key": "spicy",
+      "name": "Спайси-соус",
+      "priceCents": 4000,
+      "colorHex": "#A82D22"
+    },
+    {
+      "key": "ginger",
+      "name": "Имбирь",
+      "priceCents": 3000,
+      "colorHex": "#E0B48A"
+    },
+    {
+      "key": "wasabi",
+      "name": "Васаби",
+      "priceCents": 2000,
+      "colorHex": "#8FA96A"
+    },
+    {
+      "key": "egg",
+      "name": "Яйцо аджитама",
+      "priceCents": 6000,
+      "colorHex": "#E8C06A"
+    },
+    {
+      "key": "chashu",
+      "name": "Свинина чашу",
+      "priceCents": 12000,
+      "colorHex": "#B0705A"
+    },
+    {
+      "key": "corn",
+      "name": "Кукуруза",
+      "priceCents": 4000,
+      "colorHex": "#E7C463"
+    },
+    {
+      "key": "sauce",
+      "name": "Соус на выбор",
+      "priceCents": 3000,
+      "colorHex": "#8C4D68"
+    }
+  ],
+  "addonSetsByCategory": {
+    "pizza": [
+      "pepperoni",
+      "mozzarella",
+      "tomatoes",
+      "mushrooms",
+      "bacon",
+      "jalapeno",
+      "arugula",
+      "olives"
+    ],
+    "rolls": [
+      "unagi",
+      "spicy",
+      "ginger",
+      "wasabi",
+      "sesame"
+    ],
+    "wok": [
+      "dbl",
+      "veg",
+      "sesame",
+      "spicy"
+    ],
+    "ramen": [
+      "egg",
+      "chashu",
+      "corn",
+      "spicy"
+    ],
+    "soups": [
+      "egg",
+      "corn",
+      "spicy",
+      "veg"
+    ],
+    "snacks": [
+      "sauce",
+      "sesame",
+      "spicy"
+    ]
+  }
+}

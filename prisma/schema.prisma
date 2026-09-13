@@ -1,0 +1,392 @@
+// Good Karma — production data model.
+// Every entity here has a direct ancestor in the prototype's JSON seed
+// (index.html → <script id="gk-seed">). Comments point back to it so the
+// migration from prototype to product is traceable field by field.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  // DATABASE_URL — через пулер (PgBouncer), используется в рантайме.
+  // DIRECT_URL — прямое подключение, нужно только для миграций Prisma.
+  // Обе переменные Supabase выдаёт сразу парой в Connect → ORM → Prisma.
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------- каталог ----------
+
+model Category {
+  id        String    @id // "rolls", "wok", … — было cats[].id
+  name      String
+  sortOrder Int       @default(0)
+  meta      CategoryMeta?
+  products  Product[]
+
+  @@map("categories")
+}
+
+// Было CAT_META в JS — тема, паттерн, японская подпись, ключевое блюдо категории.
+model CategoryMeta {
+  categoryId String   @id
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  theme      String // "sakura" | "ember" | "calm" | "fusion" | "fresh" | "soft"
+  accentTint String // ключ в дизайн-токенах, напр. "sakura"
+  pattern    String // "sakura" | "asanoha" | "seigaiha" | "kikko" | "shippo" | "none"
+  jpTagline  String? // "小さな幸せ"
+  tagline    String? // "Нежность в каждом кусочке"
+
+  @@map("category_meta")
+}
+
+model Product {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  category    Category      @relation(fields: [categoryId], references: [id])
+  categoryId  String
+  name        String
+  description String
+  weight      String // "8 шт · 240 г" — в реальном виде лучше разложить на два поля,
+                       // оставлено строкой для совместимости с прототипом на первом этапе
+  priceCents  Int // храним в копейках, не в рублях с плавающей точкой
+  karma       Int // баллов начисляется за покупку
+  badge       Badge?
+  rating      Decimal       @db.Decimal(2, 1) @default(0)
+  ratingCount Int           @default(0)
+  isStopList  Boolean       @default(false) // сейчас product.stop в админке
+  isHidden    Boolean       @default(false) // кастомные позиции из конструктора не показываем в каталоге
+  images      ProductImage[]
+  ingredients ProductIngredient[]
+  nutrition   Nutrition?
+  addonGroups ProductAddonGroup[]
+  orderItems  OrderItem[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([categoryId])
+  @@map("products")
+}
+
+enum Badge {
+  HIT
+  NEW
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  url       String
+  alt       String
+  sortOrder Int     @default(0)
+
+  @@map("product_images")
+}
+
+model ProductIngredient {
+  id        String  @id @default(cuid())
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  name      String
+  sortOrder Int     @default(0)
+
+  @@map("product_ingredients")
+}
+
+// Было nutriBase + вариация по id в JS — теперь настоящие цифры на блюдо.
+model Nutrition {
+  productId String  @id
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  kcal      Int
+  proteinG  Decimal @db.Decimal(5, 1)
+  fatG      Decimal @db.Decimal(5, 1)
+  carbsG    Decimal @db.Decimal(5, 1)
+
+  @@map("nutrition")
+}
+
+// Группа добавок к блюду ("Добавить к блюду" в карточке товара).
+// Было ADDON_SETS[cat.id] + ALL_ADDONS в JS.
+model AddonGroup {
+  id      String              @id @default(cuid())
+  name    String // "Добавки к пицце", "Добавки к рамену"
+  addons  Addon[]
+  linkedTo ProductAddonGroup[]
+
+  @@map("addon_groups")
+}
+
+model Addon {
+  id           String     @id @default(cuid())
+  group        AddonGroup @relation(fields: [addonGroupId], references: [id], onDelete: Cascade)
+  addonGroupId String
+  name         String
+  priceCents   Int
+  colorHex     String // маленькая точка-индикатор в чипе
+  sortOrder    Int        @default(0)
+  orderItemAddons OrderItemAddon[]
+
+  @@map("addons")
+}
+
+model ProductAddonGroup {
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId    String
+  addonGroup   AddonGroup @relation(fields: [addonGroupId], references: [id], onDelete: Cascade)
+  addonGroupId String
+
+  @@id([productId, addonGroupId])
+  @@map("product_addon_groups")
+}
+
+// ---------- конструктор вока ----------
+// Было wokBases / wokProteins / wokSauces / calculateWokPrice() в JS.
+
+model WokBase {
+  id         String @id // "udon" | "funchoza"
+  name       String
+  extraCents Int    @default(0)
+
+  @@map("wok_bases")
+}
+
+model WokProtein {
+  id         String @id // "chicken" | "pork" | "beef" | "shrimp" | "salmon"
+  name       String
+  extraCents Int    @default(0)
+
+  @@map("wok_proteins")
+}
+
+model WokSauce {
+  id         String @id // "teriyaki" | "bbq" | "oyster" | "chili" | "sriracha"
+  name       String
+  extraCents Int    @default(0)
+  colorHex   String
+
+  @@map("wok_sauces")
+}
+
+// ---------- промокоды ----------
+// PICKUP как отдельный тип акции убран — самовывоз больше не даёт скидку,
+// поле оставлено только для METHOD, а не PromoType.
+
+model Promotion {
+  code           String      @id
+  type           PromoType
+  discountPct    Int         @default(0)
+  minOrderCents  Int         @default(0)
+  title          String
+  description    String
+  featuredImageProductId String?
+  activeFrom     DateTime?
+  activeTo       DateTime?
+  isActive       Boolean     @default(true)
+  orders         Order[]
+
+  @@map("promotions")
+}
+
+enum PromoType {
+  PERCENT
+  FIXED
+}
+
+// ---------- карма-клуб ----------
+// Было karmaLevels[] в JS — четыре уровня, каждый со своим порогом и текстом.
+
+model KarmaLevel {
+  key       String  @id // "seed" | "blossom" | "moon" | "karma"
+  name      String
+  fromKarma Int
+  toKarma   Int
+  icon      String
+  perk      String
+
+  @@map("karma_levels")
+}
+
+model KarmaEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  multiplier  Decimal? @db.Decimal(3, 2) // ×2, ×1.5
+  bonusPoints Int? // +300
+  tint        String
+  startsAt    DateTime
+  endsAt      DateTime
+
+  @@map("karma_events")
+}
+
+model KarmaReward {
+  id            String             @id @default(cuid())
+  costPoints    Int
+  title         String
+  description   String
+  isActive      Boolean            @default(true)
+  ledgerEntries KarmaLedgerEntry[]
+
+  @@map("karma_rewards")
+}
+
+// Журнал начислений/списаний — то, чего в прототипе не было вообще
+// (карма там просто число в сиде), а для реального клуба обязательно.
+model KarmaLedgerEntry {
+  id        String          @id @default(cuid())
+  user      User            @relation(fields: [userId], references: [id])
+  userId    String
+  order     Order?          @relation(fields: [orderId], references: [id])
+  orderId   String?
+  // Заполнено только при reason = REWARD_REDEEMED — какую награду обменяли.
+  reward    KarmaReward?    @relation(fields: [rewardId], references: [id])
+  rewardId  String?
+  points    Int // положительное — начисление, отрицательное — списание/сгорание
+  reason    KarmaLedgerReason
+  createdAt DateTime        @default(now())
+
+  @@index([userId])
+  @@map("karma_ledger_entries")
+}
+
+enum KarmaLedgerReason {
+  ORDER_EARNED
+  REWARD_REDEEMED
+  EVENT_BONUS
+  EXPIRED
+  MANUAL_ADJUSTMENT
+}
+
+// ---------- пользователи ----------
+// В прототипе user — один захардкоженный объект. Вход по телефону + OTP —
+// стандарт для доставки еды в РФ, поэтому пароля нет.
+
+model User {
+  id           String    @id @default(cuid())
+  phone        String    @unique
+  name         String?
+  createdAt    DateTime  @default(now())
+  addresses    Address[]
+  orders       Order[]
+  karmaEntries KarmaLedgerEntry[]
+
+  @@map("users")
+}
+
+model Address {
+  id        String  @id @default(cuid())
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  label     String // "Дом", "Работа"
+  line      String // "ул. Садовая, 12"
+  flat      String?
+  lat       Decimal? @db.Decimal(9, 6)
+  lng       Decimal? @db.Decimal(9, 6)
+  isDefault Boolean @default(false)
+
+  @@map("addresses")
+}
+
+// ---------- зоны доставки ----------
+// Было ZONES = [0,1,2,3,4].map(...) в JS, формула 250+100×i / 1500+1000×i.
+// Здесь то же самое, но как редактируемые в админке строки, а не константа в коде.
+
+model DeliveryZone {
+  zone            Int    @id // 1..5
+  maxDistanceKm   Decimal @db.Decimal(4, 1)
+  priceCents      Int
+  freeFromCents   Int
+
+  @@map("delivery_zones")
+}
+
+// ---------- заказы ----------
+
+model Order {
+  id              String        @id @default(cuid())
+  number          String        @unique // "GK-12547"
+  user            User          @relation(fields: [userId], references: [id])
+  userId          String
+  status          OrderStatus   @default(NEW)
+  fulfillment     Fulfillment
+  items           OrderItem[]
+  address         String?
+  addressFlat     String?
+  distanceKm      Decimal?      @db.Decimal(4, 1)
+  deliveryZone    Int?
+  slotLabel       String?
+  slotEta         DateTime?
+  promotion       Promotion?    @relation(fields: [promoCode], references: [code])
+  promoCode       String?
+  subtotalCents   Int
+  discountCents   Int           @default(0)
+  deliveryCents   Int           @default(0)
+  totalCents      Int
+  karmaEarned     Int           @default(0)
+  paymentMethod   PaymentMethod
+  paymentStatus   PaymentStatus @default(PENDING)
+  comment         String?
+  karmaEntries    KarmaLedgerEntry[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([userId])
+  @@map("orders")
+}
+
+enum OrderStatus {
+  NEW // "Заказ принят"
+  PREPARING // "Готовится"
+  HANDED_TO_COURIER // "Передан в доставку"
+  DELIVERING // "Доставляется"
+  DONE
+  CANCELLED
+}
+
+enum Fulfillment {
+  DELIVERY
+  PICKUP
+}
+
+enum PaymentMethod {
+  CARD_ONLINE
+  CARD_ON_DELIVERY
+  CASH
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model OrderItem {
+  id           String   @id @default(cuid())
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId      String
+  product      Product  @relation(fields: [productId], references: [id])
+  productId    String
+  nameSnapshot String // название на момент заказа — конструктор мог собрать уникальное
+  qty          Int
+  unitPriceCents Int
+  addons       OrderItemAddon[]
+  // Слепок кастомной сборки вока/добавок, был custom{} на клиенте — теперь
+  // хранится вместе с заказом, чтобы «Повторить заказ» работал и через год.
+  customConfig Json?
+
+  @@map("order_items")
+}
+
+model OrderItemAddon {
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  orderItemId String
+  addon       Addon     @relation(fields: [addonId], references: [id])
+  addonId     String
+  priceCentsSnapshot Int
+
+  @@id([orderItemId, addonId])
+  @@map("order_item_addons")
+}
