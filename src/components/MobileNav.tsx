@@ -34,13 +34,13 @@ export function MobileNav({ onCartClick }: { onCartClick: () => void }) {
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 py-2 text-[8.5px] font-semibold uppercase tracking-[0.08em] transition",
+              "relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 py-2 text-[8.5px] font-semibold uppercase tracking-[0.08em] transition duration-200 active:scale-90",
               active ? "text-ink" : "text-ink-3",
             )}
           >
             <NavIcon name={item.icon} />
             {item.label}
-            {active && <span aria-hidden className="absolute top-0 h-0.5 w-5 rounded-full bg-cherry" />}
+            {active && <span aria-hidden className="icon-pop absolute top-0 h-0.5 w-5 rounded-full bg-cherry" />}
           </Link>
         );
       })}
@@ -48,12 +48,12 @@ export function MobileNav({ onCartClick }: { onCartClick: () => void }) {
         type="button"
         onClick={onCartClick}
         aria-label={count > 0 ? `Корзина, товаров: ${count}` : "Корзина"}
-        className="relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 py-2 text-[8.5px] font-semibold uppercase tracking-[0.08em] text-ink-3 transition hover:text-ink"
+        className="relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 py-2 text-[8.5px] font-semibold uppercase tracking-[0.08em] text-ink-3 transition duration-200 active:scale-90 hover:text-ink"
       >
         <NavIcon name="cart" />
         Корзина
         {count > 0 && (
-          <span className="absolute right-[24%] top-1 grid h-[15px] min-w-[15px] place-items-center rounded-full bg-cherry px-1 text-[9px] font-bold text-white">
+          <span key={count} className="icon-pop absolute right-[24%] top-1 grid h-[15px] min-w-[15px] place-items-center rounded-full bg-cherry px-1 text-[9px] font-bold text-white">
             {count}
           </span>
         )}
