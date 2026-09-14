@@ -494,3 +494,19 @@ html {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
 }
+
+/* Переход фото карточка → страница товара (next-view-transitions).
+   Имя задаётся в коде как product-photo-{slug}, тут — только тайминг:
+   тот же язык движения, что у остальных анимаций проекта. */
+::view-transition-group(*) {
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(.2, .8, .2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 1ms !important;
+  }
+}

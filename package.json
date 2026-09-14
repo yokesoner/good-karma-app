@@ -25,6 +25,7 @@
     "@tanstack/react-query": "^5.59.0",
     "clsx": "^2.1.1",
     "next": "^14.2.13",
+    "next-view-transitions": "^0.3.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zod": "^3.23.8",

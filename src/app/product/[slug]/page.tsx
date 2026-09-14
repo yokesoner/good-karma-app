@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
@@ -76,6 +76,7 @@ export default async function ProductPage({ params }: Params) {
                 priority
                 sizes="(min-width: 768px) 50vw, 100vw"
                 className="object-cover transition duration-[900ms] group-hover:scale-[1.025]"
+                style={{ viewTransitionName: `product-photo-${product.slug}` }}
               />
             )}
             <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#21151F]/65 to-transparent" />

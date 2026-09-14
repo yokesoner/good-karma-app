@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import { formatMoney } from "@/lib/money";
 import { QuickAddButton } from "@/components/QuickAddButton";
 import type { Product, ProductImage } from "@prisma/client";
@@ -28,6 +28,7 @@ export function ProductCard({ product }: ProductCardProps) {
             fill
             sizes="(min-width: 1024px) 25vw, 50vw"
             className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.045]"
+            style={{ viewTransitionName: `product-photo-${product.slug}` }}
           />
         ) : null}
         <span className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#21151F]/60 to-transparent" />

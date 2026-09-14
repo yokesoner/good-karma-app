@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
+import { ViewTransitions } from "next-view-transitions";
 import { ThemeScript } from "@/components/ThemeScript";
 import { SiteShell } from "@/components/SiteShell";
 import "./globals.css";
@@ -35,13 +36,17 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     // ThemeScript намеренно меняет только атрибут html до гидратации React.
-    <html lang="ru" suppressHydrationWarning className={montserrat.variable}>
-      <head>
-        <ThemeScript />
-      </head>
-      <body className="font-sans antialiased">
-        <SiteShell>{children}</SiteShell>
-      </body>
-    </html>
+    // ViewTransitions оборачивает роутер — без неё next-view-transitions
+    // Link ведёт себя как обычный next/link, без анимации перехода.
+    <ViewTransitions>
+      <html lang="ru" suppressHydrationWarning className={montserrat.variable}>
+        <head>
+          <ThemeScript />
+        </head>
+        <body className="font-sans antialiased">
+          <SiteShell>{children}</SiteShell>
+        </body>
+      </html>
+    </ViewTransitions>
   );
 }
