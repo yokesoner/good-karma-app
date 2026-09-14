@@ -154,7 +154,9 @@ function WokOptionThumb({ kind, id, colorHex }: { kind: number; id: string; colo
 
   return (
     <span aria-hidden className="absolute inset-0 grid place-items-center">
-      <FlavorGlyph kind={kind} className="h-9 w-9 text-white/90" />
+      {/* Белая иконка терялась на бледном фоне по умолчанию (id вне OPTION_TONES
+          и без фото — ровно случай нового ингредиента из админки). */}
+      <FlavorGlyph kind={kind} className="h-9 w-9 text-cherry/70" />
     </span>
   );
 }

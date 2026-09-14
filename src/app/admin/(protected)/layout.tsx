@@ -7,6 +7,7 @@ import { getCurrentAdmin } from "@/lib/adminAuth";
 const adminNavigation = [
   ["Товары", "/admin/products"],
   ["Категории", "/admin/categories"],
+  ["Конструктор вока", "/admin/wok-builder"],
   ["Акции", "/admin/promotions"],
   ["Karma Club", "/admin/karma-club"],
   ["Доставка", "/admin/delivery-zones"],
