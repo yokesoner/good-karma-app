@@ -10,7 +10,7 @@ export async function getCurrentAdmin() {
 
   const admin = await db.adminUser.findUnique({
     where: { id: session.id },
-    select: { id: true, email: true, name: true },
+    select: { id: true, email: true, name: true, role: true },
   });
   return admin;
 }
@@ -18,5 +18,13 @@ export async function getCurrentAdmin() {
 export async function requireAdmin() {
   const admin = await getCurrentAdmin();
   if (!admin) throw new Error("Требуется вход администратора");
+  return admin;
+}
+
+// Управление командой (/admin/team) — единственное, что отделено ролью:
+// остальные разделы админки одинаково доступны OWNER и STAFF.
+export async function requireOwner() {
+  const admin = await requireAdmin();
+  if (admin.role !== "OWNER") throw new Error("Доступно только владельцу");
   return admin;
 }

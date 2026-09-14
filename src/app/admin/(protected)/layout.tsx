@@ -17,6 +17,7 @@ const adminNavigation = [
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const admin = await getCurrentAdmin();
   if (!admin) redirect("/admin/login");
+  const navigation = admin.role === "OWNER" ? [...adminNavigation, ["Команда", "/admin/team"] as const] : adminNavigation;
 
   return (
     <div className="min-h-screen bg-paper">
@@ -25,7 +26,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <div className="flex items-center gap-8">
             <Link href="/admin/orders" aria-label="Заказы — админка Good Karma"><BrandMark /></Link>
             <nav className="hidden items-center gap-5 xl:flex">
-              {adminNavigation.map(([label, href]) => (
+              {navigation.map(([label, href]) => (
                 <Link key={href} href={href} className="text-[10px] font-bold uppercase tracking-[0.12em] text-ink-2 hover:text-ink">
                   {label}
                 </Link>

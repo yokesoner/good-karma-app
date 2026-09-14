@@ -17,16 +17,27 @@ datasource db {
 }
 
 // Администраторы отделены от покупателей: публичной регистрации нет,
-// аккаунты создаются только локальным служебным скриптом.
+// аккаунты создаются локальным служебным скриптом (первый OWNER) или
+// владельцем через /admin/team (дальнейшие OWNER/STAFF).
 model AdminUser {
   id           String    @id @default(cuid())
   email        String    @unique
   passwordHash String
   name         String
+  role         AdminRole @default(OWNER)
   createdAt    DateTime  @default(now())
   lastLoginAt  DateTime?
 
   @@map("admin_users")
+}
+
+// STAFF ограничен от управления самими админ-аккаунтами (/admin/team) —
+// остальные разделы (товары, акции, заказы и т.д.) одинаково доступны
+// обеим ролям, это не про операционные права, а про то, кто может выдавать
+// доступ в саму админку.
+enum AdminRole {
+  OWNER
+  STAFF
 }
 
 // ---------- каталог ----------
