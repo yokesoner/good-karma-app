@@ -119,6 +119,46 @@ function WokComposition({
   );
 }
 
+// Карточка выбора показывает настоящее фото ингредиента (или перекрашенную
+// маску для соуса), а не абстрактную иконку — просили крупнее и аппетитнее.
+// Если для нового пункта из админки фото ещё нет — честная заглушка на
+// тонированном фоне, а не битая картинка.
+function WokOptionThumb({ kind, id, colorHex }: { kind: number; id: string; colorHex: string | null }) {
+  const tone = OPTION_TONES[id]?.[0] ?? colorHex ?? "#9A536E";
+
+  if (kind === 2) {
+    const maskUrl = `url("${ASSETS.wok.sauceMask}")`;
+    return (
+      <span
+        aria-hidden
+        className="absolute inset-[18%]"
+        style={{
+          backgroundColor: colorHex ?? tone,
+          WebkitMaskImage: maskUrl,
+          maskImage: maskUrl,
+          WebkitMaskPosition: "center",
+          maskPosition: "center",
+          WebkitMaskRepeat: "no-repeat",
+          maskRepeat: "no-repeat",
+          WebkitMaskSize: "contain",
+          maskSize: "contain",
+        }}
+      />
+    );
+  }
+
+  const image = kind === 0 ? WOK_BASE_IMAGES[id] : WOK_PROTEIN_IMAGES[id];
+  if (image) {
+    return <Image src={image} alt="" aria-hidden fill sizes="220px" className="object-contain p-2" />;
+  }
+
+  return (
+    <span aria-hidden className="absolute inset-0 grid place-items-center">
+      <FlavorGlyph kind={kind} className="h-9 w-9 text-white/90" />
+    </span>
+  );
+}
+
 function FlavorGlyph({ kind, className = "h-8 w-8" }: { kind: number; className?: string }) {
   return (
     <svg aria-hidden viewBox="0 0 40 40" className={className} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
@@ -214,7 +254,7 @@ export function WokBuilder({
       <div className="md:hidden">
         <div className="sticky top-16 z-20 -mx-5 bg-paper/95 px-5 pb-3 pt-2 backdrop-blur-xl">
           <div className="flex items-center gap-3 py-2">
-            <div className="relative h-14 w-14 flex-none rounded-full border border-white/70 bg-paper-2/70 shadow-s">
+            <div className="relative h-20 w-20 flex-none rounded-full border border-white/70 bg-paper-2/70 shadow-s">
               <WokComposition
                 baseId={baseId}
                 proteinId={proteinId}
@@ -290,10 +330,10 @@ export function WokBuilder({
           <p className="mt-2 text-[12px] leading-[1.6] text-ink-2">{currentStep.description}</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2.5 pb-28">
+        <div className="grid grid-cols-2 gap-3 pb-28">
           {options.map((option) => {
             const selected = option.id === selectedId;
-            const [tone, pale] = OPTION_TONES[option.id] ?? [option.colorHex ?? "#9A536E", "#F2E6EA"];
+            const [, pale] = OPTION_TONES[option.id] ?? [option.colorHex ?? "#9A536E", "#F2E6EA"];
             return (
               <button
                 key={option.id}
@@ -301,26 +341,26 @@ export function WokBuilder({
                 onClick={() => selectOption(option.id)}
                 aria-pressed={selected}
                 className={cn(
-                  "relative min-h-[132px] overflow-hidden rounded-[18px] border p-3 text-left transition duration-300",
-                  step === 0 && "min-h-[164px]",
-                  selected ? "border-transparent ring-1 ring-cherry/30 wok-card-pick" : "border-hair bg-paper/55",
+                  "relative flex flex-col overflow-hidden rounded-[20px] border bg-paper/55 text-left transition duration-300",
+                  step === 0 ? "min-h-[196px]" : "min-h-[176px]",
+                  selected ? "border-transparent ring-2 ring-cherry/40 wok-card-pick" : "border-hair",
                 )}
-                style={selected ? { background: `linear-gradient(145deg, ${pale}, #FFFDF8)` } : undefined}
               >
                 <span
-                  className="grid h-9 w-9 place-items-center rounded-[12px] text-white shadow-s"
-                  style={{ background: `linear-gradient(145deg, ${tone}, ${pale})` }}
+                  aria-hidden
+                  className="relative h-[104px] w-full flex-none border-b border-hair-soft"
+                  style={{ background: `linear-gradient(160deg, ${pale}, #FFFDF8)` }}
                 >
-                  <FlavorGlyph kind={step} className="h-4 w-4" />
+                  <WokOptionThumb kind={step} id={option.id} colorHex={option.colorHex} />
                 </span>
-                <span className="mt-3 line-clamp-2 block min-h-[26px] text-[10.5px] font-bold leading-[1.25]">
-                  {option.name}
-                </span>
-                <span className="mt-1 block text-[8px] font-bold uppercase tracking-[0.08em] text-cherry">
-                  {priceDelta(option.extraCents)}
+                <span className="flex flex-1 flex-col justify-center p-3">
+                  <span className="line-clamp-2 block text-[11px] font-bold leading-[1.25]">{option.name}</span>
+                  <span className="mt-1 block text-[8.5px] font-bold uppercase tracking-[0.08em] text-cherry">
+                    {priceDelta(option.extraCents)}
+                  </span>
                 </span>
                 {selected ? (
-                  <span className="wok-check-pop absolute right-2.5 top-2.5 grid h-5 w-5 place-items-center rounded-full bg-[#3A2338] text-[9px] text-white">
+                  <span className="wok-check-pop absolute right-2.5 top-2.5 grid h-6 w-6 place-items-center rounded-full bg-[#3A2338] text-[10px] text-white shadow-s">
                     ✓
                   </span>
                 ) : null}
@@ -463,7 +503,7 @@ export function WokBuilder({
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
           {options.map((option) => {
             const selected = option.id === selectedId;
-            const [tone, pale] = OPTION_TONES[option.id] ?? [option.colorHex ?? "#9A536E", "#F2E6EA"];
+            const [, pale] = OPTION_TONES[option.id] ?? [option.colorHex ?? "#9A536E", "#F2E6EA"];
             return (
               <button
                 key={option.id}
@@ -471,23 +511,25 @@ export function WokBuilder({
                 onClick={() => selectOption(option.id)}
                 aria-pressed={selected}
                 className={cn(
-                  "group/option relative min-h-[150px] overflow-hidden rounded-[23px] border p-4 text-left transition duration-300",
+                  "group/option relative flex min-h-[212px] flex-col overflow-hidden rounded-[23px] border bg-paper/55 text-left transition duration-300",
                   selected
-                    ? "-translate-y-1 border-transparent shadow-[0_22px_40px_-26px_rgba(73,48,68,.58)] ring-1 ring-cherry/25"
-                    : "border-hair bg-paper/55 hover:-translate-y-1 hover:border-transparent hover:shadow-m",
+                    ? "-translate-y-1 border-transparent shadow-[0_22px_40px_-26px_rgba(73,48,68,.58)] ring-2 ring-cherry/35"
+                    : "border-hair hover:-translate-y-1 hover:border-transparent hover:shadow-m",
                 )}
-                style={selected ? { background: `linear-gradient(145deg, ${pale}, #FFFDF8)` } : undefined}
               >
                 <span
-                  className="grid h-12 w-12 place-items-center rounded-[17px] text-white shadow-[0_12px_24px_-14px_rgba(38,22,31,.7)] transition duration-500 group-hover/option:rotate-[-4deg] group-hover/option:scale-105"
-                  style={{ background: `linear-gradient(145deg, ${tone}, ${pale})` }}
+                  aria-hidden
+                  className="relative h-[128px] w-full flex-none border-b border-hair-soft transition duration-500 group-hover/option:scale-[1.03]"
+                  style={{ background: `linear-gradient(160deg, ${pale}, #FFFDF8)` }}
                 >
-                  <FlavorGlyph kind={step} />
+                  <WokOptionThumb kind={step} id={option.id} colorHex={option.colorHex} />
                 </span>
-                <span className="mt-5 block text-[12px] font-bold leading-tight">{option.name}</span>
-                <span className="mt-1 block text-[9px] font-bold uppercase tracking-[0.1em] text-cherry">{priceDelta(option.extraCents)}</span>
+                <span className="flex flex-1 flex-col justify-center p-4">
+                  <span className="block text-[13px] font-bold leading-tight">{option.name}</span>
+                  <span className="mt-1.5 block text-[9px] font-bold uppercase tracking-[0.1em] text-cherry">{priceDelta(option.extraCents)}</span>
+                </span>
                 {selected ? (
-                  <span className="absolute right-3 top-3 grid h-6 w-6 place-items-center rounded-full bg-[#3A2338] text-[10px] text-white shadow-s">✓</span>
+                  <span className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-[#3A2338] text-[11px] text-white shadow-s">✓</span>
                 ) : null}
               </button>
             );
