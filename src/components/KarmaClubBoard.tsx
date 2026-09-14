@@ -272,11 +272,16 @@ export function KarmaClubBoard({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.3fr_1fr]">
         <section className="min-w-0 rounded-[28px] border border-hair bg-paper-2 p-4 sm:p-7">
           <h2 className="mb-7 font-sans text-[26px] tracking-tight">Уровни Karma Club</h2>
-          <div className="relative grid grid-cols-2 gap-x-2 gap-y-5 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-            <span
-              aria-hidden
-              className="absolute left-[10%] right-[10%] top-7 hidden h-px bg-hair md:block"
-            />
+          <div className="relative grid grid-cols-2 gap-x-2 gap-y-5 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-4">
+            {/* Соединительная линия читается только в один ряд — если уровней
+                станет больше 4 (например, из будущей админки), она молча
+                скрывается, а не режет вторую строку карточек. */}
+            {levels.length <= 4 && (
+              <span
+                aria-hidden
+                className="absolute left-[10%] right-[10%] top-7 hidden h-px bg-hair md:block"
+              />
+            )}
             {levels.map((lvl) => {
               const reached = points >= lvl.fromKarma;
               const active = lvl.key === snap.level.key;

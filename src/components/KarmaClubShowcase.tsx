@@ -30,7 +30,7 @@ export function KarmaClubShowcase({ levels, rewards }: { levels: KarmaLevel[]; r
             <p className="mt-6 text-center text-[11px] leading-relaxed text-ink-2">Образец оформления. Здесь нет личных данных и баланса.</p>
           </div>
         </div>
-        <div className="relative mt-9 grid grid-cols-2 gap-3 border-t border-gold/20 pt-7 md:grid-cols-4">
+        <div className="relative mt-9 grid grid-cols-2 gap-3 border-t border-gold/20 pt-7 sm:grid-cols-3 md:grid-cols-4">
           {levels.map((level, index) => (
             <article key={level.key} className="min-w-0 rounded-[20px] border border-hair-soft bg-paper/70 p-4">
               <div className="flex items-center justify-between gap-2"><LevelIcon name={level.icon} className="h-6 w-6 text-cherry" /><span className="text-[9px] tracking-widest text-ink-3">0{index + 1}</span></div>
