@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCart, cartSubtotalCents } from "@/lib/cart";
 import { formatMoney } from "@/lib/money";
 import { BrandMark } from "@/components/BrandMark";
@@ -13,14 +13,29 @@ import { BrandMark } from "@/components/BrandMark";
 // ближней зоне, точный расчёт будет на чекауте, когда появится адрес.
 const FREE_FROM_CENTS = 150000;
 
+// Длительность должна совпадать с анимацией .cart-line-out в globals.css —
+// строка убирается из состояния корзины только после того, как доиграет исчезновение.
+const CART_LINE_EXIT_MS = 240;
+
 export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const drawerRef = useRef<HTMLElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const { lines, setQty, remove } = useCart();
+  const [removingKey, setRemovingKey] = useState<string | null>(null);
   const subtotal = cartSubtotalCents(lines);
   const left = Math.max(0, FREE_FROM_CENTS - subtotal);
   const progress = Math.min(100, Math.round((subtotal / FREE_FROM_CENTS) * 100));
+
+  function handleRemove(key: string) {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) {
+      remove(key);
+      return;
+    }
+    setRemovingKey(key);
+    window.setTimeout(() => remove(key), CART_LINE_EXIT_MS);
+  }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -111,7 +126,12 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
         ) : (
           <div className="flex-1 overflow-y-auto px-6 py-5">
             {lines.map((line) => (
-              <div key={line.key} className="flex gap-4 border-b border-hair-soft py-5">
+              <div
+                key={line.key}
+                className={`flex gap-4 border-b border-hair-soft py-5 ${
+                  removingKey === line.key ? "cart-line-out" : ""
+                }`}
+              >
                 <div className="relative h-[76px] w-[76px] flex-none overflow-hidden rounded-[20px] border border-white/70 bg-paper-3 shadow-s">
                   {line.imageUrl && (
                     <Image src={line.imageUrl} alt="" fill sizes="68px" className="object-cover" />
@@ -135,17 +155,24 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
                       <button
                         type="button"
                         aria-label="Уменьшить количество"
+                        disabled={removingKey === line.key}
                         onClick={() => setQty(line.key, line.qty - 1)}
-                        className="grid h-7 w-7 place-items-center text-ink-3 hover:text-ink"
+                        className="grid h-7 w-7 place-items-center text-ink-3 hover:text-ink disabled:opacity-40"
                       >
                         −
                       </button>
-                      <span className="min-w-5 text-center text-[13px] font-semibold">{line.qty}</span>
+                      <span
+                        key={line.qty}
+                        className="cart-qty-pop min-w-5 text-center text-[13px] font-semibold"
+                      >
+                        {line.qty}
+                      </span>
                       <button
                         type="button"
                         aria-label="Увеличить количество"
+                        disabled={removingKey === line.key}
                         onClick={() => setQty(line.key, line.qty + 1)}
-                        className="grid h-7 w-7 place-items-center text-ink-3 hover:text-ink"
+                        className="grid h-7 w-7 place-items-center text-ink-3 hover:text-ink disabled:opacity-40"
                       >
                         +
                       </button>
@@ -156,8 +183,9 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
                   </div>
                   <button
                     type="button"
-                    onClick={() => remove(line.key)}
-                    className="mt-2 text-[11.5px] text-ink-3 hover:text-cherry"
+                    disabled={removingKey === line.key}
+                    onClick={() => handleRemove(line.key)}
+                    className="mt-2 text-[11.5px] text-ink-3 hover:text-cherry disabled:opacity-40"
                   >
                     Убрать
                   </button>

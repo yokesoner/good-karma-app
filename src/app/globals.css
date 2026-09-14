@@ -287,6 +287,14 @@ html {
     animation: wok-toast-in 220ms ease-out both;
   }
 
+  .cart-line-out {
+    animation: cart-line-out 240ms cubic-bezier(.4,0,1,1) forwards;
+  }
+
+  .cart-qty-pop {
+    animation: cart-qty-pop 220ms cubic-bezier(.34,1.56,.64,1) both;
+  }
+
   .karma-pass__sheen {
     animation: karma-sheen 7s ease-in-out infinite;
   }
@@ -454,6 +462,17 @@ html {
 @keyframes wok-toast-in {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cart-line-out {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  to { opacity: 0; transform: translateX(18px) scale(0.97); }
+}
+
+@keyframes cart-qty-pop {
+  0% { transform: scale(0.7); opacity: 0.4; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 @keyframes karma-sheen {
