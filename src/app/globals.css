@@ -279,6 +279,13 @@ html {
     animation: wok-check-pop 260ms cubic-bezier(.34,1.56,.64,1) 40ms both;
   }
 
+  /* Тот же тайминг, что у wok-check-pop, под общим именем — для любого
+     места, где иконка меняется на «✓» (быстрое добавление в корзину и т.д.),
+     не только в конструкторе вока. */
+  .icon-pop {
+    animation: wok-check-pop 260ms cubic-bezier(.34,1.56,.64,1) both;
+  }
+
   .wok-value-in {
     animation: wok-value-in 180ms cubic-bezier(.2,.8,.2,1) both;
   }
@@ -317,8 +324,16 @@ html {
   }
 
   .site-hero > div {
-    animation: hero-reveal 900ms cubic-bezier(.2,.8,.2,1) both;
+    animation: hero-reveal 700ms cubic-bezier(.2,.8,.2,1) both;
   }
+
+  /* Текст и CTA выходят по очереди поверх уже осевшей рамки — та же логика
+     нарратива, что у Apple: сначала контекст, потом заголовок, потом призыв
+     к действию, а не всё разом. */
+  .hero-stagger-1 { animation: hero-text-in 640ms cubic-bezier(.2,.8,.2,1) 120ms both; }
+  .hero-stagger-2 { animation: hero-text-in 640ms cubic-bezier(.2,.8,.2,1) 230ms both; }
+  .hero-stagger-3 { animation: hero-text-in 640ms cubic-bezier(.2,.8,.2,1) 340ms both; }
+  .hero-stagger-4 { animation: hero-text-in 640ms cubic-bezier(.2,.8,.2,1) 460ms both; }
 }
 
 .wok-stage::after {
@@ -508,6 +523,11 @@ html {
 @keyframes hero-reveal {
   from { opacity: 0; transform: translateY(10px) scale(.992); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes hero-text-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {

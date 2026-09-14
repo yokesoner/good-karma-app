@@ -38,7 +38,7 @@ export function Hero() {
         />
 
         <div className="relative z-10 flex min-h-[600px] flex-col p-6 sm:min-h-[640px] sm:p-10 md:min-h-[680px] md:p-14 lg:p-16">
-          <div className="flex items-center gap-3">
+          <div className="hero-stagger-1 flex items-center gap-3">
             <span className="h-px w-8 bg-cherry/70" aria-hidden />
             <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-ink-2 md:text-[11px]">
               Good Karma · Pan Asian Café
@@ -46,56 +46,56 @@ export function Hero() {
           </div>
 
           <div className="my-auto max-w-[610px] py-8 sm:py-12">
-            <p className="mb-5 text-[11px] font-semibold uppercase tracking-[0.22em] text-cherry">
+            <p className="hero-stagger-1 mb-5 text-[11px] font-semibold uppercase tracking-[0.22em] text-cherry">
               Одно кафе · два мира
             </p>
-            <h1 className="max-w-[10ch] text-[38px] font-extrabold leading-[0.98] tracking-[-0.045em] text-ink sm:text-[54px] md:text-[68px] lg:text-[78px]">
+            <h1 className="hero-stagger-2 max-w-[10ch] text-[38px] font-extrabold leading-[0.98] tracking-[-0.045em] text-ink sm:text-[54px] md:text-[68px] lg:text-[78px]">
               Азия встречает Европу
             </h1>
-            <p className="mt-6 max-w-[43ch] text-[14px] font-medium leading-[1.75] text-ink-2 md:text-[15px]">
+            <p className="hero-stagger-3 mt-6 max-w-[43ch] text-[14px] font-medium leading-[1.75] text-ink-2 md:text-[15px]">
               Роллы, рамен и вок соседствуют с тонким тестом и тёплой выпечкой.
               Всё готовим на открытой кухне — внимательно, честно и с хорошей кармой.
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="hero-stagger-3 mt-8 flex flex-wrap gap-3">
               <Link
                 href="/menu"
-                className="inline-flex min-h-12 items-center justify-center rounded-full bg-plum-deep px-8 text-[11px] font-bold uppercase tracking-[0.1em] text-[#F7EFF4] shadow-s transition duration-300 motion-safe:hover:-translate-y-0.5 hover:shadow-m"
+                className="inline-flex min-h-12 items-center justify-center rounded-full bg-plum-deep px-8 text-[11px] font-bold uppercase tracking-[0.1em] text-[#F7EFF4] shadow-s transition duration-300 active:scale-95 motion-safe:hover:-translate-y-0.5 hover:shadow-m"
               >
                 Выбрать блюдо
               </Link>
               <Link
                 href="/wok-builder"
-                className="inline-flex min-h-12 items-center justify-center rounded-full border border-plum/35 bg-paper/45 px-7 text-[11px] font-bold uppercase tracking-[0.1em] text-ink backdrop-blur-md transition duration-300 motion-safe:hover:-translate-y-0.5 hover:border-plum hover:bg-paper/70"
+                className="inline-flex min-h-12 items-center justify-center rounded-full border border-plum/35 bg-paper/45 px-7 text-[11px] font-bold uppercase tracking-[0.1em] text-ink backdrop-blur-md transition duration-300 active:scale-95 motion-safe:hover:-translate-y-0.5 hover:border-plum hover:bg-paper/70"
               >
                 Собрать свой вок
               </Link>
             </div>
           </div>
 
-          <div className="grid max-w-[720px] grid-cols-1 gap-2.5 border-t border-ink/15 pt-5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-2 sm:grid-cols-3 sm:gap-6">
+          <div className="hero-stagger-4 grid max-w-[720px] grid-cols-1 gap-2.5 border-t border-ink/15 pt-5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-2 sm:grid-cols-3 sm:gap-6">
             <span>Открытая кухня</span>
             <span>Карма-баллы за заказ</span>
             <span>Доставка до 20 км</span>
           </div>
         </div>
 
-        <div className="absolute right-6 top-7 z-10 hidden items-center gap-3 text-[#F8F0EA]/75 md:flex">
+        <div className="hero-stagger-4 absolute right-6 top-7 z-10 hidden items-center gap-3 text-[#F8F0EA]/75 md:flex">
           <span className="text-[10px] font-bold uppercase tracking-[0.22em]">良いカルマ</span>
           <span className="h-8 w-px bg-white/35" aria-hidden />
           <span className="text-[10px] font-semibold uppercase tracking-[0.16em]">Since 2018</span>
         </div>
 
-        <div className="absolute bottom-7 right-7 z-10 hidden gap-2 lg:flex">
+        <div className="hero-stagger-4 absolute bottom-7 right-7 z-10 hidden gap-2 lg:flex">
           <Link
             href="/menu/rolls"
-            className="rounded-full border border-white/30 bg-plum-deep/55 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#F8F0EA] backdrop-blur-md transition hover:bg-plum-deep/75"
+            className="rounded-full border border-white/30 bg-plum-deep/55 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#F8F0EA] backdrop-blur-md transition duration-300 active:scale-95 hover:bg-plum-deep/75"
           >
             Япония · ロール
           </Link>
           <Link
             href="/menu/pizza"
-            className="rounded-full border border-white/30 bg-plum-deep/55 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#F8F0EA] backdrop-blur-md transition hover:bg-plum-deep/75"
+            className="rounded-full border border-white/30 bg-plum-deep/55 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#F8F0EA] backdrop-blur-md transition duration-300 active:scale-95 hover:bg-plum-deep/75"
           >
             Европа · Pizza
           </Link>
