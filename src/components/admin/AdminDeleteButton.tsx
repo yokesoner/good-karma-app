@@ -2,21 +2,32 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { deleteAdminProduct } from "@/server/adminProducts";
 
-export function AdminDeleteProductButton({ id, name }: { id: string; name: string }) {
+type DeleteResult = { ok: true } | { ok: false; error: string };
+
+export function AdminDeleteButton({
+  identifier,
+  label,
+  action,
+}: {
+  identifier: string;
+  label: string;
+  action: (identifier: string) => Promise<DeleteResult>;
+}) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
+
   return (
     <div className="text-right">
       <button
         type="button"
         disabled={pending}
         onClick={() => {
-          if (!window.confirm(`Удалить «${name}»? Это действие нельзя отменить.`)) return;
+          if (!window.confirm(`Удалить «${label}»? Это действие нельзя отменить.`)) return;
+          setError("");
           startTransition(async () => {
-            const result = await deleteAdminProduct(id);
+            const result = await action(identifier);
             if (!result.ok) setError(result.error);
             else router.refresh();
           });
@@ -25,7 +36,7 @@ export function AdminDeleteProductButton({ id, name }: { id: string; name: strin
       >
         {pending ? "Удаляем…" : "Удалить"}
       </button>
-      {error && <p className="mt-1 max-w-[220px] text-xs text-cherry">{error}</p>}
+      {error && <p role="alert" className="mt-1 max-w-[260px] text-xs text-cherry">{error}</p>}
     </div>
   );
 }

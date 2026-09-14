@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AdminDeleteProductButton } from "@/components/admin/AdminDeleteProductButton";
+import { AdminDeleteButton } from "@/components/admin/AdminDeleteButton";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
+import { deleteAdminProduct } from "@/server/adminProducts";
 
 export const metadata: Metadata = { title: "Товары — админка Гуд Карма" };
 
@@ -51,7 +52,7 @@ export default async function AdminProductsPage() {
             <p className="font-semibold">{formatMoney(product.priceCents)}</p>
             <div className="flex items-center justify-between gap-4 sm:col-start-2 lg:col-start-auto lg:justify-end">
               <Link href={`/admin/products/${product.id}/edit`} className="text-[10px] font-bold uppercase tracking-[0.1em] text-plum hover:underline">Изменить</Link>
-              <AdminDeleteProductButton id={product.id} name={product.name} />
+              <AdminDeleteButton identifier={product.id} label={product.name} action={deleteAdminProduct} />
             </div>
           </article>
         ))}
