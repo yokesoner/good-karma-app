@@ -299,6 +299,21 @@ model User {
   @@map("users")
 }
 
+// Коды входа отделены от User: запросить код можно и для номера, который
+// ещё не оформлял заказ. История записей нужна для серверного лимита отправок.
+model LoginCode {
+  id            String    @id @default(cuid())
+  phone         String
+  codeHash      String
+  attempts      Int       @default(0)
+  expiresAt     DateTime
+  invalidatedAt DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([phone, createdAt])
+  @@map("login_codes")
+}
+
 model Address {
   id        String   @id @default(cuid())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

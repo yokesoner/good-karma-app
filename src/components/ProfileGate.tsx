@@ -2,24 +2,30 @@
 
 import { useEffect, useState } from "react";
 import { useIdentity } from "@/lib/identity";
-import { resolveIdentity } from "@/server/identity";
+import { requestLoginCode, verifyLoginCode } from "@/server/identity";
 import { ProfileView } from "@/components/ProfileView";
 import { KarmaPass } from "@/components/KarmaPass";
 import { ProfileLoading } from "@/components/ProfileLoading";
 
-// «Вход» без пароля и SMS-кода — тот же уровень доверия, что placeOrder
-// уже применяет при оформлении заказа: ввёл номер, стал этим гостем.
 export function ProfileGate() {
   const identity = useIdentity((s) => s.identity);
   const setIdentity = useIdentity((s) => s.setIdentity);
   const clear = useIdentity((s) => s.clear);
   const [phone, setPhone] = useState("");
+  const [code, setCode] = useState("");
+  const [step, setStep] = useState<"phone" | "code">("phone");
+  const [cooldown, setCooldown] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   // До гидратации persist-стор ещё не прочитал localStorage — не показываем
   // форму на долю секунды, чтобы не мигать между «войдите» и профилем.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = window.setInterval(() => setCooldown((value) => Math.max(0, value - 1)), 1000);
+    return () => window.clearInterval(timer);
+  }, [cooldown]);
 
   if (!mounted) return <ProfileLoading />;
 
@@ -27,16 +33,34 @@ export function ProfileGate() {
     return <ProfileView key={identity.userId} identity={identity} onLogout={clear} />;
   }
 
-  const submit = async () => {
+  const sendCode = async () => {
     if (pending) return;
     setError(null);
     setPending(true);
     try {
-      const res = await resolveIdentity(phone);
+      const res = await requestLoginCode(phone);
       if (!res.ok) {
         setError(res.error);
+        if (res.retryAfterSeconds) setCooldown(res.retryAfterSeconds);
         return;
       }
+      setStep("code");
+      setCode("");
+      setCooldown(res.retryAfterSeconds);
+    } catch {
+      setError("Не удалось связаться с кафе. Проверьте подключение и попробуйте ещё раз.");
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const verifyCode = async () => {
+    if (pending) return;
+    setError(null);
+    setPending(true);
+    try {
+      const res = await verifyLoginCode(phone, code);
+      if (!res.ok) return setError(res.error);
       setIdentity({ userId: res.userId, name: res.name, phone: res.phone });
     } catch {
       setError("Не удалось связаться с кафе. Проверьте подключение и попробуйте ещё раз.");
@@ -44,6 +68,8 @@ export function ProfileGate() {
       setPending(false);
     }
   };
+
+  const submit = step === "phone" ? sendCode : verifyCode;
 
   return (
     <div className="mx-auto grid max-w-[1060px] overflow-hidden rounded-[32px] border border-hair bg-paper-2/95 shadow-l lg:grid-cols-[1.08fr_0.92fr]">
@@ -86,8 +112,9 @@ export function ProfileGate() {
           Войти по номеру телефона
         </h1>
         <p className="mt-4 max-w-[42ch] text-[13px] leading-[1.7] text-ink-2">
-          Введите номер из заказа — покажем баланс кармы, историю и сохранённые адреса.
-          Подтверждение кодом появится перед боевым запуском.
+          {step === "phone"
+            ? "Введите номер из заказа — отправим короткий код подтверждения."
+            : `Введите код из SMS, отправленный на ${phone}. Код действует 5 минут.`}
         </p>
         <label className="mt-9 block">
           <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-ink-3">Телефон</span>
@@ -98,7 +125,7 @@ export function ProfileGate() {
             name="phone"
             autoComplete="tel"
             required
-            disabled={pending}
+            disabled={pending || step === "code"}
             aria-invalid={!!error}
             aria-describedby={error ? "profile-login-error" : undefined}
             inputMode="tel"
@@ -106,15 +133,45 @@ export function ProfileGate() {
             onChange={(e) => setPhone(e.target.value)}
           />
         </label>
+        {step === "code" && (
+          <label className="mt-5 block">
+            <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-ink-3">Код из SMS</span>
+            <input
+              className="mt-2 w-full rounded-[16px] border border-hair bg-paper px-4 py-4 text-center text-[22px] font-semibold tracking-[0.35em] outline-none transition focus:border-cherry/60 focus:ring-4 focus:ring-cherry/10"
+              placeholder="0000"
+              type="text"
+              name="code"
+              autoComplete="one-time-code"
+              inputMode="numeric"
+              pattern="[0-9]{4}"
+              maxLength={4}
+              required
+              disabled={pending}
+              aria-invalid={!!error}
+              aria-describedby={error ? "profile-login-error" : undefined}
+              value={code}
+              onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 4))}
+              autoFocus
+            />
+          </label>
+        )}
         {error && <p id="profile-login-error" role="alert" className="mt-3 text-[12.5px] text-cherry">{error}</p>}
         <button
           type="submit"
           disabled={pending}
           className="mt-5 flex min-h-12 w-full items-center justify-between rounded-full bg-btn px-6 py-4 text-[11px] font-semibold text-btn-fg shadow-s transition motion-safe:hover:-translate-y-0.5 hover:shadow-m disabled:opacity-50"
         >
-          {pending ? "Проверяем…" : "Продолжить"}
+          {pending ? (step === "phone" ? "Отправляем…" : "Проверяем…") : (step === "phone" ? "Отправить код" : "Войти")}
           <span aria-hidden>→</span>
         </button>
+        {step === "code" && (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-[11px]">
+            <button type="button" onClick={() => { setStep("phone"); setCode(""); setError(null); }} disabled={pending} className="text-ink-2 hover:text-ink hover:underline">Изменить номер</button>
+            <button type="button" onClick={() => void sendCode()} disabled={pending || cooldown > 0} className="font-semibold text-cherry hover:underline disabled:text-ink-3 disabled:no-underline">
+              {cooldown > 0 ? `Отправить снова через ${cooldown} сек.` : "Отправить код снова"}
+            </button>
+          </div>
+        )}
         <p className="mt-4 text-[10.5px] leading-relaxed text-ink-3">
           Продолжая, вы соглашаетесь на обработку данных для работы личного кабинета.
         </p>
