@@ -403,7 +403,7 @@ export function WokBuilder({
               type="button"
               onClick={handleAdd}
               className={cn(
-                "flex h-11 flex-1 items-center justify-center rounded-full px-4 text-[10px] font-bold uppercase tracking-[0.06em] text-[#FFF8F2] transition-colors duration-200",
+                "flex h-11 flex-1 items-center justify-center rounded-full px-4 text-[10px] font-bold uppercase tracking-[0.06em] text-[#FFF8F2] transition duration-200 active:scale-95",
                 justAdded ? "bg-mint-deep" : "bg-[#3A2338]",
               )}
             >
@@ -540,12 +540,12 @@ export function WokBuilder({
 
         <div className="mt-8 flex items-center gap-2 border-t border-hair pt-6">
           {step > 0 ? (
-            <button type="button" onClick={() => setStep((value) => value - 1)} className="rounded-full border border-hair px-5 py-4 text-[9.5px] font-bold uppercase tracking-[0.1em] text-ink-2 transition hover:bg-paper">Назад</button>
+            <button type="button" onClick={() => setStep((value) => value - 1)} className="rounded-full border border-hair px-5 py-4 text-[9.5px] font-bold uppercase tracking-[0.1em] text-ink-2 transition duration-200 active:scale-95 hover:bg-paper">Назад</button>
           ) : null}
           {step < STEPS.length - 1 ? (
-            <button type="button" onClick={() => setStep((value) => value + 1)} className="flex-1 rounded-full bg-[#3A2338] px-6 py-4 text-[10px] font-bold uppercase tracking-[0.11em] text-[#FFF8F2] shadow-[0_18px_34px_-20px_rgba(58,35,56,.72)] transition hover:-translate-y-0.5 hover:bg-[#533649]">Далее · {STEPS[step + 1]}</button>
+            <button type="button" onClick={() => setStep((value) => value + 1)} className="flex-1 rounded-full bg-[#3A2338] px-6 py-4 text-[10px] font-bold uppercase tracking-[0.11em] text-[#FFF8F2] shadow-[0_18px_34px_-20px_rgba(58,35,56,.72)] transition duration-300 active:scale-[0.98] hover:-translate-y-0.5 hover:bg-[#533649]">Далее · {STEPS[step + 1]}</button>
           ) : (
-            <button type="button" onClick={handleAdd} className="flex-1 rounded-full bg-[#3A2338] px-6 py-4 text-[10px] font-bold uppercase tracking-[0.11em] text-[#FFF8F2] shadow-[0_18px_34px_-20px_rgba(58,35,56,.72)] transition hover:-translate-y-0.5 hover:bg-[#533649]">{justAdded ? "Добавлено ✓" : `В корзину · ${formatMoney(unitPriceCents * qty)}`}</button>
+            <button type="button" onClick={handleAdd} className="flex-1 rounded-full bg-[#3A2338] px-6 py-4 text-[10px] font-bold uppercase tracking-[0.11em] text-[#FFF8F2] shadow-[0_18px_34px_-20px_rgba(58,35,56,.72)] transition duration-300 active:scale-[0.98] hover:-translate-y-0.5 hover:bg-[#533649]">{justAdded ? "Добавлено ✓" : `В корзину · ${formatMoney(unitPriceCents * qty)}`}</button>
           )}
         </div>
 
