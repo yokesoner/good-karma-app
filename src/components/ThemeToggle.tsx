@@ -27,16 +27,17 @@ export function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label="Переключить тему"
-      className="grid h-10 w-10 place-items-center rounded-full text-ink-2 transition hover:bg-hair-soft hover:text-ink"
+      className="grid h-10 w-10 place-items-center rounded-full text-ink-2 transition duration-200 active:scale-90 hover:bg-hair-soft hover:text-ink"
     >
       <span className="sr-only">
         {mounted ? (theme === "dark" ? "Включить светлую тему" : "Включить тёмную тему") : "Тема"}
       </span>
       {mounted && theme === "dark" ? (
         <svg
+          key="moon"
           aria-hidden
           viewBox="0 0 24 24"
-          className="h-[19px] w-[19px]"
+          className="icon-pop h-[19px] w-[19px]"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.5"
@@ -47,9 +48,10 @@ export function ThemeToggle() {
         </svg>
       ) : (
         <svg
+          key="sun"
           aria-hidden
           viewBox="0 0 24 24"
-          className="h-[19px] w-[19px]"
+          className="icon-pop h-[19px] w-[19px]"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.5"

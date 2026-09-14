@@ -64,11 +64,11 @@ export function Header({ onCartClick }: { onCartClick: () => void }) {
             type="button"
             onClick={onCartClick}
             aria-label={count > 0 ? `Корзина, товаров: ${count}` : "Корзина"}
-            className="relative grid h-10 w-10 place-items-center rounded-full text-ink-2 transition hover:bg-hair-soft hover:text-ink"
+            className="relative grid h-10 w-10 place-items-center rounded-full text-ink-2 transition duration-200 active:scale-90 hover:bg-hair-soft hover:text-ink"
           >
             <NavIcon name="cart" className="h-[19px] w-[19px]" strokeWidth={1.5} />
             {count > 0 && (
-              <span className="absolute -right-0.5 top-0 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-cherry px-1 text-[9px] font-bold text-white">
+              <span key={count} className="icon-pop absolute -right-0.5 top-0 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-cherry px-1 text-[9px] font-bold text-white">
                 {count}
               </span>
             )}

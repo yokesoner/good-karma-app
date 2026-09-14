@@ -59,13 +59,13 @@ export async function PromotionsSection({ compact = false }: { compact?: boolean
           <div className="mt-6 flex flex-wrap gap-3">
             <a
               href="#offers"
-              className="inline-flex min-h-12 items-center rounded-full bg-btn px-6 py-3 text-[11px] font-bold text-btn-fg shadow-m transition hover:shadow-l motion-safe:hover:-translate-y-0.5"
+              className="inline-flex min-h-12 items-center rounded-full bg-btn px-6 py-3 text-[11px] font-bold text-btn-fg shadow-m transition duration-300 active:scale-95 hover:shadow-l motion-safe:hover:-translate-y-0.5"
             >
               Забрать выгоду
             </a>
             <a
               href="#karma-club"
-              className="inline-flex min-h-12 items-center rounded-full border border-gold/30 bg-paper px-6 py-3 text-[11px] font-bold text-ink transition hover:border-gold/60"
+              className="inline-flex min-h-12 items-center rounded-full border border-gold/30 bg-paper px-6 py-3 text-[11px] font-bold text-ink transition duration-300 active:scale-95 hover:border-gold/60"
             >
               О клубе ↓
             </a>
@@ -175,7 +175,7 @@ export async function PromotionsSection({ compact = false }: { compact?: boolean
         <div className="mt-8 text-center">
           <Link
             href="/promotions"
-            className="inline-flex rounded-full border border-hair bg-paper-2 px-7 py-3.5 text-[10px] font-bold uppercase tracking-[0.14em] shadow-s transition motion-safe:hover:-translate-y-0.5 hover:shadow-m"
+            className="inline-flex rounded-full border border-hair bg-paper-2 px-7 py-3.5 text-[10px] font-bold uppercase tracking-[0.14em] shadow-s transition duration-300 active:scale-95 motion-safe:hover:-translate-y-0.5 hover:shadow-m"
           >
             Все акции и Karma Club →
           </Link>

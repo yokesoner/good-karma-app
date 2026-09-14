@@ -216,14 +216,14 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
               />
             </div>
 
-            <div className="mt-5 flex items-baseline justify-between">
+            <div className="mt-5 flex items-baseline justify-between overflow-hidden">
               <span className="text-[13px] text-ink-2">Итого</span>
-              <span className="text-[21px] font-bold">{formatMoney(subtotal)}</span>
+              <span key={subtotal} className="wok-value-in text-[21px] font-bold">{formatMoney(subtotal)}</span>
             </div>
             <Link
               href="/checkout"
               onClick={onClose}
-              className="mt-4 block w-full rounded-full bg-btn py-4 text-center text-[10.5px] font-bold uppercase tracking-[0.08em] text-btn-fg shadow-[0_18px_34px_-20px_rgba(58,35,56,.72)] transition hover:-translate-y-0.5 hover:shadow-m"
+              className="mt-4 block w-full rounded-full bg-btn py-4 text-center text-[10.5px] font-bold uppercase tracking-[0.08em] text-btn-fg shadow-[0_18px_34px_-20px_rgba(58,35,56,.72)] transition duration-300 active:scale-[0.98] hover:-translate-y-0.5 hover:shadow-m"
             >
               Оформить заказ
             </Link>
