@@ -1,12 +1,14 @@
 "use server";
 
 import { randomInt } from "node:crypto";
+import { cookies } from "next/headers";
 import { compare, hash } from "bcryptjs";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { normalizePhone, isValidPhone } from "@/lib/phone";
 import { sendLoginCodeSms } from "@/lib/sms";
+import { CUSTOMER_SESSION_COOKIE, customerSessionCookieOptions, signCustomerSession } from "@/lib/customerSession";
 
 const CODE_TTL_MS = 5 * 60 * 1000;
 const SEND_WINDOW_MS = 10 * 60 * 1000;
@@ -130,9 +132,20 @@ export async function verifyLoginCode(phoneInput: unknown, codeInput: unknown) {
       return tx.user.upsert({ where: { phone: phone.data }, update: {}, create: { phone: phone.data } });
     });
     if (!user) return { ok: false as const, error: "Код уже использован. Запросите новый" };
+
+    // SMS подтвердила владение номером только в этот момент — без подписанной
+    // cookie дальнейшие действия в профиле принимали бы userId от клиента
+    // как есть, и его можно было бы просто подставить в devtools.
+    const token = await signCustomerSession({ userId: user.id });
+    cookies().set(CUSTOMER_SESSION_COOKIE, token, customerSessionCookieOptions);
+
     return { ok: true as const, userId: user.id, name: user.name ?? "", phone: user.phone };
   } catch (error) {
     console.error("Не удалось подтвердить код входа", error);
     return { ok: false as const, error: "Не удалось войти. Попробуйте позже" };
   }
+}
+
+export async function logoutCustomer() {
+  cookies().set(CUSTOMER_SESSION_COOKIE, "", { ...customerSessionCookieOptions, maxAge: 0 });
 }

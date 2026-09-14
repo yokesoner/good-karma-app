@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useIdentity } from "@/lib/identity";
-import { requestLoginCode, verifyLoginCode } from "@/server/identity";
+import { logoutCustomer, requestLoginCode, verifyLoginCode } from "@/server/identity";
 import { ProfileView } from "@/components/ProfileView";
 import { KarmaPass } from "@/components/KarmaPass";
 import { ProfileLoading } from "@/components/ProfileLoading";
@@ -30,7 +30,11 @@ export function ProfileGate() {
   if (!mounted) return <ProfileLoading />;
 
   if (identity) {
-    return <ProfileView key={identity.userId} identity={identity} onLogout={clear} />;
+    const logout = () => {
+      clear();
+      void logoutCustomer();
+    };
+    return <ProfileView key={identity.userId} onLogout={logout} />;
   }
 
   const sendCode = async () => {

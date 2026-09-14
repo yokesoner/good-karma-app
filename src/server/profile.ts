@@ -2,13 +2,19 @@
 
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { getCurrentCustomerId } from "@/lib/customerAuth";
 
 /**
- * Данные личного кабинета. Профиль — целиком клиентская страница
- * (userId живёт в localStorage, на сервере до гидратации его не видно),
- * поэтому все данные тянутся одним экшеном, а не через серверный компонент.
+ * Данные личного кабинета. Профиль — целиком клиентская страница (identity
+ * живёт в localStorage только для UI-решения «показать форму входа или
+ * профиль»), но userId для реальных запросов берём из подписанной cookie,
+ * а не от клиента — иначе любой мог бы подставить чужой userId в devtools
+ * и увидеть/списать чужие баллы.
  */
-export async function getProfileData(userId: string) {
+export async function getProfileData() {
+  const userId = await getCurrentCustomerId();
+  if (!userId) return null;
+
   const user = await db.user.findUnique({
     where: { id: userId },
     include: { addresses: { orderBy: { isDefault: "desc" } } },
@@ -55,14 +61,15 @@ export async function getProfileData(userId: string) {
 }
 
 const ClaimSchema = z.object({
-  userId: z.string().min(1),
   rewardId: z.string().min(1),
 });
 
 export async function claimReward(input: unknown) {
+  const userId = await getCurrentCustomerId();
+  if (!userId) return { ok: false as const, error: "Сессия истекла. Войдите заново" };
   const parsed = ClaimSchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: "Некорректные данные" };
-  const { userId, rewardId } = parsed.data;
+  const { rewardId } = parsed.data;
 
   const [reward, agg] = await Promise.all([
     db.karmaReward.findUnique({ where: { id: rewardId } }),
@@ -83,31 +90,33 @@ export async function claimReward(input: unknown) {
 }
 
 const AddAddressSchema = z.object({
-  userId: z.string().min(1),
   label: z.string().trim().min(1, "Укажите название").max(40),
   line: z.string().trim().min(3, "Укажите адрес").max(200),
   flat: z.string().trim().max(80).optional(),
 });
 
 export async function addAddress(input: unknown) {
+  const userId = await getCurrentCustomerId();
+  if (!userId) return { ok: false as const, error: "Сессия истекла. Войдите заново" };
   const parsed = AddAddressSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Проверьте поля" };
   }
-  const { userId, label, line, flat } = parsed.data;
+  const { label, line, flat } = parsed.data;
   await db.address.create({ data: { userId, label, line, flat: flat || null } });
   return { ok: true as const };
 }
 
 const RemoveAddressSchema = z.object({
-  userId: z.string().min(1),
   addressId: z.string().min(1),
 });
 
 export async function removeAddress(input: unknown) {
+  const userId = await getCurrentCustomerId();
+  if (!userId) return { ok: false as const, error: "Сессия истекла. Войдите заново" };
   const parsed = RemoveAddressSchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: "Некорректные данные" };
-  const { userId, addressId } = parsed.data;
+  const { addressId } = parsed.data;
   // deleteMany с составным where — id ищем только среди адресов этого userId,
   // иначе по подобранному id можно было бы удалить чужой адрес.
   await db.address.deleteMany({ where: { id: addressId, userId } });

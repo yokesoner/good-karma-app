@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Identity } from "@/lib/identity";
 import { getProfileData, claimReward, addAddress, removeAddress } from "@/server/profile";
 import { formatMoney } from "@/lib/money";
 import { karmaSnapshot, rewardState } from "@/lib/karma";
@@ -22,10 +21,8 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export function ProfileView({
-  identity,
   onLogout,
 }: {
-  identity: NonNullable<Identity>;
   onLogout: () => void;
 }) {
   const [data, setData] = useState<ProfileData | null>(null);
@@ -35,15 +32,15 @@ export function ProfileView({
   const load = useCallback(() => {
     const current = ++requestId.current;
     setLoadError(null);
-    getProfileData(identity.userId).then((res) => {
+    getProfileData().then((res) => {
       // Поздний ответ не должен перезаписать более свежий баланс или другой профиль.
       if (current !== requestId.current) return;
-      if (!res) setLoadError("Не удалось загрузить профиль. Попробуйте ещё раз.");
+      if (!res) setLoadError("Сессия истекла или устройство больше не подтверждено. Войдите заново.");
       else setData(res);
     }).catch(() => {
       if (current === requestId.current) setLoadError("Связь с кафе прервалась. Проверьте интернет и попробуйте ещё раз.");
     });
-  }, [identity.userId]);
+  }, []);
 
   useEffect(() => {
     load();
@@ -127,7 +124,7 @@ export function ProfileView({
         </section>
       )}
 
-      <RewardsSection userId={identity.userId} data={data} onChanged={load} />
+      <RewardsSection data={data} onChanged={load} />
 
       <section id="profile-orders" className="scroll-mt-24 rounded-[30px] border border-hair bg-paper-2/90 p-5 shadow-m sm:p-8">
         <h2 className="mb-5 text-[23px] font-bold tracking-tight">Ваши вкусные моменты</h2>
@@ -154,17 +151,15 @@ export function ProfileView({
         )}
       </section>
 
-      <AddressesSection userId={identity.userId} addresses={data.addresses} onChanged={load} />
+      <AddressesSection addresses={data.addresses} onChanged={load} />
     </div>
   );
 }
 
 function RewardsSection({
-  userId,
   data,
   onChanged,
 }: {
-  userId: string;
   data: ProfileData;
   onChanged: () => void;
 }) {
@@ -177,7 +172,7 @@ function RewardsSection({
     setError(null);
     setClaimingId(rewardId);
     try {
-      const res = await claimReward({ userId, rewardId });
+      const res = await claimReward({ rewardId });
       if (!res.ok) setError(res.error);
       else onChanged();
     } catch {
@@ -230,11 +225,9 @@ function RewardsSection({
 }
 
 function AddressesSection({
-  userId,
   addresses,
   onChanged,
 }: {
-  userId: string;
   addresses: ProfileData["addresses"];
   onChanged: () => void;
 }) {
@@ -249,7 +242,7 @@ function AddressesSection({
     setError(null);
     setSaving(true);
     try {
-      const res = await addAddress({ userId, ...form });
+      const res = await addAddress(form);
       if (!res.ok) {
         setError(res.error);
         return;
@@ -268,7 +261,7 @@ function AddressesSection({
     setError(null);
     setRemovingId(addressId);
     try {
-      const result = await removeAddress({ userId, addressId });
+      const result = await removeAddress({ addressId });
       if (!result.ok) { setError(result.error); return; }
       onChanged();
     } catch {
