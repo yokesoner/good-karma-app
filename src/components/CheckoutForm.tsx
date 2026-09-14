@@ -160,7 +160,7 @@ export function CheckoutForm() {
                 key={String(pickup)}
                 type="button"
                 onClick={() => setIsPickup(pickup)}
-                className={`flex-1 rounded-full border py-3.5 text-[12px] font-bold transition duration-300 ${
+                className={`flex-1 rounded-full border py-3.5 text-[12px] font-bold transition duration-300 active:scale-[0.97] ${
                   isPickup === pickup
                     ? "-translate-y-0.5 border-transparent bg-btn text-btn-fg shadow-[0_15px_28px_-18px_rgba(58,35,56,.7)]"
                     : "border-hair bg-paper/50 text-ink-2 hover:border-cherry/25 hover:bg-paper"
@@ -225,7 +225,7 @@ export function CheckoutForm() {
                 type="button"
                 onClick={locate}
                 disabled={geoState === "loading"}
-                className="rounded-full border border-hair bg-paper/55 px-5 py-3 text-[11px] font-semibold transition hover:-translate-y-0.5 hover:border-cherry/30 hover:shadow-s disabled:opacity-50"
+                className="rounded-full border border-hair bg-paper/55 px-5 py-3 text-[11px] font-semibold transition duration-300 active:scale-[0.97] hover:-translate-y-0.5 hover:border-cherry/30 hover:shadow-s disabled:opacity-50 disabled:active:scale-100"
               >
                 {geoState === "loading" ? "Определяем…" : "Определить моё местоположение"}
               </button>
@@ -269,7 +269,7 @@ export function CheckoutForm() {
                 key={value}
                 type="button"
                 onClick={() => setForm({ ...form, paymentMethod: value })}
-                className={`rounded-full border px-5 py-3 text-[12px] font-semibold transition duration-300 ${
+                className={`rounded-full border px-5 py-3 text-[12px] font-semibold transition duration-300 active:scale-[0.97] ${
                   form.paymentMethod === value
                     ? "-translate-y-0.5 border-transparent bg-btn text-btn-fg shadow-[0_15px_28px_-18px_rgba(58,35,56,.7)]"
                     : "border-hair bg-paper/50 text-ink-2 hover:border-cherry/25 hover:bg-paper"
@@ -330,7 +330,7 @@ export function CheckoutForm() {
             <button
               type="button"
               onClick={() => setPromo(promoInput.trim() || null)}
-              className="rounded-full bg-[#3A2338] px-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#FFF8F2] shadow-s transition hover:-translate-y-0.5"
+              className="rounded-full bg-[#3A2338] px-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#FFF8F2] shadow-s transition duration-300 active:scale-95 hover:-translate-y-0.5"
             >
               Применить
             </button>
@@ -365,9 +365,11 @@ export function CheckoutForm() {
                     : formatMoney(q.deliveryCents)}
               </span>
             </div>
-            <div className="mt-2 flex items-baseline justify-between border-t border-hair pt-3">
+            <div className="mt-2 flex items-baseline justify-between overflow-hidden border-t border-hair pt-3">
               <span className="font-semibold">К оплате</span>
-              <span className="text-[21px] font-bold tabular-nums">{formatMoney(q.totalCents)}</span>
+              <span key={q.totalCents} className="wok-value-in text-[21px] font-bold tabular-nums">
+                {formatMoney(q.totalCents)}
+              </span>
             </div>
             <p className="mt-1 text-[11.5px] text-ink-3">
               Начислим {q.karmaEarned} карма-баллов после доставки
@@ -381,7 +383,7 @@ export function CheckoutForm() {
           type="button"
           onClick={submit}
           disabled={pending || quote?.tooFar}
-          className="mt-5 w-full rounded-full bg-btn py-4 text-[10.5px] font-bold uppercase tracking-[0.08em] text-btn-fg shadow-[0_18px_34px_-20px_rgba(58,35,56,.72)] transition hover:-translate-y-0.5 hover:shadow-m disabled:opacity-50"
+          className="mt-5 w-full rounded-full bg-btn py-4 text-[10.5px] font-bold uppercase tracking-[0.08em] text-btn-fg shadow-[0_18px_34px_-20px_rgba(58,35,56,.72)] transition duration-300 active:scale-[0.98] hover:-translate-y-0.5 hover:shadow-m disabled:opacity-50 disabled:active:scale-100"
         >
           {pending ? "Оформляем…" : "Оформить заказ"}
         </button>
