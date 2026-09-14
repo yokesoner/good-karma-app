@@ -19,7 +19,12 @@ import { cn } from "@/lib/cn";
 export function SiteShell({ children }: { children: React.ReactNode }) {
   const [cartOpen, setCartOpen] = useState(false);
   const pathname = usePathname();
+  const isAdmin = pathname.startsWith("/admin");
   const hasOwnMobileBar = pathname === "/wok-builder";
+
+  // Админка использует собственную навигацию и не должна показывать
+  // покупательскую корзину поверх форм управления каталогом.
+  if (isAdmin) return <div className="site-canvas">{children}</div>;
 
   return (
     <>

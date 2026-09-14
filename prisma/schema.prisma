@@ -16,12 +16,25 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// Администраторы отделены от покупателей: публичной регистрации нет,
+// аккаунты создаются только локальным служебным скриптом.
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime  @default(now())
+  lastLoginAt  DateTime?
+
+  @@map("admin_users")
+}
+
 // ---------- каталог ----------
 
 model Category {
-  id        String    @id // "rolls", "wok", … — было cats[].id
+  id        String        @id // "rolls", "wok", … — было cats[].id
   name      String
-  sortOrder Int       @default(0)
+  sortOrder Int           @default(0)
   meta      CategoryMeta?
   products  Product[]
 
@@ -42,28 +55,28 @@ model CategoryMeta {
 }
 
 model Product {
-  id          String        @id @default(cuid())
-  slug        String        @unique
-  category    Category      @relation(fields: [categoryId], references: [id])
+  id          String              @id @default(cuid())
+  slug        String              @unique
+  category    Category            @relation(fields: [categoryId], references: [id])
   categoryId  String
   name        String
   description String
   weight      String // "8 шт · 240 г" — в реальном виде лучше разложить на два поля,
-                       // оставлено строкой для совместимости с прототипом на первом этапе
+  // оставлено строкой для совместимости с прототипом на первом этапе
   priceCents  Int // храним в копейках, не в рублях с плавающей точкой
   karma       Int // баллов начисляется за покупку
   badge       Badge?
-  rating      Decimal       @db.Decimal(2, 1) @default(0)
-  ratingCount Int           @default(0)
-  isStopList  Boolean       @default(false) // сейчас product.stop в админке
-  isHidden    Boolean       @default(false) // кастомные позиции из конструктора не показываем в каталоге
+  rating      Decimal             @default(0) @db.Decimal(2, 1)
+  ratingCount Int                 @default(0)
+  isStopList  Boolean             @default(false) // сейчас product.stop в админке
+  isHidden    Boolean             @default(false) // кастомные позиции из конструктора не показываем в каталоге
   images      ProductImage[]
   ingredients ProductIngredient[]
   nutrition   Nutrition?
   addonGroups ProductAddonGroup[]
   orderItems  OrderItem[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
 
   @@index([categoryId])
   @@map("products")
@@ -110,22 +123,22 @@ model Nutrition {
 // Группа добавок к блюду ("Добавить к блюду" в карточке товара).
 // Было ADDON_SETS[cat.id] + ALL_ADDONS в JS.
 model AddonGroup {
-  id      String              @id @default(cuid())
-  name    String // "Добавки к пицце", "Добавки к рамену"
-  addons  Addon[]
+  id       String              @id @default(cuid())
+  name     String // "Добавки к пицце", "Добавки к рамену"
+  addons   Addon[]
   linkedTo ProductAddonGroup[]
 
   @@map("addon_groups")
 }
 
 model Addon {
-  id           String     @id @default(cuid())
-  group        AddonGroup @relation(fields: [addonGroupId], references: [id], onDelete: Cascade)
-  addonGroupId String
-  name         String
-  priceCents   Int
-  colorHex     String // маленькая точка-индикатор в чипе
-  sortOrder    Int        @default(0)
+  id              String           @id @default(cuid())
+  group           AddonGroup       @relation(fields: [addonGroupId], references: [id], onDelete: Cascade)
+  addonGroupId    String
+  name            String
+  priceCents      Int
+  colorHex        String // маленькая точка-индикатор в чипе
+  sortOrder       Int              @default(0)
   orderItemAddons OrderItemAddon[]
 
   @@map("addons")
@@ -174,17 +187,17 @@ model WokSauce {
 // поле оставлено только для METHOD, а не PromoType.
 
 model Promotion {
-  code           String      @id
-  type           PromoType
-  discountPct    Int         @default(0)
-  minOrderCents  Int         @default(0)
-  title          String
-  description    String
+  code                   String    @id
+  type                   PromoType
+  discountPct            Int       @default(0)
+  minOrderCents          Int       @default(0)
+  title                  String
+  description            String
   featuredImageProductId String?
-  activeFrom     DateTime?
-  activeTo       DateTime?
-  isActive       Boolean     @default(true)
-  orders         Order[]
+  activeFrom             DateTime?
+  activeTo               DateTime?
+  isActive               Boolean   @default(true)
+  orders                 Order[]
 
   @@map("promotions")
 }
@@ -198,7 +211,7 @@ enum PromoType {
 // Было karmaLevels[] в JS — четыре уровня, каждый со своим порогом и текстом.
 
 model KarmaLevel {
-  key       String  @id // "seed" | "blossom" | "moon" | "karma"
+  key       String @id // "seed" | "blossom" | "moon" | "karma"
   name      String
   fromKarma Int
   toKarma   Int
@@ -235,17 +248,17 @@ model KarmaReward {
 // Журнал начислений/списаний — то, чего в прототипе не было вообще
 // (карма там просто число в сиде), а для реального клуба обязательно.
 model KarmaLedgerEntry {
-  id        String          @id @default(cuid())
-  user      User            @relation(fields: [userId], references: [id])
+  id        String            @id @default(cuid())
+  user      User              @relation(fields: [userId], references: [id])
   userId    String
-  order     Order?          @relation(fields: [orderId], references: [id])
+  order     Order?            @relation(fields: [orderId], references: [id])
   orderId   String?
   // Заполнено только при reason = REWARD_REDEEMED — какую награду обменяли.
-  reward    KarmaReward?    @relation(fields: [rewardId], references: [id])
+  reward    KarmaReward?      @relation(fields: [rewardId], references: [id])
   rewardId  String?
   points    Int // положительное — начисление, отрицательное — списание/сгорание
   reason    KarmaLedgerReason
-  createdAt DateTime        @default(now())
+  createdAt DateTime          @default(now())
 
   @@index([userId])
   @@map("karma_ledger_entries")
@@ -264,10 +277,10 @@ enum KarmaLedgerReason {
 // стандарт для доставки еды в РФ, поэтому пароля нет.
 
 model User {
-  id           String    @id @default(cuid())
-  phone        String    @unique
+  id           String             @id @default(cuid())
+  phone        String             @unique
   name         String?
-  createdAt    DateTime  @default(now())
+  createdAt    DateTime           @default(now())
   addresses    Address[]
   orders       Order[]
   karmaEntries KarmaLedgerEntry[]
@@ -276,15 +289,15 @@ model User {
 }
 
 model Address {
-  id        String  @id @default(cuid())
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
   label     String // "Дом", "Работа"
   line      String // "ул. Садовая, 12"
   flat      String?
   lat       Decimal? @db.Decimal(9, 6)
   lng       Decimal? @db.Decimal(9, 6)
-  isDefault Boolean @default(false)
+  isDefault Boolean  @default(false)
 
   @@map("addresses")
 }
@@ -294,10 +307,10 @@ model Address {
 // Здесь то же самое, но как редактируемые в админке строки, а не константа в коде.
 
 model DeliveryZone {
-  zone            Int    @id // 1..5
-  maxDistanceKm   Decimal @db.Decimal(4, 1)
-  priceCents      Int
-  freeFromCents   Int
+  zone          Int     @id // 1..5
+  maxDistanceKm Decimal @db.Decimal(4, 1)
+  priceCents    Int
+  freeFromCents Int
 
   @@map("delivery_zones")
 }
@@ -305,32 +318,32 @@ model DeliveryZone {
 // ---------- заказы ----------
 
 model Order {
-  id              String        @id @default(cuid())
-  number          String        @unique // "GK-12547"
-  user            User          @relation(fields: [userId], references: [id])
-  userId          String
-  status          OrderStatus   @default(NEW)
-  fulfillment     Fulfillment
-  items           OrderItem[]
-  address         String?
-  addressFlat     String?
-  distanceKm      Decimal?      @db.Decimal(4, 1)
-  deliveryZone    Int?
-  slotLabel       String?
-  slotEta         DateTime?
-  promotion       Promotion?    @relation(fields: [promoCode], references: [code])
-  promoCode       String?
-  subtotalCents   Int
-  discountCents   Int           @default(0)
-  deliveryCents   Int           @default(0)
-  totalCents      Int
-  karmaEarned     Int           @default(0)
-  paymentMethod   PaymentMethod
-  paymentStatus   PaymentStatus @default(PENDING)
-  comment         String?
-  karmaEntries    KarmaLedgerEntry[]
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id            String             @id @default(cuid())
+  number        String             @unique // "GK-12547"
+  user          User               @relation(fields: [userId], references: [id])
+  userId        String
+  status        OrderStatus        @default(NEW)
+  fulfillment   Fulfillment
+  items         OrderItem[]
+  address       String?
+  addressFlat   String?
+  distanceKm    Decimal?           @db.Decimal(4, 1)
+  deliveryZone  Int?
+  slotLabel     String?
+  slotEta       DateTime?
+  promotion     Promotion?         @relation(fields: [promoCode], references: [code])
+  promoCode     String?
+  subtotalCents Int
+  discountCents Int                @default(0)
+  deliveryCents Int                @default(0)
+  totalCents    Int
+  karmaEarned   Int                @default(0)
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus      @default(PENDING)
+  comment       String?
+  karmaEntries  KarmaLedgerEntry[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
 
   @@index([userId])
   @@map("orders")
@@ -364,27 +377,27 @@ enum PaymentStatus {
 }
 
 model OrderItem {
-  id           String   @id @default(cuid())
-  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderId      String
-  product      Product  @relation(fields: [productId], references: [id])
-  productId    String
-  nameSnapshot String // название на момент заказа — конструктор мог собрать уникальное
-  qty          Int
+  id             String           @id @default(cuid())
+  order          Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId        String
+  product        Product          @relation(fields: [productId], references: [id])
+  productId      String
+  nameSnapshot   String // название на момент заказа — конструктор мог собрать уникальное
+  qty            Int
   unitPriceCents Int
-  addons       OrderItemAddon[]
+  addons         OrderItemAddon[]
   // Слепок кастомной сборки вока/добавок, был custom{} на клиенте — теперь
   // хранится вместе с заказом, чтобы «Повторить заказ» работал и через год.
-  customConfig Json?
+  customConfig   Json?
 
   @@map("order_items")
 }
 
 model OrderItemAddon {
-  orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
-  orderItemId String
-  addon       Addon     @relation(fields: [addonId], references: [id])
-  addonId     String
+  orderItem          OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  orderItemId        String
+  addon              Addon     @relation(fields: [addonId], references: [id])
+  addonId            String
   priceCentsSnapshot Int
 
   @@id([orderItemId, addonId])
