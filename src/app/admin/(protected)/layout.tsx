@@ -5,6 +5,7 @@ import { BrandMark } from "@/components/BrandMark";
 import { getCurrentAdmin } from "@/lib/adminAuth";
 
 const adminNavigation = [
+  ["Заказы", "/admin/orders"],
   ["Товары", "/admin/products"],
   ["Категории", "/admin/categories"],
   ["Конструктор вока", "/admin/wok-builder"],
@@ -22,7 +23,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <header className="sticky top-0 z-40 border-b border-hair bg-paper/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-wrap items-center justify-between gap-5 px-5 py-4 md:px-8">
           <div className="flex items-center gap-8">
-            <Link href="/admin/products" aria-label="Товары — админка Good Karma"><BrandMark /></Link>
+            <Link href="/admin/orders" aria-label="Заказы — админка Good Karma"><BrandMark /></Link>
             <nav className="hidden items-center gap-5 xl:flex">
               {adminNavigation.map(([label, href]) => (
                 <Link key={href} href={href} className="text-[10px] font-bold uppercase tracking-[0.12em] text-ink-2 hover:text-ink">

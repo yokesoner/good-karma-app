@@ -23,7 +23,7 @@ export function AdminLoginForm() {
       const requested = searchParams.get("next");
       const destination = requested?.startsWith("/admin/") && !requested.startsWith("//")
         ? requested
-        : "/admin/products";
+        : "/admin/orders";
       router.replace(destination);
       router.refresh();
     });
