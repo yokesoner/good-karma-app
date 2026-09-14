@@ -163,7 +163,7 @@ export function ProfileGate() {
         <button
           type="submit"
           disabled={pending}
-          className="mt-5 flex min-h-12 w-full items-center justify-between rounded-full bg-btn px-6 py-4 text-[11px] font-semibold text-btn-fg shadow-s transition motion-safe:hover:-translate-y-0.5 hover:shadow-m disabled:opacity-50"
+          className="mt-5 flex min-h-12 w-full items-center justify-between rounded-full bg-btn px-6 py-4 text-[11px] font-semibold text-btn-fg shadow-s transition duration-300 active:scale-[0.98] motion-safe:hover:-translate-y-0.5 hover:shadow-m disabled:opacity-50 disabled:active:scale-100"
         >
           {pending ? (step === "phone" ? "Отправляем…" : "Проверяем…") : (step === "phone" ? "Отправить код" : "Войти")}
           <span aria-hidden>→</span>

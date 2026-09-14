@@ -71,7 +71,7 @@ export function ProfileView({
         <button
           type="button"
           onClick={onLogout}
-          className="rounded-s border border-hair px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-2 hover:border-ink-3"
+          className="rounded-s border border-hair px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-2 transition duration-200 active:scale-95 hover:border-ink-3"
         >
           Выйти
         </button>
@@ -208,12 +208,12 @@ function RewardsSection({
                   type="button"
                   disabled={pending}
                   onClick={() => claim(r.id)}
-                  className="min-h-11 rounded-full bg-btn px-5 py-3 text-[11px] font-bold text-btn-fg shadow-s disabled:opacity-50"
+                  className="min-h-11 rounded-full bg-btn px-5 py-3 text-[11px] font-bold text-btn-fg shadow-s transition duration-200 active:scale-95 disabled:opacity-50 disabled:active:scale-100"
                 >
                   {pending && claimingId === r.id ? "Обмениваем…" : "Обменять"}
                 </button>
               ) : (
-                <div><div aria-hidden className="mb-3 h-1 overflow-hidden rounded-full bg-hair-soft"><div className="h-full rounded-full bg-gradient-to-r from-cherry/60 to-gold/80" style={{width: `${Math.min(100, Math.max(0, data.points / Math.max(1, r.costPoints) * 100))}%`}} /></div><span className="text-[11px] text-ink-2">Ещё {(r.costPoints - data.points).toLocaleString("ru-RU")} баллов до подарка</span></div>
+                <div><div aria-hidden className="mb-3 h-1 overflow-hidden rounded-full bg-hair-soft"><div className="h-full rounded-full bg-gradient-to-r from-cherry/60 to-gold/80 transition-[width] duration-[900ms] ease-[cubic-bezier(.2,.8,.2,1)]" style={{width: `${Math.min(100, Math.max(0, data.points / Math.max(1, r.costPoints) * 100))}%`}} /></div><span className="text-[11px] text-ink-2">Ещё {(r.costPoints - data.points).toLocaleString("ru-RU")} баллов до подарка</span></div>
               )}
             </article>
           );
@@ -340,7 +340,7 @@ function AddressesSection({
       <button
         type="submit"
         disabled={pending}
-        className="mt-5 min-h-12 rounded-full bg-btn px-6 py-3 text-[12px] font-semibold text-btn-fg shadow-s transition hover:shadow-m disabled:opacity-50"
+        className="mt-5 min-h-12 rounded-full bg-btn px-6 py-3 text-[12px] font-semibold text-btn-fg shadow-s transition duration-200 active:scale-[0.98] hover:shadow-m disabled:opacity-50 disabled:active:scale-100"
       >
         {saving ? "Сохраняем…" : "Сохранить адрес"}
       </button>
