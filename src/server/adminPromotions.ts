@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/adminAuth";
 import { db } from "@/lib/db";
+import { PROMO_BACKGROUND_KEYS } from "@/lib/promoBackgrounds";
 
 const PromotionSchema = z.object({
   code: z.string().trim().min(1).max(40).regex(/^[A-Z0-9_-]+$/, "Код: заглавная латиница, цифры, _ и -"),
@@ -17,6 +18,10 @@ const PromotionSchema = z.object({
   activeTo: z.string().datetime().nullable(),
   isActive: z.boolean(),
   featuredImageProductId: z.string().cuid().nullable(),
+  // Своя картинка приоритетнее featuredImageProductId — это URL из S3,
+  // а не строгий cuid, поэтому отдельная, более мягкая валидация.
+  imageUrl: z.string().trim().url().max(500).nullable(),
+  backgroundKey: z.enum(PROMO_BACKGROUND_KEYS).nullable(),
 }).superRefine((value, ctx) => {
   if (value.activeFrom && value.activeTo && value.activeTo <= value.activeFrom) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["activeTo"], message: "Дата окончания должна быть позже даты начала" });
@@ -42,6 +47,8 @@ function promotionData(input: AdminPromotionInput) {
     activeTo: input.activeTo ? new Date(input.activeTo) : null,
     isActive: input.isActive,
     featuredImageProductId: input.featuredImageProductId,
+    imageUrl: input.imageUrl,
+    backgroundKey: input.backgroundKey,
   };
 }
 
@@ -104,5 +111,30 @@ export async function deleteAdminPromotion(code: string) {
       return { ok: false as const, error: "Акция уже использована в заказах и не может быть удалена" };
     }
     return { ok: false as const, error: "Не удалось удалить акцию" };
+  }
+}
+
+const PromoHeroBannerSchema = z.object({
+  title: z.string().trim().min(1, "Укажите заголовок").max(120),
+  description: z.string().trim().min(1, "Укажите описание").max(400),
+  imageUrl: z.string().trim().url().max(500).nullable(),
+});
+
+export type AdminPromoHeroBannerInput = z.infer<typeof PromoHeroBannerSchema>;
+
+export async function updatePromoHeroBanner(input: unknown) {
+  await requireAdmin();
+  const parsed = PromoHeroBannerSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Проверьте поля" };
+  try {
+    await db.promoHeroBanner.upsert({
+      where: { id: "singleton" },
+      update: parsed.data,
+      create: { id: "singleton", ...parsed.data },
+    });
+    refreshPromotionPages();
+    return { ok: true as const };
+  } catch {
+    return { ok: false as const, error: "Не удалось сохранить баннер" };
   }
 }

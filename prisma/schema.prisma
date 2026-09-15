@@ -204,13 +204,34 @@ model Promotion {
   minOrderCents          Int       @default(0)
   title                  String
   description            String
+  // Своя картинка карточки — приоритетнее featuredImageProductId, который
+  // остаётся для обратной совместимости со старыми акциями (ссылка на фото
+  // уже существующего товара вместо отдельной загрузки).
+  imageUrl               String?
   featuredImageProductId String?
+  // Пресет фона карточки из фиксированного набора в коде (см.
+  // BANNER_BACKGROUNDS в PromotionsSection.tsx) — не свободный цвет,
+  // чтобы не разъезжалась продуманная палитра «Кинцуги-стол».
+  backgroundKey          String?
   activeFrom             DateTime?
   activeTo               DateTime?
   isActive               Boolean   @default(true)
   orders                 Order[]
 
   @@map("promotions")
+}
+
+// Единственный редакционный блок вверху /promotions («Всё хорошее
+// возвращается») — раньше жил только в коде PromotionsSection.tsx,
+// теперь редактируется из админки. Синглтон, как TelegramBotState.
+model PromoHeroBanner {
+  id          String   @id @default("singleton")
+  title       String
+  description String
+  imageUrl    String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("promo_hero_banner")
 }
 
 enum PromoType {

@@ -3,7 +3,13 @@
 import { ChangeEvent, useRef, useState } from "react";
 import { createProductImageUpload } from "@/server/adminUploads";
 
-export function AdminImageUploader({ onUploaded }: { onUploaded: (url: string, alt: string) => void }) {
+export function AdminImageUploader({
+  onUploaded,
+  folder = "products",
+}: {
+  onUploaded: (url: string, alt: string) => void;
+  folder?: "products" | "promotions";
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -19,6 +25,7 @@ export function AdminImageUploader({ onUploaded }: { onUploaded: (url: string, a
         fileName: file.name,
         contentType: file.type,
         size: file.size,
+        folder,
       });
       if (!prepared.ok) throw new Error(prepared.error);
       const response = await fetch(prepared.uploadUrl, {

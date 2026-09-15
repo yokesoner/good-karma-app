@@ -6,13 +6,17 @@ import { ASSETS } from "@/lib/assets";
 import { PromoCodeButton } from "@/components/PromoCodeButton";
 import { BackgroundFootage } from "@/components/BackgroundFootage";
 import { GoldHairline } from "@/components/GoldHairline";
+import { promoBackgroundGradient } from "@/lib/promoBackgrounds";
 import { cn } from "@/lib/cn";
 
 export async function PromotionsSection({ compact = false }: { compact?: boolean }) {
-  const promotions = await db.promotion.findMany({
-    where: { isActive: true },
-    orderBy: { discountPct: "desc" },
-  });
+  const [promotions, heroBanner] = await Promise.all([
+    db.promotion.findMany({
+      where: { isActive: true },
+      orderBy: { discountPct: "desc" },
+    }),
+    db.promoHeroBanner.findUnique({ where: { id: "singleton" } }),
+  ]);
   const flagship = promotions[0];
   if (!flagship) return null;
 
@@ -29,9 +33,12 @@ export async function PromotionsSection({ compact = false }: { compact?: boolean
     images.map((image) => [image.productId, { url: image.url, alt: image.alt }]),
   );
   const second = promotions[1];
-  const flagshipImage = flagship.featuredImageProductId
-    ? imageByProductId.get(flagship.featuredImageProductId)
-    : undefined;
+  const flagshipImage = flagship.imageUrl
+    ? { url: flagship.imageUrl, alt: flagship.title }
+    : flagship.featuredImageProductId
+      ? imageByProductId.get(flagship.featuredImageProductId)
+      : undefined;
+  const secondBackground = promoBackgroundGradient(second?.backgroundKey ?? null);
 
   return (
     <section
@@ -50,10 +57,10 @@ export async function PromotionsSection({ compact = false }: { compact?: boolean
             </span>
           </div>
           <h1 className="max-w-[12ch] text-[36px] font-bold leading-[1.02] tracking-[-0.045em] text-ink sm:text-[50px]">
-            Всё хорошее возвращается
+            {heroBanner?.title ?? "Всё хорошее возвращается"}
           </h1>
           <p className="mt-5 max-w-[40ch] text-[14px] leading-[1.75] text-ink-2">
-            Особенные предложения, любимые блюда и подарки за вашу карму. Маленькие поводы радовать себя чаще.
+            {heroBanner?.description ?? "Особенные предложения, любимые блюда и подарки за вашу карму. Маленькие поводы радовать себя чаще."}
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
@@ -73,7 +80,7 @@ export async function PromotionsSection({ compact = false }: { compact?: boolean
 
         </div>
         <div className="relative min-h-[210px] overflow-hidden sm:min-h-[280px] lg:min-h-[420px]">
-          <Image src={ASSETS.backgrounds.karmaGarden} alt="Кот, лиса и кролик в саду Good Karma" fill priority sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover object-[65%_center] transition-transform duration-[1800ms] motion-safe:group-hover:scale-[1.025]" />
+          <Image src={heroBanner?.imageUrl ?? ASSETS.backgrounds.karmaGarden} alt="Кот, лиса и кролик в саду Good Karma" fill priority sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover object-[65%_center] transition-transform duration-[1800ms] motion-safe:group-hover:scale-[1.025]" />
           <BackgroundFootage src={ASSETS.animations.sakuraPetals} opacity={0.16} />
           <span className="absolute bottom-5 right-5 rounded-full border border-gold/30 bg-[#FBF8F2]/90 px-4 py-2 text-[10px] font-semibold tracking-wide text-[#493044] backdrop-blur-md">Вкусно быть вместе · 良いカルマ</span>
         </div>
@@ -130,7 +137,7 @@ export async function PromotionsSection({ compact = false }: { compact?: boolean
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
             {second ? (
-              <article className="relative isolate overflow-hidden rounded-[30px] border border-white/70 bg-gradient-to-br from-[#F8E8E7] via-[#F4E7ED] to-[#E8E2F0] p-7 shadow-s transition duration-500 motion-safe:hover:-translate-y-1 hover:shadow-m">
+              <article className={`relative isolate overflow-hidden rounded-[30px] border border-white/70 bg-gradient-to-br p-7 shadow-s transition duration-500 motion-safe:hover:-translate-y-1 hover:shadow-m ${secondBackground}`}>
                 <div aria-hidden className="promo-rings absolute -right-12 -top-12 h-44 w-44 opacity-45" />
                 <div className="relative">
                   <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-[#93566E]">

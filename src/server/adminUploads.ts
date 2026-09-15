@@ -11,6 +11,9 @@ const UploadSchema = z.object({
   fileName: z.string().trim().min(1).max(180),
   contentType: z.enum(["image/jpeg", "image/png", "image/webp", "image/avif"]),
   size: z.number().int().positive().max(12 * 1024 * 1024, "Файл должен быть не больше 12 МБ"),
+  // Только имя папки в бакете — не даём вызывающему коду задавать произвольный
+  // путь, чтобы не расползались случайные префиксы в хранилище.
+  folder: z.enum(["products", "promotions"]).default("products"),
 });
 
 const extensionByType: Record<z.infer<typeof UploadSchema>["contentType"], string> = {
@@ -30,7 +33,7 @@ export async function createProductImageUpload(input: unknown) {
   try {
     const { client, bucket, publicUrlBase } = getS3Config();
     const now = new Date();
-    const key = `products/${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}/${randomUUID()}.${extensionByType[parsed.data.contentType]}`;
+    const key = `${parsed.data.folder}/${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}/${randomUUID()}.${extensionByType[parsed.data.contentType]}`;
     const command = new PutObjectCommand({
       Bucket: bucket,
       Key: key,
