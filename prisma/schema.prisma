@@ -314,6 +314,27 @@ model LoginCode {
   @@map("login_codes")
 }
 
+// Бот не может написать первым — chatId появляется только после того, как
+// человек сам нажал Start по deep-link'у c номером в параметре. Дальше это
+// разовая привязка: код входа шлётся сюда же, SMS не нужен вообще.
+model TelegramLink {
+  phone     String   @id
+  chatId    String
+  createdAt DateTime @default(now())
+
+  @@map("telegram_links")
+}
+
+// getUpdates — это long polling, а не вебхук (вебхуку нужен публичный HTTPS,
+// которого у localhost/пока нет). Синглтон-строка хранит, докуда мы уже
+// дочитали апдейты, чтобы не обрабатывать один и тот же /start дважды.
+model TelegramBotState {
+  id           String @id @default("singleton")
+  lastUpdateId Int    @default(0)
+
+  @@map("telegram_bot_state")
+}
+
 model Address {
   id        String   @id @default(cuid())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

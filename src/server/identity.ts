@@ -7,7 +7,7 @@ import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { normalizePhone, isValidPhone } from "@/lib/phone";
-import { sendLoginCodeSms } from "@/lib/sms";
+import { getBotUsername, getTelegramUpdates, sendTelegramMessage } from "@/lib/telegram";
 import { CUSTOMER_SESSION_COOKIE, customerSessionCookieOptions, signCustomerSession } from "@/lib/customerSession";
 
 const CODE_TTL_MS = 5 * 60 * 1000;
@@ -33,11 +33,11 @@ function sendLimitError(retryAfterSeconds: number) {
   return { ok: false as const, error: `Слишком много запросов. Повторите через ${minutes} мин.`, retryAfterSeconds };
 }
 
-export async function requestLoginCode(input: unknown) {
-  const parsed = PhoneSchema.safeParse(input);
-  if (!parsed.success) return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Введите телефон" };
-
-  const phone = parsed.data;
+// Бот не может написать первым: пока для номера нет привязки, отправлять
+// код некуда. requestLoginCode в этом случае не трогает лимиты и не создаёт
+// код вообще — только отдаёт ссылку на бота, реальный код уйдёт уже из
+// confirmTelegramLink после того, как человек нажмёт Start.
+async function sendCodeToChat(phone: string, chatId: string) {
   const now = new Date();
   const windowStart = new Date(now.getTime() - SEND_WINDOW_MS);
 
@@ -78,11 +78,11 @@ export async function requestLoginCode(input: unknown) {
     if (created.limited) return sendLimitError(created.retryAfterSeconds);
 
     try {
-      await sendLoginCodeSms(phone, code);
+      await sendTelegramMessage(chatId, `Код входа Good Karma: ${code}. Никому его не сообщайте.`);
     } catch (error) {
       await db.loginCode.updateMany({ where: { id: created.id }, data: { invalidatedAt: new Date() } });
-      console.error("Не удалось отправить код входа", error);
-      return { ok: false as const, error: "Не удалось отправить SMS. Попробуйте позже" };
+      console.error("Не удалось отправить код входа в Telegram", error);
+      return { ok: false as const, error: "Не удалось отправить код в Telegram. Попробуйте позже" };
     }
     return { ok: true as const, retryAfterSeconds: RESEND_COOLDOWN_SECONDS };
   } catch (error) {
@@ -92,6 +92,72 @@ export async function requestLoginCode(input: unknown) {
     console.error("Не удалось создать код входа", error);
     return { ok: false as const, error: "Не удалось отправить код. Попробуйте позже" };
   }
+}
+
+// Апдейты от Telegram — не вебхук, а обычный getUpdates: вебхуку нужен
+// публичный HTTPS, которого нет ни в dev, ни пока на текущем хостинге.
+// Синглтон TelegramBotState.lastUpdateId — чтобы не читать одно и то же
+// сообщение повторно при следующем вызове.
+async function findChatIdForPhone(phone: string): Promise<string | null> {
+  const state = await db.telegramBotState.upsert({
+    where: { id: "singleton" },
+    update: {},
+    create: { id: "singleton" },
+  });
+  const updates = await getTelegramUpdates(state.lastUpdateId);
+
+  let maxSeen = state.lastUpdateId;
+  let chatId: string | null = null;
+  for (const update of updates) {
+    maxSeen = Math.max(maxSeen, update.update_id + 1);
+    const text = update.message?.text?.trim() ?? "";
+    const match = /^\/start\s+(\S+)$/.exec(text);
+    if (match?.[1] === phone && update.message) {
+      chatId = String(update.message.chat.id);
+    }
+  }
+  if (maxSeen > state.lastUpdateId) {
+    await db.telegramBotState.update({ where: { id: "singleton" }, data: { lastUpdateId: maxSeen } });
+  }
+  return chatId;
+}
+
+export async function requestLoginCode(input: unknown) {
+  const parsed = PhoneSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Введите телефон" };
+  const phone = parsed.data;
+
+  const link = await db.telegramLink.findUnique({ where: { phone } });
+  if (link) return sendCodeToChat(phone, link.chatId);
+
+  try {
+    const username = await getBotUsername();
+    return { ok: true as const, needsTelegramLink: true as const, telegramUrl: `https://t.me/${username}?start=${phone}` };
+  } catch (error) {
+    console.error("Не удалось получить имя Telegram-бота", error);
+    return { ok: false as const, error: "Вход через Telegram сейчас недоступен. Попробуйте позже" };
+  }
+}
+
+export async function confirmTelegramLink(phoneInput: unknown) {
+  const phone = PhoneSchema.safeParse(phoneInput);
+  if (!phone.success) return { ok: false as const, error: phone.error.issues[0]?.message ?? "Введите телефон" };
+
+  const existing = await db.telegramLink.findUnique({ where: { phone: phone.data } });
+  let chatId = existing?.chatId ?? null;
+  if (!chatId) {
+    try {
+      chatId = await findChatIdForPhone(phone.data);
+    } catch (error) {
+      console.error("Не удалось проверить привязку Telegram", error);
+      return { ok: false as const, error: "Не удалось проверить Telegram. Попробуйте ещё раз" };
+    }
+    if (!chatId) {
+      return { ok: false as const, error: "Не нашли, что вы нажали Start в боте. Откройте ссылку ещё раз и подождите пару секунд" };
+    }
+    await db.telegramLink.create({ data: { phone: phone.data, chatId } });
+  }
+  return sendCodeToChat(phone.data, chatId);
 }
 
 export async function verifyLoginCode(phoneInput: unknown, codeInput: unknown) {
