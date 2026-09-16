@@ -61,6 +61,9 @@ model CategoryMeta {
   pattern    String // "sakura" | "asanoha" | "seigaiha" | "kikko" | "shippo" | "none"
   jpTagline  String? // "小さな幸せ"
   tagline    String? // "Нежность в каждом кусочке"
+  // Своя фотография "визуального мира" категории — если не задана, страница
+  // категории по-прежнему берёт фото первого товара (старое поведение).
+  imageUrl   String?
 
   @@map("category_meta")
 }
@@ -169,26 +172,33 @@ model ProductAddonGroup {
 // Было wokBases / wokProteins / wokSauces / calculateWokPrice() в JS.
 
 model WokBase {
-  id         String @id // "udon" | "funchoza"
+  id         String  @id // "udon" | "funchoza"
   name       String
-  extraCents Int    @default(0)
+  extraCents Int     @default(0)
+  // Своя фотография — если не задана, конструктор берёт слой из реестра
+  // ассетов по id, а без совпадения — нейтральную иконку.
+  imageUrl   String?
 
   @@map("wok_bases")
 }
 
 model WokProtein {
-  id         String @id // "chicken" | "pork" | "beef" | "shrimp" | "salmon"
+  id         String  @id // "chicken" | "pork" | "beef" | "shrimp" | "salmon"
   name       String
-  extraCents Int    @default(0)
+  extraCents Int     @default(0)
+  imageUrl   String?
 
   @@map("wok_proteins")
 }
 
 model WokSauce {
-  id         String @id // "teriyaki" | "bbq" | "oyster" | "chili" | "sriracha"
+  id         String  @id // "teriyaki" | "bbq" | "oyster" | "chili" | "sriracha"
   name       String
-  extraCents Int    @default(0)
+  extraCents Int     @default(0)
   colorHex   String
+  // Своя фотография для карточки выбора соуса — в собранной миске соус
+  // по-прежнему рисуется тонировкой маски по colorHex, не фотографией.
+  imageUrl   String?
 
   @@map("wok_sauces")
 }

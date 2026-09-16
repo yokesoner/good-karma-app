@@ -46,7 +46,9 @@ export default async function CategoryPage({ params }: Params) {
 
   if (!category) notFound();
 
-  const heroImage = category.products[0]?.images[0];
+  // Своя фотография из админки приоритетнее — иначе, как и раньше, берём
+  // фото первого товара категории.
+  const heroImageUrl = category.meta?.imageUrl ?? category.products[0]?.images[0]?.url;
 
   return (
     <main className="mx-auto max-w-wrap px-5 py-8 md:px-16">
@@ -55,9 +57,9 @@ export default async function CategoryPage({ params }: Params) {
       {/* «Визуальный мир» категории из прототипа: фото, японская подпись
           и слоган. Оттенок берётся из CategoryMeta.accentTint. */}
       <section className="relative mt-6 flex h-[190px] items-end overflow-hidden rounded-l bg-tint-cream md:h-[220px]">
-        {heroImage && (
+        {heroImageUrl && (
           <Image
-            src={heroImage.url}
+            src={heroImageUrl}
             alt=""
             fill
             sizes="100vw"

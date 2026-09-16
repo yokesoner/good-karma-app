@@ -15,6 +15,7 @@ const CategorySchema = z.object({
   pattern: z.string().trim().min(1, "Укажите паттерн").max(40),
   jpTagline: z.string().trim().max(80).nullable(),
   tagline: z.string().trim().max(160).nullable(),
+  imageUrl: z.string().trim().url().max(500).nullable(),
 });
 
 export type AdminCategoryInput = z.infer<typeof CategorySchema>;
@@ -30,12 +31,12 @@ export async function createAdminCategory(input: unknown) {
   await requireAdmin();
   const parsed = CategorySchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Проверьте поля" };
-  const { theme, accentTint, pattern, jpTagline, tagline, ...category } = parsed.data;
+  const { theme, accentTint, pattern, jpTagline, tagline, imageUrl, ...category } = parsed.data;
   try {
     await db.category.create({
       data: {
         ...category,
-        meta: { create: { theme, accentTint, pattern, jpTagline, tagline } },
+        meta: { create: { theme, accentTint, pattern, jpTagline, tagline, imageUrl } },
       },
     });
     refreshCategoryPages(category.id);
@@ -55,7 +56,7 @@ export async function updateAdminCategory(id: string, input: unknown) {
   if (!parsedId.success || !parsed.success || parsed.data.id !== id) {
     return { ok: false as const, error: "Некорректные данные категории" };
   }
-  const { theme, accentTint, pattern, jpTagline, tagline, ...category } = parsed.data;
+  const { theme, accentTint, pattern, jpTagline, tagline, imageUrl, ...category } = parsed.data;
   try {
     await db.category.update({
       where: { id },
@@ -64,8 +65,8 @@ export async function updateAdminCategory(id: string, input: unknown) {
         sortOrder: category.sortOrder,
         meta: {
           upsert: {
-            create: { theme, accentTint, pattern, jpTagline, tagline },
-            update: { theme, accentTint, pattern, jpTagline, tagline },
+            create: { theme, accentTint, pattern, jpTagline, tagline, imageUrl },
+            update: { theme, accentTint, pattern, jpTagline, tagline, imageUrl },
           },
         },
       },

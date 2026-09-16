@@ -72,19 +72,25 @@ const WOK_PROTEIN_IMAGES: Record<string, string> = {
   salmon: ASSETS.wok.salmon,
 };
 
+function resolveBaseImage(base: WokBase) {
+  return base.imageUrl ?? WOK_BASE_IMAGES[base.id] ?? ASSETS.wok.udon;
+}
+
+function resolveProteinImage(protein: WokProtein) {
+  return protein.imageUrl ?? WOK_PROTEIN_IMAGES[protein.id] ?? ASSETS.wok.chicken;
+}
+
 function WokComposition({
-  baseId,
-  proteinId,
+  baseImage,
+  proteinImage,
   sauceColor,
   label,
 }: {
-  baseId: string;
-  proteinId: string;
+  baseImage: string;
+  proteinImage: string;
   sauceColor: string;
   label: string;
 }) {
-  const baseImage = WOK_BASE_IMAGES[baseId] ?? ASSETS.wok.udon;
-  const proteinImage = WOK_PROTEIN_IMAGES[proteinId] ?? ASSETS.wok.chicken;
   const maskUrl = `url("${ASSETS.wok.sauceMask}")`;
 
   return (
@@ -123,10 +129,23 @@ function WokComposition({
 // маску для соуса), а не абстрактную иконку — просили крупнее и аппетитнее.
 // Если для нового пункта из админки фото ещё нет — честная заглушка на
 // тонированном фоне, а не битая картинка.
-function WokOptionThumb({ kind, id, colorHex }: { kind: number; id: string; colorHex: string | null }) {
+function WokOptionThumb({
+  kind,
+  id,
+  colorHex,
+  imageUrl,
+}: {
+  kind: number;
+  id: string;
+  colorHex: string | null;
+  imageUrl?: string | null;
+}) {
   const tone = OPTION_TONES[id]?.[0] ?? colorHex ?? "#9A536E";
 
   if (kind === 2) {
+    if (imageUrl) {
+      return <Image src={imageUrl} alt="" aria-hidden fill sizes="220px" className="object-cover" />;
+    }
     const maskUrl = `url("${ASSETS.wok.sauceMask}")`;
     return (
       <span
@@ -147,7 +166,7 @@ function WokOptionThumb({ kind, id, colorHex }: { kind: number; id: string; colo
     );
   }
 
-  const image = kind === 0 ? WOK_BASE_IMAGES[id] : WOK_PROTEIN_IMAGES[id];
+  const image = imageUrl ?? (kind === 0 ? WOK_BASE_IMAGES[id] : WOK_PROTEIN_IMAGES[id]);
   if (image) {
     return <Image src={image} alt="" aria-hidden fill sizes="220px" className="object-contain p-2" />;
   }
@@ -200,6 +219,8 @@ export function WokBuilder({
   const base = bases.find((item) => item.id === baseId)!;
   const protein = proteins.find((item) => item.id === proteinId)!;
   const sauce = sauces.find((item) => item.id === sauceId)!;
+  const baseImage = resolveBaseImage(base);
+  const proteinImage = resolveProteinImage(protein);
   const unitPriceCents = useMemo(
     () => calculateWokPriceCents(basePriceCents, base, protein, sauce),
     [basePriceCents, base, protein, sauce],
@@ -258,8 +279,8 @@ export function WokBuilder({
           <div className="flex items-center gap-3 py-2">
             <div className="relative h-20 w-20 flex-none rounded-full border border-white/70 bg-paper-2/70 shadow-s">
               <WokComposition
-                baseId={baseId}
-                proteinId={proteinId}
+                baseImage={baseImage}
+                proteinImage={proteinImage}
                 sauceColor={sauceTone}
                 label={`Вок: ${base.name}, ${protein.name}, соус ${sauce.name}`}
               />
@@ -353,7 +374,7 @@ export function WokBuilder({
                   className="relative h-[104px] w-full flex-none border-b border-hair-soft"
                   style={{ background: `linear-gradient(160deg, ${pale}, #FFFDF8)` }}
                 >
-                  <WokOptionThumb kind={step} id={option.id} colorHex={option.colorHex} />
+                  <WokOptionThumb kind={step} id={option.id} colorHex={option.colorHex} imageUrl={option.imageUrl} />
                 </span>
                 <span className="flex flex-1 flex-col justify-center p-3">
                   <span className="line-clamp-2 block text-[11px] font-bold leading-[1.25]">{option.name}</span>
@@ -444,8 +465,8 @@ export function WokBuilder({
             className="wok-dish-swap absolute inset-[3%] drop-shadow-[0_32px_36px_rgba(65,34,45,.28)]"
           >
             <WokComposition
-              baseId={baseId}
-              proteinId={proteinId}
+              baseImage={baseImage}
+              proteinImage={proteinImage}
               sauceColor={sauceTone}
               label={`Вок: ${base.name}, ${protein.name}, соус ${sauce.name}`}
             />
@@ -524,7 +545,7 @@ export function WokBuilder({
                   className="relative h-[128px] w-full flex-none border-b border-hair-soft transition duration-500 group-hover/option:scale-[1.03]"
                   style={{ background: `linear-gradient(160deg, ${pale}, #FFFDF8)` }}
                 >
-                  <WokOptionThumb kind={step} id={option.id} colorHex={option.colorHex} />
+                  <WokOptionThumb kind={step} id={option.id} colorHex={option.colorHex} imageUrl={option.imageUrl} />
                 </span>
                 <span className="flex flex-1 flex-col justify-center p-4">
                   <span className="block text-[13px] font-bold leading-tight">{option.name}</span>

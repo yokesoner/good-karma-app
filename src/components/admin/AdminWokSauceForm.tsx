@@ -3,12 +3,14 @@
 import { FormEvent, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { adminFieldClass, adminLabelClass, adminPanelClass } from "@/components/admin/formStyles";
+import { AdminImageUploader } from "@/components/admin/AdminImageUploader";
 import { createAdminWokSauce, type AdminWokSauceInput, updateAdminWokSauce } from "@/server/adminWokIngredients";
 
 export function AdminWokSauceForm({ initial }: { initial?: AdminWokSauceInput }) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
+  const [imageUrl, setImageUrl] = useState<string | null>(initial?.imageUrl ?? null);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -18,6 +20,7 @@ export function AdminWokSauceForm({ initial }: { initial?: AdminWokSauceInput })
       name: String(form.get("name") ?? ""),
       extraCents: Number(form.get("extraCents")),
       colorHex: String(form.get("colorHex") ?? ""),
+      imageUrl,
     };
     setError("");
     startTransition(async () => {
@@ -50,6 +53,20 @@ export function AdminWokSauceForm({ initial }: { initial?: AdminWokSauceInput })
             <span className="text-xs text-ink-3">Красит маску соуса на карточке и в конструкторе</span>
           </div>
         </label>
+        <div className="md:col-span-2">
+          <span className={adminLabelClass}>Своя фотография для карточки выбора</span>
+          <p className="mb-2 text-xs text-ink-3">В собранной миске соус всё равно рисуется тонировкой маски выше — фото используется только на карточке выбора соуса.</p>
+          <div className="flex flex-wrap items-center gap-3">
+            {imageUrl && (
+              /* eslint-disable-next-line @next/next/no-img-element -- превью произвольного S3-URL, next/image тут не нужен */
+              <img src={imageUrl} alt="" className="h-16 w-16 rounded-2xl border border-hair object-cover" />
+            )}
+            <AdminImageUploader folder="wok" onUploaded={(url) => setImageUrl(url)} />
+            {imageUrl && (
+              <button type="button" onClick={() => setImageUrl(null)} className="text-xs font-semibold text-cherry hover:underline">Убрать</button>
+            )}
+          </div>
+        </div>
       </section>
       {error && <p role="alert" className="rounded-2xl bg-tint-blush px-5 py-4 text-sm text-cherry">{error}</p>}
       <div className="flex justify-end gap-3">

@@ -13,7 +13,7 @@ const UploadSchema = z.object({
   size: z.number().int().positive().max(12 * 1024 * 1024, "Файл должен быть не больше 12 МБ"),
   // Только имя папки в бакете — не даём вызывающему коду задавать произвольный
   // путь, чтобы не расползались случайные префиксы в хранилище.
-  folder: z.enum(["products", "promotions"]).default("products"),
+  folder: z.enum(["products", "promotions", "categories", "wok"]).default("products"),
 });
 
 const extensionByType: Record<z.infer<typeof UploadSchema>["contentType"], string> = {

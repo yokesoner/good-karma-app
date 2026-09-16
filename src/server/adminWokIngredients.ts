@@ -17,6 +17,7 @@ const WokIngredientSchema = z.object({
   id: IdSchema,
   name: z.string().trim().min(1, "Укажите название").max(80),
   extraCents: z.number().int().min(0).max(10_000_000),
+  imageUrl: z.string().trim().url().max(500).nullable(),
 });
 
 const WokSauceSchema = WokIngredientSchema.extend({
@@ -55,7 +56,7 @@ export async function updateAdminWokBase(id: string, input: unknown) {
     return { ok: false as const, error: parsed.success ? "ID нельзя менять" : parsed.error.issues[0]?.message ?? "Проверьте поля" };
   }
   try {
-    await db.wokBase.update({ where: { id }, data: { name: parsed.data.name, extraCents: parsed.data.extraCents } });
+    await db.wokBase.update({ where: { id }, data: { name: parsed.data.name, extraCents: parsed.data.extraCents, imageUrl: parsed.data.imageUrl } });
     refreshWokPages();
     return { ok: true as const };
   } catch {
@@ -99,7 +100,7 @@ export async function updateAdminWokProtein(id: string, input: unknown) {
     return { ok: false as const, error: parsed.success ? "ID нельзя менять" : parsed.error.issues[0]?.message ?? "Проверьте поля" };
   }
   try {
-    await db.wokProtein.update({ where: { id }, data: { name: parsed.data.name, extraCents: parsed.data.extraCents } });
+    await db.wokProtein.update({ where: { id }, data: { name: parsed.data.name, extraCents: parsed.data.extraCents, imageUrl: parsed.data.imageUrl } });
     refreshWokPages();
     return { ok: true as const };
   } catch {
@@ -145,7 +146,7 @@ export async function updateAdminWokSauce(id: string, input: unknown) {
   try {
     await db.wokSauce.update({
       where: { id },
-      data: { name: parsed.data.name, extraCents: parsed.data.extraCents, colorHex: parsed.data.colorHex },
+      data: { name: parsed.data.name, extraCents: parsed.data.extraCents, colorHex: parsed.data.colorHex, imageUrl: parsed.data.imageUrl },
     });
     refreshWokPages();
     return { ok: true as const };
