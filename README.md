@@ -159,3 +159,8 @@ npx prisma db push
 npm run db:seed
 npm run dev
 ```
+
+## Продакшн
+
+Пошаговый переезд на боевой хостинг (reg.ru VPS, перенос базы в РФ по
+152-ФЗ, S3, PM2, Nginx/HTTPS) — в [DEPLOYMENT.md](./DEPLOYMENT.md).

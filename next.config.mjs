@@ -25,6 +25,24 @@ const nextConfig = {
       ...(s3RemotePattern ? [s3RemotePattern] : []),
     ],
   },
+  // Самодостаточная сборка в .next/standalone — на VPS не нужно тащить
+  // node_modules целиком, только public/, .next/static и сам standalone.
+  // См. DEPLOYMENT.md.
+  output: "standalone",
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          // geolocation=(self) — используется на /checkout для определения зоны доставки.
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
