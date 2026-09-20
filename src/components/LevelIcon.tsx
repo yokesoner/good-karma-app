@@ -1,6 +1,15 @@
-// Символы уровней: семечко, сакура, полумесяц, лотос.
-// Тонкая линия в одном стиле, наследуют currentColor.
+// Символы уровней: семечко, сакура, полумесяц, лотос — плюс произвольная
+// картинка, загруженная админом (src/components/admin/AdminKarmaLevelForm.tsx),
+// вместо угаданного слова. Свои иконки живут на /uploads/... (диск сервера,
+// src/lib/uploadStorage.ts) или /assets/... (бандл) — остальные строки
+// (включая старое значение "karma") по-прежнему падают в словарь ниже,
+// это не ломает уже существующие уровни.
 export function LevelIcon({ name, className }: { name: string; className?: string }) {
+  if (name.startsWith("/uploads/") || name.startsWith("/assets/") || /^https?:\/\//i.test(name)) {
+    // eslint-disable-next-line @next/next/no-img-element -- маленькая иконка в произвольном месте разметки, next/image тут избыточен
+    return <img src={name} alt="" aria-hidden className={className} />;
+  }
+
   const common = {
     className,
     viewBox: "0 0 32 32",

@@ -3,6 +3,7 @@ import { Montserrat } from "next/font/google";
 import { ViewTransitions } from "next-view-transitions";
 import { ThemeScript } from "@/components/ThemeScript";
 import { SiteShell } from "@/components/SiteShell";
+import { ToastHost } from "@/components/ToastHost";
 import "./globals.css";
 
 const montserrat = Montserrat({
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </head>
         <body className="font-sans antialiased">
           <SiteShell>{children}</SiteShell>
+          <ToastHost />
         </body>
       </html>
     </ViewTransitions>

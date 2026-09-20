@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentCustomerId } from "@/lib/customerAuth";
+import { checkRewardEligibility } from "@/server/karmaRewards";
 
 /**
  * Данные личного кабинета. Профиль — целиком клиентская страница (identity
@@ -21,13 +22,18 @@ export async function getProfileData() {
   });
   if (!user) return null;
 
-  const [agg, levels, rewards, redeemed, orders] = await Promise.all([
+  const [agg, levels, rewards, orders, discountGrants] = await Promise.all([
     db.karmaLedgerEntry.aggregate({ where: { userId }, _sum: { points: true } }),
     db.karmaLevel.findMany({ orderBy: { fromKarma: "asc" } }),
-    db.karmaReward.findMany({ where: { isActive: true }, orderBy: { costPoints: "asc" } }),
-    db.karmaLedgerEntry.findMany({
-      where: { userId, reason: "REWARD_REDEEMED" },
-      select: { rewardId: true },
+    db.karmaReward.findMany({
+      where: { isActive: true },
+      orderBy: { costPoints: "asc" },
+      include: {
+        products: {
+          include: { product: { select: { id: true, name: true, priceCents: true, images: { take: 1, orderBy: { sortOrder: "asc" } } } } },
+        },
+        minLevel: { select: { name: true } },
+      },
     }),
     db.order.findMany({
       where: { userId },
@@ -35,7 +41,20 @@ export async function getProfileData() {
       take: 20,
       include: { items: { select: { qty: true } } },
     }),
+    // Неиспользованные персональные скидки Karma Club — выданы мгновенно
+    // при обмене DISCOUNT-наград (redeemDiscountReward), ждут применения
+    // на чекауте вместо промокода (см. CheckoutForm.tsx).
+    db.karmaDiscountGrant.findMany({
+      where: { userId, isUsed: false },
+      orderBy: { createdAt: "desc" },
+      include: { reward: { select: { title: true } } },
+    }),
   ]);
+
+  // Уровень/недельный лимит — правило конкретной награды, не про баланс
+  // (баланс уже решает доступность через data.points >= costPoints на
+  // клиенте). Считаем здесь, а не в компоненте — там нет доступа к БД.
+  const eligibility = await Promise.all(rewards.map((r) => checkRewardEligibility(userId, r)));
 
   return {
     user: { id: user.id, name: user.name ?? "", phone: user.phone },
@@ -48,8 +67,32 @@ export async function getProfileData() {
     })),
     points: agg._sum.points ?? 0,
     levels,
-    rewards,
-    claimedIds: redeemed.map((r) => r.rewardId).filter((id): id is string => !!id),
+    rewards: rewards.map((r, i) => ({
+      id: r.id,
+      costPoints: r.costPoints,
+      title: r.title,
+      description: r.description,
+      kind: r.kind,
+      discountType: r.discountType,
+      discountPct: r.discountPct,
+      discountFixedCents: r.discountFixedCents,
+      minLevelName: r.minLevel?.name ?? null,
+      restrictionError: eligibility[i]!.ok ? null : eligibility[i]!.error,
+      products: r.products.map((link) => ({
+        id: link.product.id,
+        name: link.product.name,
+        priceCents: link.product.priceCents,
+        imageUrl: link.product.images[0]?.url ?? null,
+      })),
+    })),
+    discountGrants: discountGrants.map((g) => ({
+      id: g.id,
+      rewardTitle: g.reward.title,
+      discountType: g.discountType,
+      discountPct: g.discountPct,
+      discountFixedCents: g.discountFixedCents,
+      createdAt: g.createdAt,
+    })),
     orders: orders.map((o) => ({
       number: o.number,
       status: o.status,
@@ -58,35 +101,6 @@ export async function getProfileData() {
       itemsCount: o.items.reduce((s, i) => s + i.qty, 0),
     })),
   };
-}
-
-const ClaimSchema = z.object({
-  rewardId: z.string().min(1),
-});
-
-export async function claimReward(input: unknown) {
-  const userId = await getCurrentCustomerId();
-  if (!userId) return { ok: false as const, error: "Сессия истекла. Войдите заново" };
-  const parsed = ClaimSchema.safeParse(input);
-  if (!parsed.success) return { ok: false as const, error: "Некорректные данные" };
-  const { rewardId } = parsed.data;
-
-  const [reward, agg] = await Promise.all([
-    db.karmaReward.findUnique({ where: { id: rewardId } }),
-    db.karmaLedgerEntry.aggregate({ where: { userId }, _sum: { points: true } }),
-  ]);
-  if (!reward || !reward.isActive) {
-    return { ok: false as const, error: "Награда сейчас недоступна" };
-  }
-  const balance = agg._sum.points ?? 0;
-  if (balance < reward.costPoints) {
-    return { ok: false as const, error: "Недостаточно баллов" };
-  }
-
-  await db.karmaLedgerEntry.create({
-    data: { userId, rewardId, points: -reward.costPoints, reason: "REWARD_REDEEMED" },
-  });
-  return { ok: true as const };
 }
 
 const AddAddressSchema = z.object({

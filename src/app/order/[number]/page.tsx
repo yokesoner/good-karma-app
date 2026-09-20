@@ -1,8 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { OrderAccessGate } from "@/components/OrderAccessGate";
+import { OrderStatusLive } from "@/components/OrderStatusLive";
+import { CAFE_ADDRESS } from "@/lib/delivery";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
+import { hasOrderAccess } from "@/lib/orderAccess";
 
 export const metadata: Metadata = {
   title: "Заказ — Гуд Карма",
@@ -15,13 +19,6 @@ export const metadata: Metadata = {
 const DELIVERY_PHONE = "+7 (999) 000-00-00";
 const DELIVERY_TRACKING_URL = "";
 
-const STAGES = [
-  { key: "NEW", label: "Заказ принят" },
-  { key: "PREPARING", label: "Готовится" },
-  { key: "HANDED_TO_COURIER", label: "Передан в доставку" },
-  { key: "DELIVERING", label: "Доставляется" },
-] as const;
-
 export default async function OrderPage({ params }: { params: { number: string } }) {
   const order = await db.order.findUnique({
     where: { number: params.number },
@@ -32,8 +29,18 @@ export default async function OrderPage({ params }: { params: { number: string }
 
   if (!order) notFound();
 
-  const currentIndex = STAGES.findIndex((s) => s.key === order.status);
-  const isDone = order.status === "DONE";
+  // Номера заказов последовательные (GK-00001, ...) — без этой проверки
+  // страница была бы читаема перебором URL кем угодно.
+  const granted = await hasOrderAccess(order.number);
+  if (!granted) {
+    return (
+      <main className="mx-auto max-w-wrap px-5 py-10 md:px-16">
+        <OrderAccessGate number={order.number} />
+      </main>
+    );
+  }
+
+  const onlinePaymentPending = order.paymentMethod === "CARD_ONLINE" && order.paymentStatus === "PENDING";
 
   return (
     <main className="mx-auto max-w-wrap px-5 py-10 md:px-16">
@@ -48,6 +55,13 @@ export default async function OrderPage({ params }: { params: { number: string }
           {order.items.reduce((n, i) => n + i.qty, 0)} позиции ·{" "}
           {formatMoney(order.totalCents)} ·{" "}
           {order.fulfillment === "PICKUP" ? "самовывоз" : "доставка"}
+        </p>
+        <p className="mt-3 text-[12.5px] text-ink-3">
+          Закроете страницу — не страшно: этот заказ сохранён в разделе{" "}
+          <Link href="/track" className="font-semibold text-cherry hover:underline">
+            «Заказ»
+          </Link>{" "}
+          в этом браузере.
         </p>
 
         <div className="mt-7 flex flex-wrap items-center gap-4">
@@ -64,28 +78,20 @@ export default async function OrderPage({ params }: { params: { number: string }
         </div>
       </div>
 
+      {onlinePaymentPending && (
+        <div
+          role="status"
+          className="mt-8 rounded-s bg-tint-cream px-5 py-4 text-[13.5px] leading-relaxed text-ink-2"
+        >
+          <b className="font-bold text-ink">Онлайн-оплата подключается.</b> В ближайшее время
+          администратор свяжется, чтобы принять оплату — это ещё не автоматический платёж.
+        </div>
+      )}
+
       {/* Этапы без обратного отсчёта — сознательное решение из прототипа:
           обещать точное время до минуты значит регулярно его нарушать. */}
-      <div className="mt-8 grid grid-cols-2 gap-y-6 md:grid-cols-4">
-        {STAGES.map((stage, i) => {
-          const done = isDone || i < currentIndex;
-          const now = !isDone && i === currentIndex;
-          return (
-            <div key={stage.key} className="relative pr-4 pt-6">
-              <span
-                className={`absolute left-0 right-4 top-0 h-[3px] rounded-full ${
-                  done || now ? "bg-cherry" : "bg-hair"
-                }`}
-              />
-              <span className="text-[10px] font-bold tracking-[0.16em] text-ink-3">
-                0{i + 1}
-              </span>
-              <b className={`mt-1.5 block text-[14.5px] font-bold ${now ? "text-cherry" : ""}`}>
-                {stage.label}
-              </b>
-            </div>
-          );
-        })}
+      <div className="mt-8">
+        <OrderStatusLive number={order.number} fulfillment={order.fulfillment} initialStatus={order.status} />
       </div>
 
       <div className="mt-10 grid grid-cols-1 gap-10 md:grid-cols-2">
@@ -131,7 +137,7 @@ export default async function OrderPage({ params }: { params: { number: string }
                 [
                   order.fulfillment === "PICKUP" ? "Адрес кафе" : "Адрес",
                   order.fulfillment === "PICKUP"
-                    ? "ул. Садовая, 12"
+                    ? CAFE_ADDRESS
                     : [order.address, order.addressFlat].filter(Boolean).join(", "),
                 ],
                 ...(order.deliveryZone ? [["Зона доставки", `№${order.deliveryZone}`]] : []),

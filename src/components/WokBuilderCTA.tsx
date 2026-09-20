@@ -13,7 +13,7 @@ export function WokBuilderCTA() {
       <div>
         <h3 className="text-[15.5px] font-bold leading-tight">Собери свой ВОК</h3>
         <p className="mt-1 text-[12.5px] leading-snug text-ink-2">
-          Основа, белок и соус — как захочется
+          Основа, начинка и соус — как захочется
         </p>
         <span className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-cherry">
           Собрать →

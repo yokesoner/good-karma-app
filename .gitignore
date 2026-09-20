@@ -29,3 +29,8 @@ next-env.d.ts
 
 # Локальный lock-файл рантайма Claude Code (pid/session конкретной машины).
 .claude/*.lock
+
+# Картинки, загруженные из админки — хранятся прямо на диске сервера
+# (src/lib/uploadStorage.ts), не в git. При переносе на новый VPS эту папку
+# нужно перенести отдельно, так же как базу (см. DEPLOYMENT.md).
+/public/uploads/

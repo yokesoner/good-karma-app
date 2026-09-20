@@ -27,19 +27,26 @@ export type KarmaSnapshot = {
   pointsToNextReward: number;
 };
 
+// levels должен быть отсортирован по fromKarma по возрастанию (так его и
+// запрашивают все вызывающие — orderBy: { fromKarma: "asc" }). Вынесено
+// отдельно от karmaSnapshot, чтобы ту же логику подбора уровня можно было
+// переиспользовать на сервере (см. checkRewardEligibility в
+// src/server/karmaRewards.ts — там же level-gate наград).
+export function pickLevel(points: number, levels: KarmaLevel[]): KarmaLevel | null {
+  const first = levels[0];
+  if (!first) return null;
+  return levels.find((l) => points >= l.fromKarma && points < l.toKarma) ?? levels[levels.length - 1] ?? first;
+}
+
 /** Всё состояние клуба выводится из одного числа — количества баллов. */
 export function karmaSnapshot(
   points: number,
   levels: KarmaLevel[],
   rewards: KarmaReward[],
 ): KarmaSnapshot | null {
-  const first = levels[0];
-  if (!first) return null;
+  const level = pickLevel(points, levels);
+  if (!level) return null;
 
-  const level =
-    levels.find((l) => points >= l.fromKarma && points < l.toKarma) ??
-    levels[levels.length - 1] ??
-    first;
   const nextLevel = levels[levels.indexOf(level) + 1] ?? null;
 
   const ceiling = nextLevel ? nextLevel.fromKarma : level.toKarma;

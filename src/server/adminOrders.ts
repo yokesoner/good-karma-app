@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/adminAuth";
 import { db } from "@/lib/db";
+import { ALLOWED_STATUSES_BY_FULFILLMENT } from "@/lib/orderLabels";
 
 const UpdateAdminOrderSchema = z.object({
   status: z.nativeEnum(OrderStatus),
@@ -19,6 +20,15 @@ export async function updateAdminOrder(id: string, input: unknown) {
   const parsed = UpdateAdminOrderSchema.safeParse(input);
   if (!parsedId.success || !parsed.success) {
     return { ok: false as const, error: "Проверьте статусы заказа и оплаты" };
+  }
+
+  // Не доверяем клиенту, даже своей же форме: статусы доставки не имеют
+  // смысла для самовывоза и наоборот (см. ALLOWED_STATUSES_BY_FULFILLMENT).
+  const existing = await db.order.findUnique({ where: { id: parsedId.data }, select: { fulfillment: true } });
+  if (!existing) return { ok: false as const, error: "Заказ не найден" };
+  const allowed = ALLOWED_STATUSES_BY_FULFILLMENT[existing.fulfillment];
+  if (!(allowed as readonly string[]).includes(parsed.data.status)) {
+    return { ok: false as const, error: "Этот статус недоступен для выбранного способа получения" };
   }
 
   try {
@@ -37,4 +47,20 @@ export async function updateAdminOrder(id: string, input: unknown) {
     }
     return { ok: false as const, error: "Не удалось сохранить статусы" };
   }
+}
+
+const RECENT_ORDERS_TAKE = 20;
+
+// Питает живую ленту уведомлений в шапке админки (AdminOrderAlerts) —
+// обычный поллинг раз в несколько секунд, без SSE/WebSocket.
+export async function getRecentOrdersForAdmin(sinceIso?: string) {
+  await requireAdmin();
+  const since = sinceIso ? new Date(sinceIso) : null;
+  const orders = await db.order.findMany({
+    where: since && !Number.isNaN(since.getTime()) ? { createdAt: { gt: since } } : {},
+    orderBy: { createdAt: "desc" },
+    take: RECENT_ORDERS_TAKE,
+    select: { id: true, number: true, totalCents: true, fulfillment: true, createdAt: true },
+  });
+  return orders.map((order) => ({ ...order, createdAt: order.createdAt.toISOString() }));
 }

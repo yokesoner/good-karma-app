@@ -1,22 +1,28 @@
 import Image from "next/image";
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { formatMoney } from "@/lib/money";
+import { formatDiscount, formatMoney } from "@/lib/money";
 import { ASSETS } from "@/lib/assets";
 import { PromoCodeButton } from "@/components/PromoCodeButton";
 import { BackgroundFootage } from "@/components/BackgroundFootage";
 import { GoldHairline } from "@/components/GoldHairline";
 import { promoBackgroundGradient } from "@/lib/promoBackgrounds";
+import { isPromotionCurrentlyActive } from "@/lib/promoSchedule";
 import { cn } from "@/lib/cn";
 
 export async function PromotionsSection({ compact = false }: { compact?: boolean }) {
-  const [promotions, heroBanner] = await Promise.all([
+  const [allPromotions, heroBanner] = await Promise.all([
     db.promotion.findMany({
       where: { isActive: true },
       orderBy: { discountPct: "desc" },
     }),
     db.promoHeroBanner.findUnique({ where: { id: "singleton" } }),
   ]);
+  // isActive в БД — только "включена админом", не "действует прямо
+  // сейчас": акция с истёкшим activeTo или вне окна повтора (DAILY/WEEKLY/
+  // MONTHLY) продолжает быть isActive: true, но здесь ей не место — иначе
+  // баннер продолжал бы висеть неприменимым обещанием (см. src/lib/promoSchedule.ts).
+  const promotions = allPromotions.filter((promo) => isPromotionCurrentlyActive(promo));
   const flagship = promotions[0];
   if (!flagship) return null;
 
@@ -123,7 +129,7 @@ export async function PromotionsSection({ compact = false }: { compact?: boolean
               </div>
               <div>
                 <div className="text-[82px] font-bold leading-none tracking-[-0.065em] md:text-[112px]">
-                  −{flagship.discountPct}%
+                  {formatDiscount(flagship.type, flagship.discountPct, flagship.discountFixedCents)}
                 </div>
                 <p className="mt-4 max-w-[30ch] text-[14px] leading-relaxed text-white/72">
                   {flagship.description}
@@ -144,7 +150,7 @@ export async function PromotionsSection({ compact = false }: { compact?: boolean
                     {second.code === "KARMA15" ? "Первое знакомство" : "Специально для вас"}
                   </span>
                   <div className="mt-4 text-[54px] font-bold leading-none tracking-[-0.06em] text-[#493044]">
-                    −{second.discountPct}%
+                    {formatDiscount(second.type, second.discountPct, second.discountFixedCents)}
                   </div>
                   <p className="mt-3 max-w-[28ch] text-[13px] leading-relaxed text-[#74636E]">
                     {second.description}

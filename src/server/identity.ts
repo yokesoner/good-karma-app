@@ -7,7 +7,7 @@ import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { normalizePhone, isValidPhone } from "@/lib/phone";
-import { getBotUsername, getTelegramUpdates, sendTelegramMessage } from "@/lib/telegram";
+import { getBotUsername, resolveTelegramStart, sendTelegramMessage } from "@/lib/telegram";
 import { CUSTOMER_SESSION_COOKIE, customerSessionCookieOptions, signCustomerSession } from "@/lib/customerSession";
 
 const CODE_TTL_MS = 5 * 60 * 1000;
@@ -94,34 +94,6 @@ async function sendCodeToChat(phone: string, chatId: string) {
   }
 }
 
-// Апдейты от Telegram — не вебхук, а обычный getUpdates: вебхуку нужен
-// публичный HTTPS, которого нет ни в dev, ни пока на текущем хостинге.
-// Синглтон TelegramBotState.lastUpdateId — чтобы не читать одно и то же
-// сообщение повторно при следующем вызове.
-async function findChatIdForPhone(phone: string): Promise<string | null> {
-  const state = await db.telegramBotState.upsert({
-    where: { id: "singleton" },
-    update: {},
-    create: { id: "singleton" },
-  });
-  const updates = await getTelegramUpdates(state.lastUpdateId);
-
-  let maxSeen = state.lastUpdateId;
-  let chatId: string | null = null;
-  for (const update of updates) {
-    maxSeen = Math.max(maxSeen, update.update_id + 1);
-    const text = update.message?.text?.trim() ?? "";
-    const match = /^\/start\s+(\S+)$/.exec(text);
-    if (match?.[1] === phone && update.message) {
-      chatId = String(update.message.chat.id);
-    }
-  }
-  if (maxSeen > state.lastUpdateId) {
-    await db.telegramBotState.update({ where: { id: "singleton" }, data: { lastUpdateId: maxSeen } });
-  }
-  return chatId;
-}
-
 export async function requestLoginCode(input: unknown) {
   const parsed = PhoneSchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Введите телефон" };
@@ -147,7 +119,7 @@ export async function confirmTelegramLink(phoneInput: unknown) {
   let chatId = existing?.chatId ?? null;
   if (!chatId) {
     try {
-      chatId = await findChatIdForPhone(phone.data);
+      chatId = await resolveTelegramStart(phone.data);
     } catch (error) {
       console.error("Не удалось проверить привязку Telegram", error);
       return { ok: false as const, error: "Не удалось проверить Telegram. Попробуйте ещё раз" };

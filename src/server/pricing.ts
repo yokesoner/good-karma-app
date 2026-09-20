@@ -1,6 +1,23 @@
+import type { PromoType } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getDeliveryZone, deliveryCostCents, type DeliveryZone } from "@/lib/delivery";
+import { isPromotionCurrentlyActive } from "@/lib/promoSchedule";
 import { calculateWokPriceCents } from "@/lib/wok";
+
+// Общая формула скидки — переиспользуется и промокодом (Promotion), и
+// персональной скидкой Karma Club (KarmaDiscountGrant): при FIXED раньше
+// discountPct молча интерпретировался как проценты даже для "фиксированной"
+// скидки — это и было багом. min(...) не даёт фиксированной скидке уйти в
+// минус итоговую сумму.
+function computeDiscountCents(
+  discount: { type: PromoType; discountPct: number; discountFixedCents: number },
+  subtotalCents: number,
+): number {
+  if (discount.type === "FIXED") {
+    return Math.min(discount.discountFixedCents, subtotalCents);
+  }
+  return Math.round((subtotalCents * discount.discountPct) / 100);
+}
 
 export type IncomingWokConfig = {
   baseId: string;
@@ -13,6 +30,10 @@ export type IncomingLine = {
   qty: number;
   addonIds: string[];
   wokConfig?: IncomingWokConfig | null;
+  // Подарок Karma Club — товар оплачивается баллами, не деньгами (проверка
+  // баланса и авторства баллов — в src/server/actions.ts, здесь только
+  // сверяется, что этот товар вообще входит в список товаров награды).
+  rewardId?: string | null;
 };
 
 export type PricedLineWokConfig = {
@@ -32,6 +53,8 @@ export type PricedOrder = {
     unitPriceCents: number;
     addons: { id: string; name: string; priceCents: number }[];
     customConfig?: PricedLineWokConfig | null;
+    isReward?: boolean;
+    rewardId?: string | null;
   }[];
   subtotalCents: number;
   discountCents: number;
@@ -41,6 +64,12 @@ export type PricedOrder = {
   zone: DeliveryZone | null;
   promoCode: string | null;
   promoError: string | null;
+  // Персональная скидка Karma Club — занимает тот же "слот" итога, что и
+  // промокод, но источник другой (KarmaDiscountGrant, не Promotion), и
+  // применяется/погашается по-другому (см. actions.ts) — поэтому не
+  // смешиваю с promoCode/promoError, отдельная пара полей.
+  karmaDiscountApplied: boolean;
+  redeemedRewards: { rewardId: string; costPoints: number; productName: string }[];
 };
 
 /**
@@ -55,16 +84,26 @@ export async function priceOrder(params: {
   promoCode?: string | null;
   distanceKm?: number | null;
   isPickup: boolean;
+  // Проверка «один промокод — один телефон» делается в actions.ts (там же
+  // есть доступ к БД заказов и телефону) — сюда приходит уже готовый
+  // результат, priceOrder просто превращает его в тот же promoError,
+  // что и остальные причины отказа применить промокод.
+  promoAlreadyUsedByPhone?: boolean;
+  // Персональная скидка Karma Club — уже провалидированная в actions.ts
+  // (сессия, принадлежность гранта, isUsed). Взаимоисключает promoCode —
+  // если задана, promoCode для расчёта скидки не используется вообще.
+  karmaDiscount?: { type: PromoType; discountPct: number; discountFixedCents: number } | null;
 }): Promise<PricedOrder> {
-  const { lines, promoCode, distanceKm, isPickup } = params;
+  const { lines, promoCode, distanceKm, isPickup, promoAlreadyUsedByPhone, karmaDiscount } = params;
 
   const productIds = [...new Set(lines.map((l) => l.productId))];
   const addonIds = [...new Set(lines.flatMap((l) => l.addonIds))];
   const baseIds = [...new Set(lines.flatMap((l) => (l.wokConfig ? [l.wokConfig.baseId] : [])))];
   const proteinIds = [...new Set(lines.flatMap((l) => (l.wokConfig ? [l.wokConfig.proteinId] : [])))];
   const sauceIds = [...new Set(lines.flatMap((l) => (l.wokConfig ? [l.wokConfig.sauceId] : [])))];
+  const rewardIds = [...new Set(lines.flatMap((l) => (l.rewardId ? [l.rewardId] : [])))];
 
-  const [products, addons, zones, wokBases, wokProteins, wokSauces] = await Promise.all([
+  const [products, addons, zones, wokBases, wokProteins, wokSauces, rewards] = await Promise.all([
     // isHidden НЕ фильтруем здесь — товар-носитель конструктора вока скрыт
     // из каталога, но должен ценообразовываться. Разрешаем такой товар
     // только для строк с wokConfig — проверка ниже, в цикле по строкам.
@@ -84,6 +123,12 @@ export async function priceOrder(params: {
       ? db.wokProtein.findMany({ where: { id: { in: proteinIds } } })
       : Promise.resolve([]),
     sauceIds.length ? db.wokSauce.findMany({ where: { id: { in: sauceIds } } }) : Promise.resolve([]),
+    rewardIds.length
+      ? db.karmaReward.findMany({
+          where: { id: { in: rewardIds } },
+          select: { id: true, costPoints: true, isActive: true, products: { select: { productId: true } } },
+        })
+      : Promise.resolve([]),
   ]);
 
   type ProductRow = {
@@ -96,6 +141,7 @@ export async function priceOrder(params: {
   };
   type AddonRow = { id: string; name: string; priceCents: number };
   type WokRow = { id: string; name: string; extraCents: number };
+  type RewardRow = { id: string; costPoints: number; isActive: boolean; products: { productId: string }[] };
 
   const productById = new Map<string, ProductRow>(
     (products as ProductRow[]).map((p) => [p.id, p]),
@@ -106,6 +152,7 @@ export async function priceOrder(params: {
   const wokBaseById = new Map<string, WokRow>((wokBases as WokRow[]).map((b) => [b.id, b]));
   const wokProteinById = new Map<string, WokRow>((wokProteins as WokRow[]).map((p) => [p.id, p]));
   const wokSauceById = new Map<string, WokRow>((wokSauces as WokRow[]).map((s) => [s.id, s]));
+  const rewardById = new Map<string, RewardRow>((rewards as RewardRow[]).map((r) => [r.id, r]));
   // Prisma возвращает Decimal, а модуль расчёта доставки намеренно не
   // зависит от ORM. Преобразуем значение на границе между слоями.
   const deliveryZones: DeliveryZone[] = zones.map((zone) => ({
@@ -116,6 +163,7 @@ export async function priceOrder(params: {
   }));
 
   const pricedLines: PricedOrder["lines"] = [];
+  const redeemedRewards: PricedOrder["redeemedRewards"] = [];
   let subtotalCents = 0;
   let karmaEarned = 0;
 
@@ -128,6 +176,29 @@ export async function priceOrder(params: {
     // нельзя — только через валидный wokConfig, иначе это дыра для заказа
     // служебных позиций в обход каталога.
     if (product.isHidden && !line.wokConfig) continue;
+
+    // Подарок за баллы — отдельная ветка: ровно 1 шт, без добавок и вока,
+    // цена не идёт ни в сумму заказа, ни в начисление кармы (уже оплачено
+    // баллами). Баланс и авторство баллов проверяет actions.ts до вызова
+    // priceOrder — здесь только сверяется, что товар правда из этой награды.
+    if (line.rewardId) {
+      const reward = rewardById.get(line.rewardId);
+      if (!reward || !reward.isActive) continue;
+      if (!reward.products.some((p) => p.productId === product.id)) continue;
+
+      pricedLines.push({
+        productId: product.id,
+        name: product.name,
+        qty: 1,
+        unitPriceCents: product.priceCents,
+        addons: [],
+        customConfig: null,
+        isReward: true,
+        rewardId: reward.id,
+      });
+      redeemedRewards.push({ rewardId: reward.id, costPoints: reward.costPoints, productName: product.name });
+      continue;
+    }
 
     const qty = Math.max(1, Math.min(99, Math.floor(line.qty)));
     const lineAddons = line.addonIds
@@ -142,7 +213,7 @@ export async function priceOrder(params: {
       const base = wokBaseById.get(line.wokConfig.baseId);
       const protein = wokProteinById.get(line.wokConfig.proteinId);
       const sauce = wokSauceById.get(line.wokConfig.sauceId);
-      // Основу/белок/соус сняли с продажи, пока гость собирал вок —
+      // Основу/начинку/соус сняли с продажи, пока гость собирал вок —
       // так же молча пропускаем строку, как и с удалённым товаром.
       if (!base || !protein || !sauce) continue;
 
@@ -170,24 +241,39 @@ export async function priceOrder(params: {
     });
   }
 
-  // Промокод
+  // Промокод и персональная скидка Karma Club взаимоисключают друг друга —
+  // actions.ts уже гарантирует, что оба сразу сюда не попадут, но порядок
+  // проверки ниже (karmaDiscount раньше promoCode) на всякий случай тоже
+  // отдаёт приоритет провалидированному серверному гранту, а не тексту,
+  // который мог набрать клиент.
   let discountCents = 0;
   let appliedPromo: string | null = null;
   let promoError: string | null = null;
+  let karmaDiscountApplied = false;
 
-  if (promoCode) {
+  if (karmaDiscount) {
+    discountCents = computeDiscountCents(
+      { type: karmaDiscount.type, discountPct: karmaDiscount.discountPct, discountFixedCents: karmaDiscount.discountFixedCents },
+      subtotalCents,
+    );
+    karmaDiscountApplied = true;
+  } else if (promoCode) {
     const promo = await db.promotion.findUnique({ where: { code: promoCode.toUpperCase() } });
     const now = new Date();
-    if (!promo || !promo.isActive) {
+    if (promoAlreadyUsedByPhone) {
+      promoError = "Этот промокод уже был использован";
+    } else if (!promo || !promo.isActive) {
       promoError = "Промокод не найден";
     } else if (promo.activeFrom && promo.activeFrom > now) {
       promoError = "Промокод ещё не действует";
     } else if (promo.activeTo && promo.activeTo < now) {
       promoError = "Срок действия промокода истёк";
+    } else if (!isPromotionCurrentlyActive(promo, now)) {
+      promoError = "Промокод сейчас не в расписании действия — загляните в другое время";
     } else if (subtotalCents < promo.minOrderCents) {
       promoError = `Промокод действует от ${Math.round(promo.minOrderCents / 100)} ₽`;
     } else {
-      discountCents = Math.round((subtotalCents * promo.discountPct) / 100);
+      discountCents = computeDiscountCents(promo, subtotalCents);
       appliedPromo = promo.code;
     }
   }
@@ -207,5 +293,7 @@ export async function priceOrder(params: {
     zone,
     promoCode: appliedPromo,
     promoError,
+    karmaDiscountApplied,
+    redeemedRewards,
   };
 }

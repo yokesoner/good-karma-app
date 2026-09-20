@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/adminAuth";
 import { db } from "@/lib/db";
+import { imageUrlSchema } from "@/lib/imageUrlSchema";
 
 const IdSchema = z
   .string()
@@ -17,7 +18,7 @@ const WokIngredientSchema = z.object({
   id: IdSchema,
   name: z.string().trim().min(1, "Укажите название").max(80),
   extraCents: z.number().int().min(0).max(10_000_000),
-  imageUrl: z.string().trim().url().max(500).nullable(),
+  imageUrl: imageUrlSchema().nullable(),
 });
 
 const WokSauceSchema = WokIngredientSchema.extend({
@@ -87,9 +88,9 @@ export async function createAdminWokProtein(input: unknown) {
     return { ok: true as const };
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      return { ok: false as const, error: "Белок с таким ID уже существует" };
+      return { ok: false as const, error: "Начинка с таким ID уже существует" };
     }
-    return { ok: false as const, error: "Не удалось создать белок" };
+    return { ok: false as const, error: "Не удалось создать начинку" };
   }
 }
 
@@ -104,7 +105,7 @@ export async function updateAdminWokProtein(id: string, input: unknown) {
     refreshWokPages();
     return { ok: true as const };
   } catch {
-    return { ok: false as const, error: "Не удалось сохранить белок" };
+    return { ok: false as const, error: "Не удалось сохранить начинку" };
   }
 }
 
@@ -117,7 +118,7 @@ export async function deleteAdminWokProtein(id: string) {
     refreshWokPages();
     return { ok: true as const };
   } catch {
-    return { ok: false as const, error: "Не удалось удалить белок" };
+    return { ok: false as const, error: "Не удалось удалить начинку" };
   }
 }
 

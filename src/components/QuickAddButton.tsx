@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useCart } from "@/lib/cart";
+import { useToast } from "@/lib/toast";
 
 export function QuickAddButton({
   productId,
@@ -17,6 +18,7 @@ export function QuickAddButton({
   disabled?: boolean;
 }) {
   const add = useCart((s) => s.add);
+  const showToast = useToast((s) => s.show);
   const [added, setAdded] = useState(false);
 
   return (
@@ -26,6 +28,7 @@ export function QuickAddButton({
       aria-label={`Добавить ${name} в корзину`}
       onClick={() => {
         add({ productId, name, imageUrl, unitPriceCents: priceCents, addons: [] });
+        showToast(`Добавлено в корзину: ${name}`);
         setAdded(true);
         setTimeout(() => setAdded(false), 1200);
       }}

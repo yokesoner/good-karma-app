@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { CafeMap } from "@/components/CafeMap";
 import { CulturalAccent } from "@/components/CulturalAccent";
+import { CAFE_ADDRESS } from "@/lib/delivery";
 
 // Контент здесь пока статичный (адрес, часы, телефон) — как и в прототипе.
 // Если это должно меняться из админки без деплоя, вынести в отдельную
@@ -43,12 +45,27 @@ export function Footer() {
             >
               hi@goodkarma.cafe
             </a>
-            <span className="text-[13.5px] text-[#EFE6EC]/80">ул. Садовая, 12</span>
+            <span className="text-[13.5px] text-[#EFE6EC]/80">{CAFE_ADDRESS}</span>
           </div>
         </div>
 
-        <div className="mt-8 text-[11.5px] text-[#EFE6EC]/55">
-          © {new Date().getFullYear()} Гуд Карма
+        <CafeMap className="mt-8 text-[#EFE6EC]" />
+
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6">
+          <nav className="flex flex-wrap gap-5">
+            <Link href="/terms" className="text-[11.5px] text-[#EFE6EC]/55 hover:text-white">
+              Условия сервиса
+            </Link>
+            <Link href="/privacy" className="text-[11.5px] text-[#EFE6EC]/55 hover:text-white">
+              Конфиденциальность
+            </Link>
+            <Link href="/karma-club/rules" className="text-[11.5px] text-[#EFE6EC]/55 hover:text-white">
+              Правила Karma Club
+            </Link>
+          </nav>
+          <div className="text-[11.5px] text-[#EFE6EC]/55">
+            © {new Date().getFullYear()} Гуд Карма
+          </div>
         </div>
       </div>
     </footer>

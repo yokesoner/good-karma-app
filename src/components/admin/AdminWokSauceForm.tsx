@@ -4,6 +4,7 @@ import { FormEvent, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { adminFieldClass, adminLabelClass, adminPanelClass } from "@/components/admin/formStyles";
 import { AdminImageUploader } from "@/components/admin/AdminImageUploader";
+import { centsToRubles, rublesToCents } from "@/lib/money";
 import { createAdminWokSauce, type AdminWokSauceInput, updateAdminWokSauce } from "@/server/adminWokIngredients";
 
 export function AdminWokSauceForm({ initial }: { initial?: AdminWokSauceInput }) {
@@ -18,7 +19,7 @@ export function AdminWokSauceForm({ initial }: { initial?: AdminWokSauceInput })
     const input: AdminWokSauceInput = {
       id: String(form.get("id") ?? ""),
       name: String(form.get("name") ?? ""),
-      extraCents: Number(form.get("extraCents")),
+      extraCents: rublesToCents(Number(form.get("extraRubles"))),
       colorHex: String(form.get("colorHex") ?? ""),
       imageUrl,
     };
@@ -43,8 +44,8 @@ export function AdminWokSauceForm({ initial }: { initial?: AdminWokSauceInput })
           <input name="name" required maxLength={80} defaultValue={initial?.name} className={adminFieldClass} />
         </label>
         <label>
-          <span className={adminLabelClass}>Наценка, копейки</span>
-          <input name="extraCents" type="number" min={0} max={10_000_000} step={1} required defaultValue={initial?.extraCents ?? 0} className={adminFieldClass} />
+          <span className={adminLabelClass}>Наценка, ₽</span>
+          <input name="extraRubles" type="number" min={0} step={0.01} required defaultValue={centsToRubles(initial?.extraCents ?? 0)} className={adminFieldClass} />
         </label>
         <label>
           <span className={adminLabelClass}>Цвет тонировки</span>

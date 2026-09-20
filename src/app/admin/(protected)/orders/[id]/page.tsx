@@ -9,20 +9,21 @@ import { FULFILLMENT_LABELS, ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS, PAYMENT
 
 export const metadata: Metadata = { title: "Заказ — админка Гуд Карма" };
 
+// Только названия — *Id-поля (baseId/proteinId/sauceId) в customConfig
+// нужны для перезаказа и цены, но администратору бесполезны на глаз.
 const customLabels: Record<string, string> = {
-  baseId: "ID основы",
   baseName: "Основа",
-  proteinId: "ID белка",
-  proteinName: "Белок",
-  sauceId: "ID соуса",
+  proteinName: "Начинка",
   sauceName: "Соус",
 };
 
 function CustomConfig({ value }: { value: Prisma.JsonValue }) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  const entries = Object.entries(value).filter(([, entry]) => typeof entry === "string" || typeof entry === "number" || typeof entry === "boolean");
+  const entries = Object.entries(value).filter(
+    ([key, entry]) => key in customLabels && (typeof entry === "string" || typeof entry === "number" || typeof entry === "boolean"),
+  );
   if (!entries.length) return null;
-  return <dl className="mt-3 grid gap-1 rounded-2xl bg-paper-3 px-4 py-3 text-xs text-ink-2 sm:grid-cols-2">{entries.map(([key, entry]) => <div key={key} className="flex gap-2"><dt className="text-ink-3">{customLabels[key] ?? key}:</dt><dd>{String(entry)}</dd></div>)}</dl>;
+  return <dl className="mt-3 grid gap-1 rounded-2xl bg-paper-3 px-4 py-3 text-xs text-ink-2 sm:grid-cols-2">{entries.map(([key, entry]) => <div key={key} className="flex gap-2"><dt className="text-ink-3">{customLabels[key]}:</dt><dd>{String(entry)}</dd></div>)}</dl>;
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
@@ -50,7 +51,7 @@ export default async function AdminOrderPage({ params }: { params: { id: string 
         </div>
 
         <div className="space-y-6">
-          <AdminOrderStatusForm id={order.id} initial={{ status: order.status, paymentStatus: order.paymentStatus }} />
+          <AdminOrderStatusForm id={order.id} initial={{ status: order.status, paymentStatus: order.paymentStatus, fulfillment: order.fulfillment }} />
           <section className="rounded-[28px] border border-hair bg-paper-2 p-5 md:p-7"><h2 className="text-xl font-semibold">Клиент и получение</h2><dl className="mt-5 space-y-3 text-sm"><InfoRow label="Имя" value={order.user.name || "Не указано"} /><InfoRow label="Телефон" value={order.user.phone} /><InfoRow label="Получение" value={FULFILLMENT_LABELS[order.fulfillment]} /><InfoRow label={order.fulfillment === "PICKUP" ? "Место" : "Адрес"} value={address || "Не указан"} />{order.deliveryZone && <InfoRow label="Зона доставки" value={`№${order.deliveryZone}`} />}{order.distanceKm && <InfoRow label="Расстояние" value={`${Number(order.distanceKm).toFixed(1)} км`} />}{order.slotLabel && <InfoRow label="Время" value={order.slotLabel} />}</dl></section>
           <section className="rounded-[28px] border border-hair bg-paper-2 p-5 md:p-7"><h2 className="text-xl font-semibold">Оплата и время</h2><dl className="mt-5 space-y-3 text-sm"><InfoRow label="Способ оплаты" value={PAYMENT_METHOD_LABELS[order.paymentMethod]} /><InfoRow label="Статус оплаты" value={PAYMENT_STATUS_LABELS[order.paymentStatus]} /><InfoRow label="Создан" value={order.createdAt.toLocaleString("ru-RU")} /><InfoRow label="Обновлён" value={order.updatedAt.toLocaleString("ru-RU")} /></dl></section>
         </div>

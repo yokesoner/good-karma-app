@@ -5,7 +5,7 @@ import { WokBuilder } from "@/components/WokBuilder";
 
 export const metadata: Metadata = {
   title: "Собери свой ВОК — Гуд Карма",
-  description: "Конструктор вока: выберите основу, белок и соус — мы приготовим по вашему рецепту.",
+  description: "Конструктор вока: выберите основу, начинку и соус — мы приготовим по вашему рецепту.",
 };
 
 export default async function WokBuilderPage() {
@@ -33,7 +33,7 @@ export default async function WokBuilderPage() {
         </div>
         <div className="flex flex-col items-start gap-3 md:items-end">
           <p className="max-w-[42ch] text-[13px] leading-relaxed text-ink-2 md:text-right">
-            Основа, белок и соус — вы задаёте характер, мы отвечаем за баланс, свежесть и правильный огонь.
+            Основа, начинка и соус — вы задаёте характер, мы отвечаем за баланс, свежесть и правильный огонь.
           </p>
           <div className="flex gap-2">
             {["3 минуты на огне", "готовим после заказа"].map((item) => (

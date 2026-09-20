@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useCart } from "@/lib/cart";
+import { useToast } from "@/lib/toast";
 import { formatMoney } from "@/lib/money";
 
 type Addon = { id: string; name: string; priceCents: number; colorHex: string };
@@ -25,6 +26,7 @@ export function ProductPurchasePanel({
   const [qty, setQty] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
   const add = useCart((s) => s.add);
+  const showToast = useToast((s) => s.show);
 
   const chosen = useMemo(
     () => addons.filter((a) => selected.includes(a.id)),
@@ -46,6 +48,7 @@ export function ProductPurchasePanel({
       },
       qty,
     );
+    showToast(`Добавлено в корзину: ${name}`);
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1600);
   };

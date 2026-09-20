@@ -51,8 +51,8 @@ export default async function AdminWokBuilderPage() {
 
       <section>
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <div><h2 className="text-2xl font-semibold">Белки</h2><p className="mt-1 text-sm text-ink-2">Мясо, морепродукты, тофу</p></div>
-          <Link href="/admin/wok-builder/proteins/new" className="rounded-full bg-plum-deep px-5 py-3 text-xs font-bold uppercase tracking-[0.1em] text-btn-fg">Добавить белок</Link>
+          <div><h2 className="text-2xl font-semibold">Начинки</h2><p className="mt-1 text-sm text-ink-2">Мясо, морепродукты, тофу</p></div>
+          <Link href="/admin/wok-builder/proteins/new" className="rounded-full bg-plum-deep px-5 py-3 text-xs font-bold uppercase tracking-[0.1em] text-btn-fg">Добавить начинку</Link>
         </div>
         <div className="mt-5 overflow-hidden rounded-[28px] border border-hair bg-paper-2">
           {proteins.map((protein) => (
@@ -65,7 +65,7 @@ export default async function AdminWokBuilderPage() {
               </div>
             </article>
           ))}
-          {proteins.length === 0 && <p className="p-10 text-center text-sm text-ink-2">Белков пока нет.</p>}
+          {proteins.length === 0 && <p className="p-10 text-center text-sm text-ink-2">Начинок пока нет.</p>}
         </div>
       </section>
 

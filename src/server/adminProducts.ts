@@ -5,12 +5,10 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/adminAuth";
 import { db } from "@/lib/db";
+import { imageUrlSchema } from "@/lib/imageUrlSchema";
 
 const ImageSchema = z.object({
-  url: z.string().trim().min(1, "Укажите URL изображения").max(2048).refine(
-    (value) => value.startsWith("/assets/") || /^https:\/\//i.test(value),
-    "Допустим локальный путь /assets/... или HTTPS URL",
-  ),
+  url: imageUrlSchema({ maxLength: 2048, requiredMessage: "Укажите URL изображения" }),
   alt: z.string().trim().max(160, "Alt-текст должен быть не длиннее 160 символов"),
   sortOrder: z.number().int().min(0).max(1000),
 });

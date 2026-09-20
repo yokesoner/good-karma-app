@@ -4,6 +4,17 @@ import { FormEvent, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { adminFieldClass, adminLabelClass, adminPanelClass } from "@/components/admin/formStyles";
 import { AdminImageUploader } from "@/components/admin/AdminImageUploader";
+import {
+  CATEGORY_THEME_KEYS,
+  CATEGORY_THEME_LABELS,
+  CATEGORY_ACCENT_TINT_KEYS,
+  CATEGORY_ACCENT_TINT_LABELS,
+  CATEGORY_PATTERN_KEYS,
+  CATEGORY_PATTERN_LABELS,
+  DEFAULT_CATEGORY_THEME,
+  DEFAULT_CATEGORY_ACCENT_TINT,
+  DEFAULT_CATEGORY_PATTERN,
+} from "@/lib/categoryThemes";
 import { createAdminCategory, type AdminCategoryInput, updateAdminCategory } from "@/server/adminCategories";
 
 export function AdminCategoryForm({ initial }: { initial?: AdminCategoryInput }) {
@@ -20,9 +31,9 @@ export function AdminCategoryForm({ initial }: { initial?: AdminCategoryInput })
       id: String(form.get("id") ?? ""),
       name: String(form.get("name") ?? ""),
       sortOrder: Number(form.get("sortOrder")),
-      theme: String(form.get("theme") ?? ""),
-      accentTint: String(form.get("accentTint") ?? ""),
-      pattern: String(form.get("pattern") ?? ""),
+      theme: String(form.get("theme") ?? "") as AdminCategoryInput["theme"],
+      accentTint: String(form.get("accentTint") ?? "") as AdminCategoryInput["accentTint"],
+      pattern: String(form.get("pattern") ?? "") as AdminCategoryInput["pattern"],
       jpTagline: nullable("jpTagline"),
       tagline: nullable("tagline"),
       imageUrl,
@@ -42,9 +53,9 @@ export function AdminCategoryForm({ initial }: { initial?: AdminCategoryInput })
         <label><span className={adminLabelClass}>ID</span><input name="id" required maxLength={40} pattern="[a-z0-9]+(-[a-z0-9]+)*" readOnly={!!initial} defaultValue={initial?.id} className={adminFieldClass} /></label>
         <label><span className={adminLabelClass}>Название</span><input name="name" required maxLength={80} defaultValue={initial?.name} className={adminFieldClass} /></label>
         <label><span className={adminLabelClass}>Порядок</span><input name="sortOrder" type="number" min={-1000} max={1000} step={1} required defaultValue={initial?.sortOrder ?? 0} className={adminFieldClass} /></label>
-        <label><span className={adminLabelClass}>Тема</span><input name="theme" required maxLength={40} defaultValue={initial?.theme ?? "calm"} className={adminFieldClass} /></label>
-        <label><span className={adminLabelClass}>Accent tint</span><input name="accentTint" required maxLength={40} defaultValue={initial?.accentTint ?? "ivory"} className={adminFieldClass} /></label>
-        <label><span className={adminLabelClass}>Паттерн</span><input name="pattern" required maxLength={40} defaultValue={initial?.pattern ?? "none"} className={adminFieldClass} /></label>
+        <label><span className={adminLabelClass}>Тема</span><select name="theme" defaultValue={initial?.theme ?? DEFAULT_CATEGORY_THEME} className={adminFieldClass}>{CATEGORY_THEME_KEYS.map((key) => <option key={key} value={key}>{CATEGORY_THEME_LABELS[key]}</option>)}</select></label>
+        <label><span className={adminLabelClass}>Accent tint</span><select name="accentTint" defaultValue={initial?.accentTint ?? DEFAULT_CATEGORY_ACCENT_TINT} className={adminFieldClass}>{CATEGORY_ACCENT_TINT_KEYS.map((key) => <option key={key} value={key}>{CATEGORY_ACCENT_TINT_LABELS[key]}</option>)}</select></label>
+        <label><span className={adminLabelClass}>Паттерн</span><select name="pattern" defaultValue={initial?.pattern ?? DEFAULT_CATEGORY_PATTERN} className={adminFieldClass}>{CATEGORY_PATTERN_KEYS.map((key) => <option key={key} value={key}>{CATEGORY_PATTERN_LABELS[key]}</option>)}</select></label>
         <label><span className={adminLabelClass}>Японская подпись</span><input name="jpTagline" maxLength={80} defaultValue={initial?.jpTagline ?? ""} className={adminFieldClass} /></label>
         <label><span className={adminLabelClass}>Слоган</span><input name="tagline" maxLength={160} defaultValue={initial?.tagline ?? ""} className={adminFieldClass} /></label>
         <div className="md:col-span-2">

@@ -69,7 +69,7 @@ export default async function MenuPage() {
               </span>
             </div>
             <div className="mt-5 grid grid-cols-3 gap-2">
-              {["Основа", "Белок", "Соус"].map((step, index) => (
+              {["Основа", "Начинка", "Соус"].map((step, index) => (
                 <span
                   key={step}
                   className="rounded-full border border-[#493044]/10 bg-[#FBF8F2]/55 px-2 py-2 text-center text-[8.5px] font-bold uppercase tracking-[0.1em] text-[#76636F]"

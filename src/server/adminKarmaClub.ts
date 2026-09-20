@@ -23,6 +23,24 @@ const KarmaRewardSchema = z.object({
   title: z.string().trim().min(1).max(120),
   description: z.string().trim().min(1).max(400),
   isActive: z.boolean(),
+  kind: z.enum(["PRODUCT", "DISCOUNT"]),
+  // Товар(ы), которые покупатель получает в обмен на эту награду — при
+  // нескольких он выбирает один в /profile. Только для kind = PRODUCT.
+  // Без единого товара награду обменять на сайте нельзя (см. RewardsSection).
+  productIds: z.array(z.string()).max(20),
+  // Только для kind = DISCOUNT — тот же паттерн, что у Promotion
+  // (type/discountPct/discountFixedCents), см. computeDiscountCents в
+  // src/server/pricing.ts.
+  discountType: z.enum(["PERCENT", "FIXED"]).nullable(),
+  discountPct: z.number().int().min(0).max(100).nullable(),
+  discountFixedCents: z.number().int().min(0).max(100_000_000).nullable(),
+  // null = без ограничения уровнем/частотой.
+  minLevelKey: z.string().nullable(),
+  maxRedemptionsPerWeek: z.number().int().min(1).max(1000).nullable(),
+}).superRefine((value, ctx) => {
+  if (value.kind === "DISCOUNT" && !value.discountType) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["discountType"], message: "Укажите тип скидки" });
+  }
 });
 
 export type AdminKarmaLevelInput = z.infer<typeof KarmaLevelSchema>;
@@ -86,12 +104,27 @@ export async function deleteAdminKarmaLevel(key: string) {
   }
 }
 
+async function minLevelExists(key: string | null) {
+  if (!key) return true;
+  return Boolean(await db.karmaLevel.findUnique({ where: { key }, select: { key: true } }));
+}
+
 export async function createAdminKarmaReward(input: unknown) {
   await requireAdmin();
   const parsed = KarmaRewardSchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Проверьте поля" };
+  if (!(await minLevelExists(parsed.data.minLevelKey))) {
+    return { ok: false as const, error: "Выбранный уровень не существует" };
+  }
+  // Скидке не на что быть товарной строкой — обмен kind=DISCOUNT минует
+  // корзину полностью (см. redeemDiscountReward), поэтому и привязывать
+  // к ней товары незачем, даже если форма прислала их по ошибке.
+  const productIds = parsed.data.kind === "DISCOUNT" ? [] : parsed.data.productIds;
+  const { productIds: _productIds, ...rest } = parsed.data;
   try {
-    await db.karmaReward.create({ data: parsed.data });
+    await db.karmaReward.create({
+      data: { ...rest, products: { create: productIds.map((productId) => ({ productId })) } },
+    });
     refreshKarmaPages();
     return { ok: true as const };
   } catch {
@@ -104,8 +137,18 @@ export async function updateAdminKarmaReward(id: string, input: unknown) {
   const parsedId = z.string().cuid().safeParse(id);
   const parsed = KarmaRewardSchema.safeParse(input);
   if (!parsedId.success || !parsed.success) return { ok: false as const, error: parsed.success ? "Некорректный ID награды" : parsed.error.issues[0]?.message ?? "Проверьте поля" };
+  if (!(await minLevelExists(parsed.data.minLevelKey))) {
+    return { ok: false as const, error: "Выбранный уровень не существует" };
+  }
+  const productIds = parsed.data.kind === "DISCOUNT" ? [] : parsed.data.productIds;
+  const { productIds: _productIds, ...rest } = parsed.data;
   try {
-    await db.karmaReward.update({ where: { id }, data: parsed.data });
+    // deleteMany + create в одном nested write — весь набор товаров
+    // перезаписывается атомарно, без ручной транзакции.
+    await db.karmaReward.update({
+      where: { id },
+      data: { ...rest, products: { deleteMany: {}, create: productIds.map((productId) => ({ productId })) } },
+    });
     refreshKarmaPages();
     return { ok: true as const };
   } catch {

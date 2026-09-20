@@ -1,52 +1,65 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/adminAuth";
-import { getS3Config } from "@/lib/s3";
+import { saveUploadedFile, type UploadFolder } from "@/lib/uploadStorage";
 
-const UploadSchema = z.object({
-  fileName: z.string().trim().min(1).max(180),
+const MAX_SIZE_BYTES = 12 * 1024 * 1024;
+
+const MetaSchema = z.object({
   contentType: z.enum(["image/jpeg", "image/png", "image/webp", "image/avif"]),
-  size: z.number().int().positive().max(12 * 1024 * 1024, "Файл должен быть не больше 12 МБ"),
-  // Только имя папки в бакете — не даём вызывающему коду задавать произвольный
-  // путь, чтобы не расползались случайные префиксы в хранилище.
-  folder: z.enum(["products", "promotions", "categories", "wok"]).default("products"),
+  // Только имя папки — не даём вызывающему коду задавать произвольный путь,
+  // чтобы не расползались случайные префиксы в public/uploads.
+  folder: z.enum(["products", "promotions", "categories", "wok", "levels"]).default("products"),
 });
 
-const extensionByType: Record<z.infer<typeof UploadSchema>["contentType"], string> = {
+const extensionByType: Record<z.infer<typeof MetaSchema>["contentType"], string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
   "image/avif": "avif",
 };
 
-export async function createProductImageUpload(input: unknown) {
+// Загрузка в один шаг: клиент шлёт сам файл в FormData, сервер пишет его на
+// диск (public/uploads) и сразу отдаёт публичный URL. Раньше здесь было два
+// шага — presigned PUT URL в S3, потом отдельный PUT с браузера напрямую в
+// хранилище; на своём диске это лишнее, файл можно записать сразу.
+export async function uploadProductImage(formData: FormData) {
   await requireAdmin();
-  const parsed = UploadSchema.safeParse(input);
+
+  const file = formData.get("file");
+  if (!(file instanceof File)) {
+    return { ok: false as const, error: "Файл не найден" };
+  }
+  if (file.size <= 0) {
+    return { ok: false as const, error: "Пустой файл" };
+  }
+  if (file.size > MAX_SIZE_BYTES) {
+    return { ok: false as const, error: "Файл должен быть не больше 12 МБ" };
+  }
+
+  const parsed = MetaSchema.safeParse({
+    contentType: file.type,
+    folder: formData.get("folder") ?? undefined,
+  });
   if (!parsed.success) {
     return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Некорректный файл" };
   }
 
   try {
-    const { client, bucket, publicUrlBase } = getS3Config();
-    const now = new Date();
-    const key = `${parsed.data.folder}/${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}/${randomUUID()}.${extensionByType[parsed.data.contentType]}`;
-    const command = new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      ContentType: parsed.data.contentType,
-      CacheControl: "public, max-age=31536000, immutable",
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const fileName = `${randomUUID()}.${extensionByType[parsed.data.contentType]}`;
+    const { publicUrl } = await saveUploadedFile({
+      folder: parsed.data.folder as UploadFolder,
+      fileName,
+      buffer,
     });
-    const uploadUrl = await getSignedUrl(client, command, { expiresIn: 10 * 60 });
-    const publicUrl = `${publicUrlBase}/${key.split("/").map(encodeURIComponent).join("/")}`;
-    return { ok: true as const, uploadUrl, publicUrl, key };
+    return { ok: true as const, publicUrl };
   } catch (error) {
     return {
       ok: false as const,
-      error: error instanceof Error ? error.message : "Не удалось подготовить загрузку",
+      error: error instanceof Error ? error.message : "Не удалось сохранить изображение",
     };
   }
 }

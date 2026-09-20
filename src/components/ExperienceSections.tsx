@@ -9,8 +9,8 @@ export function ExperienceSections() {
     <div className="mx-auto max-w-wrap px-5 py-8 md:px-16 md:py-14">
       <section className="group relative isolate min-h-[520px] overflow-hidden rounded-[34px] bg-plum-deep text-[#F8F0EA] shadow-l md:min-h-[610px]">
         <Image
-          src={ASSETS.backgrounds.openKitchenStory}
-          alt="Шеф завершает подачу рамена на открытой кухне"
+          src={ASSETS.backgrounds.wokSignature}
+          alt="Авторский вок, собранный из своей основы, начинки и соуса"
           fill
           sizes="(min-width: 1280px) 1152px, 100vw"
           className="object-cover object-[64%_center] transition duration-[1200ms] group-hover:scale-[1.02]"
@@ -27,27 +27,26 @@ export function ExperienceSections() {
         <div className="relative flex min-h-[520px] flex-col justify-between p-7 md:min-h-[610px] md:p-12 lg:p-16">
           <div className="flex items-center gap-3 text-[9.5px] font-bold uppercase tracking-[0.22em] text-[#F8F0EA]/65">
             <GoldHairline width={32} />
-            Открытая кухня · кухня без кулис
+            Конструктор вока · собери свою миску
           </div>
 
           <div>
             <span className="mb-4 block text-[11px] font-bold uppercase tracking-[0.22em] text-[#E7B0C0]">
-              Всё начинается с рук
+              Основа → начинка → соус
             </span>
             <h2 className="max-w-[11ch] text-[38px] font-bold leading-[0.98] tracking-[-0.045em] md:text-[62px]">
-              Не просто меню. Живой ритм кухни.
+              Ваш вок. Ваши правила.
             </h2>
             <p className="mt-6 max-w-[48ch] text-[13px] font-medium leading-[1.8] text-[#F8F0EA]/72 md:text-[14px]">
-              Бульон варится восемь часов, рис заправляется перед сменой,
-              а каждое блюдо собирается только после вашего заказа. Можно смотреть —
-              нам нечего прятать.
+              Выбираете основу, начинку и соус — мы собираем миску за 3 минуты
+              на открытом огне, сразу после вашего заказа.
             </p>
 
             <div className="mt-9 grid max-w-[620px] grid-cols-3 border-t border-white/20 pt-6">
               {[
-                ["8 часов", "варим бульон"],
+                ["3", "шага сборки"],
                 ["3 минуты", "огонь вока"],
-                ["0", "вчерашних блюд"],
+                ["1", "миска, придуманная вами"],
               ].map(([value, label]) => (
                 <div key={label} className="border-r border-white/15 pr-3 last:border-r-0 last:pl-4 md:px-5 md:first:pl-0">
                   <strong className="block text-[17px] font-bold md:text-[22px]">{value}</strong>
@@ -57,6 +56,13 @@ export function ExperienceSections() {
                 </div>
               ))}
             </div>
+
+            <Link
+              href="/wok-builder"
+              className="relative mt-8 inline-flex w-fit items-center gap-3 rounded-full bg-btn px-7 py-4 text-[10.5px] font-bold uppercase tracking-[0.1em] text-btn-fg shadow-[0_18px_34px_-20px_rgba(58,35,56,.72)] transition hover:-translate-y-0.5 hover:shadow-m"
+            >
+              Собрать свой вок <span aria-hidden>↗</span>
+            </Link>
           </div>
         </div>
       </section>

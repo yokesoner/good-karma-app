@@ -5,17 +5,21 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/adminAuth";
 import { db } from "@/lib/db";
+import { imageUrlSchema } from "@/lib/imageUrlSchema";
+import { CATEGORY_THEME_KEYS, CATEGORY_ACCENT_TINT_KEYS, CATEGORY_PATTERN_KEYS } from "@/lib/categoryThemes";
 
 const CategorySchema = z.object({
   id: z.string().trim().min(1).max(40).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "ID: только латиница, цифры и дефисы"),
   name: z.string().trim().min(1, "Укажите название").max(80),
   sortOrder: z.number().int().min(-1000).max(1000),
-  theme: z.string().trim().min(1, "Укажите тему").max(40),
-  accentTint: z.string().trim().min(1, "Укажите акцент").max(40),
-  pattern: z.string().trim().min(1, "Укажите паттерн").max(40),
+  // Закрытые наборы — определяют реальный фон "визуального мира"
+  // категории (src/lib/categoryThemes.ts), не свободный текст.
+  theme: z.enum(CATEGORY_THEME_KEYS),
+  accentTint: z.enum(CATEGORY_ACCENT_TINT_KEYS),
+  pattern: z.enum(CATEGORY_PATTERN_KEYS),
   jpTagline: z.string().trim().max(80).nullable(),
   tagline: z.string().trim().max(160).nullable(),
-  imageUrl: z.string().trim().url().max(500).nullable(),
+  imageUrl: imageUrlSchema().nullable(),
 });
 
 export type AdminCategoryInput = z.infer<typeof CategorySchema>;

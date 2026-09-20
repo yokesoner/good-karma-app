@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { WokBase, WokProtein, WokSauce } from "@prisma/client";
 import { useCart } from "@/lib/cart";
+import { useToast } from "@/lib/toast";
 import { formatMoney } from "@/lib/money";
 import { calculateWokPriceCents } from "@/lib/wok";
 import { ASSETS } from "@/lib/assets";
@@ -20,7 +21,7 @@ type Props = {
   sauces: WokSauce[];
 };
 
-const STEPS = ["Основа", "Белок", "Соус"] as const;
+const STEPS = ["Основа", "Начинка", "Соус"] as const;
 const STEP_COPY = [
   {
     eyebrow: "Текстура",
@@ -215,6 +216,7 @@ export function WokBuilder({
   const [qty, setQty] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
   const add = useCart((state) => state.add);
+  const showToast = useToast((state) => state.show);
 
   const base = bases.find((item) => item.id === baseId)!;
   const protein = proteins.find((item) => item.id === proteinId)!;
@@ -261,6 +263,7 @@ export function WokBuilder({
       },
       qty,
     );
+    showToast(`Добавлено в корзину: ${productName}`);
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1600);
   };

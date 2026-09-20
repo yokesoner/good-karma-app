@@ -1,4 +1,4 @@
-export type NavIconName = "grid" | "spark" | "user" | "cart";
+export type NavIconName = "grid" | "spark" | "user" | "cart" | "receipt";
 
 // Общие иконки навигации — раньше были продублированы дословно в
 // Header.tsx (только cart) и MobileNav.tsx (все четыре).
@@ -42,6 +42,12 @@ export function NavIcon({
           <path d="M3 4.2h2.2l2.3 10.4h9.3l1.9-7.3H6.3" />
           <circle cx="9.6" cy="18.6" r="1.4" />
           <circle cx="16.8" cy="18.6" r="1.4" />
+        </>
+      )}
+      {name === "receipt" && (
+        <>
+          <path d="M6 3.5h12v17l-2.4-1.6-2.4 1.6-2.4-1.6-2.4 1.6-2.4-1.6V3.5Z" />
+          <path d="M8.4 8.2h7.2M8.4 11.6h7.2M8.4 15h4.4" />
         </>
       )}
     </svg>

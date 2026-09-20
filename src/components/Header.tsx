@@ -12,6 +12,7 @@ import { cn } from "@/lib/cn";
 const NAV = [
   { href: "/menu", label: "Меню" },
   { href: "/promotions", label: "Акции" },
+  { href: "/track", label: "Заказ" },
   { href: "/profile", label: "Профиль" },
 ];
 

@@ -139,47 +139,59 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-[14px] font-bold leading-tight">{line.name}</p>
-                  {line.addons.length > 0 && (
-                    <p className="mt-1 text-[11.5px] text-ink-3">
-                      {line.addons.map((a) => a.name).join(" · ")}
-                    </p>
-                  )}
-                  {line.wokConfig && (
-                    <p className="mt-1 text-[11.5px] text-ink-3">
-                      {line.wokConfig.baseName} · {line.wokConfig.proteinName} ·{" "}
-                      {line.wokConfig.sauceName}
-                    </p>
+                  {line.rewardId ? (
+                    <p className="mt-1 text-[11.5px] font-semibold text-mint-deep">🎁 Подарок за баллы</p>
+                  ) : (
+                    <>
+                      {line.addons.length > 0 && (
+                        <p className="mt-1 text-[11.5px] text-ink-3">
+                          {line.addons.map((a) => a.name).join(" · ")}
+                        </p>
+                      )}
+                      {line.wokConfig && (
+                        <p className="mt-1 text-[11.5px] text-ink-3">
+                          {line.wokConfig.baseName} · {line.wokConfig.proteinName} ·{" "}
+                          {line.wokConfig.sauceName}
+                        </p>
+                      )}
+                    </>
                   )}
                   <div className="mt-2.5 flex items-center gap-3">
-                    <div className="flex items-center gap-1 rounded-full border border-hair">
-                      <button
-                        type="button"
-                        aria-label="Уменьшить количество"
-                        disabled={removingKey === line.key}
-                        onClick={() => setQty(line.key, line.qty - 1)}
-                        className="grid h-7 w-7 place-items-center text-ink-3 hover:text-ink disabled:opacity-40"
-                      >
-                        −
-                      </button>
-                      <span
-                        key={line.qty}
-                        className="cart-qty-pop min-w-5 text-center text-[13px] font-semibold"
-                      >
-                        {line.qty}
-                      </span>
-                      <button
-                        type="button"
-                        aria-label="Увеличить количество"
-                        disabled={removingKey === line.key}
-                        onClick={() => setQty(line.key, line.qty + 1)}
-                        className="grid h-7 w-7 place-items-center text-ink-3 hover:text-ink disabled:opacity-40"
-                      >
-                        +
-                      </button>
-                    </div>
-                    <span className="ml-auto text-[14px] font-bold">
-                      {formatMoney(line.unitPriceCents * line.qty)}
-                    </span>
+                    {line.rewardId ? (
+                      <span className="text-[14px] font-bold text-mint-deep">Бесплатно</span>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-1 rounded-full border border-hair">
+                          <button
+                            type="button"
+                            aria-label="Уменьшить количество"
+                            disabled={removingKey === line.key}
+                            onClick={() => setQty(line.key, line.qty - 1)}
+                            className="grid h-7 w-7 place-items-center text-ink-3 hover:text-ink disabled:opacity-40"
+                          >
+                            −
+                          </button>
+                          <span
+                            key={line.qty}
+                            className="cart-qty-pop min-w-5 text-center text-[13px] font-semibold"
+                          >
+                            {line.qty}
+                          </span>
+                          <button
+                            type="button"
+                            aria-label="Увеличить количество"
+                            disabled={removingKey === line.key}
+                            onClick={() => setQty(line.key, line.qty + 1)}
+                            className="grid h-7 w-7 place-items-center text-ink-3 hover:text-ink disabled:opacity-40"
+                          >
+                            +
+                          </button>
+                        </div>
+                        <span className="ml-auto text-[14px] font-bold">
+                          {formatMoney(line.unitPriceCents * line.qty)}
+                        </span>
+                      </>
+                    )}
                   </div>
                   <button
                     type="button"

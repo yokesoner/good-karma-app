@@ -3,6 +3,7 @@
 import { FormEvent, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AdminImageUploader } from "@/components/admin/AdminImageUploader";
+import { centsToRubles, rublesToCents } from "@/lib/money";
 import {
   createAdminProduct,
   type AdminProductInput,
@@ -55,7 +56,7 @@ export function AdminProductForm({
       name: String(form.get("name") ?? ""),
       description: String(form.get("description") ?? ""),
       weight: String(form.get("weight") ?? ""),
-      priceCents: Number(form.get("priceCents")),
+      priceCents: rublesToCents(Number(form.get("priceRubles"))),
       karma: Number(form.get("karma")),
       badge: (String(form.get("badge") ?? "") || null) as AdminProductInput["badge"],
       categoryId: String(form.get("categoryId") ?? ""),
@@ -106,9 +107,8 @@ export function AdminProductForm({
           </select>
         </label>
         <label className="block">
-          <span className={labelClass}>Цена, копейки</span>
-          <input name="priceCents" type="number" min={0} max={10_000_000} step={1} required defaultValue={initial?.priceCents ?? 0} className={fieldClass} />
-          <span className="mt-1 block text-xs text-ink-3">Например, 64900 = 649 ₽</span>
+          <span className={labelClass}>Цена, ₽</span>
+          <input name="priceRubles" type="number" min={0} step={0.01} required defaultValue={centsToRubles(initial?.priceCents ?? 0)} className={fieldClass} />
         </label>
         <label className="block">
           <span className={labelClass}>Баллы кармы</span>

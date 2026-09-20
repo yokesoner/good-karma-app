@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Category, CategoryMeta, Product, ProductImage } from "@prisma/client";
+import { categoryAccentTintClass } from "@/lib/categoryThemes";
 
 type CategoryWithMeta = Category & {
   meta: CategoryMeta | null;
@@ -27,7 +28,7 @@ export function CategoryStrip({ categories }: { categories: CategoryWithMeta[] }
             role="tab"
             className="group w-[116px] flex-none rounded-[26px] border border-transparent px-2 pb-4 pt-2.5 text-center transition duration-500 hover:-translate-y-1 hover:border-white/80 hover:bg-white/55 hover:shadow-[0_18px_42px_-32px_rgba(73,48,68,.5)]"
           >
-            <span className="relative mb-3 block aspect-square overflow-hidden rounded-[34px] border border-white/80 bg-tint-cream p-1 shadow-s transition duration-500 group-hover:rotate-[-1.5deg] group-hover:shadow-m">
+            <span className={`relative mb-3 block aspect-square overflow-hidden rounded-[34px] border border-white/80 p-1 shadow-s transition duration-500 group-hover:rotate-[-1.5deg] group-hover:shadow-m ${categoryAccentTintClass(c.meta?.accentTint)}`}>
               {face ? (
                 <span className="relative block h-full w-full overflow-hidden rounded-[29px]">
                   <Image

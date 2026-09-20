@@ -16,3 +16,17 @@ export function formatMoney(cents: number): string {
 export function rublesToCents(rubles: number): number {
   return Math.round(rubles * 100);
 }
+
+// Обратная конвертация — только для отображения существующего значения в
+// админ-форме (ввод по-прежнему в рублях, хранение по-прежнему в копейках).
+export function centsToRubles(cents: number): number {
+  return cents / 100;
+}
+
+// Единое форматирование "−20%" / "−300 ₽" — для промокода (Promotion) и
+// персональной скидки Karma Club (KarmaDiscountGrant), у которых одна и
+// та же пара полей type/discountPct/discountFixedCents означает одно и то
+// же (см. computeDiscountCents в src/server/pricing.ts).
+export function formatDiscount(type: "PERCENT" | "FIXED", discountPct: number, discountFixedCents: number): string {
+  return type === "FIXED" ? `−${formatMoney(discountFixedCents)}` : `−${discountPct}%`;
+}

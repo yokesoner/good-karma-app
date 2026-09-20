@@ -27,6 +27,11 @@ model AdminUser {
   role         AdminRole @default(OWNER)
   createdAt    DateTime  @default(now())
   lastLoginAt  DateTime?
+  // Личная привязка Telegram (не общий чат) — каждый админ сам подключает
+  // свой аккаунт на /admin/notifications, получает туда пуш о новых заказах.
+  // Тот же deep-link/getUpdates механизм, что и у клиентского входа, но с
+  // payload `admin_<id>` вместо телефона — см. resolveTelegramStart.
+  telegramChatId String? @unique
 
   @@map("admin_users")
 }
@@ -89,6 +94,7 @@ model Product {
   nutrition   Nutrition?
   addonGroups ProductAddonGroup[]
   orderItems  OrderItem[]
+  rewardLinks KarmaRewardProduct[]
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
 
@@ -211,6 +217,11 @@ model Promotion {
   code                   String    @id
   type                   PromoType
   discountPct            Int       @default(0)
+  // Только для type = FIXED — скидка в копейках, а не в процентах.
+  // Раньше этого поля не было вообще, и FIXED молча считался как PERCENT
+  // (discountPct интерпретировался как проценты в обоих случаях) — это и
+  // было репортнутым багом «фиксированная скидка не работает».
+  discountFixedCents     Int       @default(0)
   minOrderCents          Int       @default(0)
   title                  String
   description            String
@@ -223,12 +234,38 @@ model Promotion {
   // BANNER_BACKGROUNDS в PromotionsSection.tsx) — не свободный цвет,
   // чтобы не разъезжалась продуманная палитра «Кинцуги-стол».
   backgroundKey          String?
+  // Внешняя (необязательная) рамка кампании — "акция существует с 1
+  // сентября по 31 октября". recurrence сужает её на конкретные моменты
+  // внутри этой рамки; при recurrence = NONE ведёт себя как раньше.
   activeFrom             DateTime?
   activeTo               DateTime?
   isActive               Boolean   @default(true)
+  recurrence             PromoRecurrence @default(NONE)
+  // "ЧЧ:ММ" — окно времени суток для DAILY/WEEKLY/MONTHLY (например,
+  // "Счастливые часы" 15:00–18:00). Не используется при NONE.
+  recurrenceStartTime    String?
+  recurrenceEndTime      String?
+  // 0=вс … 6=сб (Date.getDay()) — только для WEEKLY.
+  recurrenceWeekdays     Int[]           @default([])
+  // Число месяца — только для MONTHLY.
+  recurrenceDayOfMonth   Int?
+  // Единый источник истины "активна ли акция прямо сейчас" — см.
+  // src/lib/promoSchedule.ts, использует все поля выше разом.
+  //
+  // Проставляется checkAndNotifyExpiringPromotions (src/server/promoMaintenance.ts),
+  // когда activeTo меньше чем через 24 часа — чтобы уведомление в Telegram
+  // ушло администратору один раз, а не при каждом заходе в /admin.
+  expiryWarnedAt         DateTime?
   orders                 Order[]
 
   @@map("promotions")
+}
+
+enum PromoRecurrence {
+  NONE
+  DAILY
+  WEEKLY
+  MONTHLY
 }
 
 // Единственный редакционный блок вверху /promotions («Всё хорошее
@@ -259,6 +296,7 @@ model KarmaLevel {
   toKarma   Int
   icon      String
   perk      String
+  rewards   KarmaReward[]
 
   @@map("karma_levels")
 }
@@ -282,9 +320,71 @@ model KarmaReward {
   title         String
   description   String
   isActive      Boolean            @default(true)
+  kind          RewardKind         @default(PRODUCT)
+  // Только для kind = DISCOUNT — тот же паттерн типа скидки, что у
+  // Promotion (type/discountPct/discountFixedCents), см. computeDiscountCents
+  // в src/server/pricing.ts, общая для промокодов и наград-скидок.
+  discountType       PromoType?
+  discountPct        Int?
+  discountFixedCents Int?
+  // Награда доступна только с этого уровня и выше (по позиции в списке
+  // уровней, отсортированном по fromKarma) — независимо от баланса баллов.
+  // onDelete: SetNull — удаление уровня в админке не ломает награду,
+  // просто снимает ограничение.
+  minLevel      KarmaLevel?        @relation(fields: [minLevelKey], references: [key], onDelete: SetNull)
+  minLevelKey   String?
+  // null = без ограничения. Считается скользящим окном 7 дней по
+  // KarmaLedgerEntry (reason = REWARD_REDEEMED) — см. checkRewardEligibility.
+  maxRedemptionsPerWeek Int?
   ledgerEntries KarmaLedgerEntry[]
+  products      KarmaRewardProduct[]
+  discountGrants KarmaDiscountGrant[]
 
   @@map("karma_rewards")
+}
+
+enum RewardKind {
+  PRODUCT
+  DISCOUNT
+}
+
+// Выдаётся мгновенно при обмене DISCOUNT-награды в /profile (не через
+// корзину — скидке не на что быть "строкой заказа") — баллы списываются
+// в тот же момент, как покупка подарочной карты. Значения скидки —
+// снэпшот на момент обмена (тот же принцип, что OrderItem.nameSnapshot):
+// если админ потом изменит или удалит саму награду, уже выданная
+// покупателю скидка не должна поменяться.
+model KarmaDiscountGrant {
+  id                 String    @id @default(cuid())
+  user               User      @relation(fields: [userId], references: [id])
+  userId             String
+  reward             KarmaReward @relation(fields: [rewardId], references: [id])
+  rewardId           String
+  discountType       PromoType
+  discountPct        Int
+  discountFixedCents Int
+  costPoints         Int
+  isUsed             Boolean   @default(false)
+  order              Order?    @relation(fields: [orderId], references: [id])
+  orderId            String?
+  createdAt          DateTime  @default(now())
+
+  @@index([userId])
+  @@map("karma_discount_grants")
+}
+
+// Один или несколько товаров, которые можно получить в обмен на эту
+// награду — один и тот же join-паттерн, что уже есть у ProductAddonGroup
+// (составной PK, без лишних полей). Один товар — обмен добавляет его
+// сразу; несколько — покупатель выбирает один при обмене.
+model KarmaRewardProduct {
+  reward    KarmaReward @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  rewardId  String
+  product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+
+  @@id([rewardId, productId])
+  @@map("karma_reward_products")
 }
 
 // Журнал начислений/списаний — то, чего в прототипе не было вообще
@@ -319,13 +419,14 @@ enum KarmaLedgerReason {
 // стандарт для доставки еды в РФ, поэтому пароля нет.
 
 model User {
-  id           String             @id @default(cuid())
-  phone        String             @unique
-  name         String?
-  createdAt    DateTime           @default(now())
-  addresses    Address[]
-  orders       Order[]
-  karmaEntries KarmaLedgerEntry[]
+  id             String             @id @default(cuid())
+  phone          String             @unique
+  name           String?
+  createdAt      DateTime           @default(now())
+  addresses      Address[]
+  orders         Order[]
+  karmaEntries   KarmaLedgerEntry[]
+  discountGrants KarmaDiscountGrant[]
 
   @@map("users")
 }
@@ -364,6 +465,17 @@ model TelegramBotState {
   lastUpdateId Int    @default(0)
 
   @@map("telegram_bot_state")
+}
+
+// Синглтон-счётчик для номеров заказов (GK-00001, GK-00002, ...). Инкремент —
+// через upsert с increment, это INSERT ... ON CONFLICT DO UPDATE на Postgres,
+// атомарно даже при параллельных заказах. Раньше номер был последними 5
+// цифрами Date.now() — при одновременном оформлении мог совпасть.
+model OrderCounter {
+  id    String @id @default("singleton")
+  value Int    @default(0)
+
+  @@map("order_counters")
 }
 
 model Address {
@@ -420,6 +532,7 @@ model Order {
   paymentStatus PaymentStatus      @default(PENDING)
   comment       String?
   karmaEntries  KarmaLedgerEntry[]
+  discountGrants KarmaDiscountGrant[]
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
 
@@ -430,8 +543,9 @@ model Order {
 enum OrderStatus {
   NEW // "Заказ принят"
   PREPARING // "Готовится"
-  HANDED_TO_COURIER // "Передан в доставку"
-  DELIVERING // "Доставляется"
+  READY_FOR_PICKUP // только для самовывоза — "Готов к выдаче"
+  HANDED_TO_COURIER // только для доставки — "Передан в доставку"
+  DELIVERING // только для доставки — "Доставляется"
   DONE
   CANCELLED
 }

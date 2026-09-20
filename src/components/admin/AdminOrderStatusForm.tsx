@@ -3,13 +3,20 @@
 import { FormEvent, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { adminFieldClass, adminLabelClass } from "@/components/admin/formStyles";
-import { ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/orderLabels";
+import { ALLOWED_STATUSES_BY_FULFILLMENT, ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/orderLabels";
 import { type AdminOrderStatusInput, updateAdminOrder } from "@/server/adminOrders";
 
-export function AdminOrderStatusForm({ id, initial }: { id: string; initial: AdminOrderStatusInput }) {
+export function AdminOrderStatusForm({
+  id,
+  initial,
+}: {
+  id: string;
+  initial: AdminOrderStatusInput & { fulfillment: "PICKUP" | "DELIVERY" };
+}) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
+  const allowedStatuses = ALLOWED_STATUSES_BY_FULFILLMENT[initial.fulfillment];
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -33,7 +40,7 @@ export function AdminOrderStatusForm({ id, initial }: { id: string; initial: Adm
         <label>
           <span className={adminLabelClass}>Статус заказа</span>
           <select name="status" defaultValue={initial.status} className={adminFieldClass}>
-            {Object.entries(ORDER_STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            {allowedStatuses.map((value) => <option key={value} value={value}>{ORDER_STATUS_LABELS[value]}</option>)}
           </select>
         </label>
         <label>

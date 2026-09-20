@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
+import { ASSETS } from "@/lib/assets";
+import { categoryThemeGradient } from "@/lib/categoryThemes";
 import { ProductCard } from "@/components/ProductCard";
 import { CategoryStrip } from "@/components/CategoryStrip";
 import { WokBuilderCTA } from "@/components/WokBuilderCTA";
@@ -55,8 +57,20 @@ export default async function CategoryPage({ params }: Params) {
       <CategoryStrip categories={categories} />
 
       {/* «Визуальный мир» категории из прототипа: фото, японская подпись
-          и слоган. Оттенок берётся из CategoryMeta.accentTint. */}
-      <section className="relative mt-6 flex h-[190px] items-end overflow-hidden rounded-l bg-tint-cream md:h-[220px]">
+          и слоган. Фон — градиент по CategoryMeta.theme; декоративный
+          узор волн поверх него — только когда pattern="seigaiha", это
+          единственное значение паттерна с готовым ассетом сейчас. */}
+      <section className={`relative mt-6 flex h-[190px] items-end overflow-hidden rounded-l bg-gradient-to-br ${categoryThemeGradient(category.meta?.theme)} md:h-[220px]`}>
+        {category.meta?.pattern === "seigaiha" && (
+          <Image
+            src={ASSETS.decor.seigaihaWave}
+            alt=""
+            aria-hidden
+            fill
+            sizes="100vw"
+            className="pointer-events-none object-cover opacity-[0.12]"
+          />
+        )}
         {heroImageUrl && (
           <Image
             src={heroImageUrl}
