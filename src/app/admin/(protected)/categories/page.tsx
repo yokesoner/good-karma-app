@@ -12,7 +12,7 @@ export default async function AdminCategoriesPage() {
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-5">
-        <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cherry">Каталог</p><h1 className="mt-2 text-4xl font-semibold tracking-tight">Категории</h1><p className="mt-2 text-sm text-ink-2">{categories.length} разделов</p></div>
+        <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cherry">Каталог</p><h1 className="mt-2 text-[28px] font-semibold tracking-tight md:text-4xl">Категории</h1><p className="mt-2 text-sm text-ink-2">{categories.length} разделов</p></div>
         <Link href="/admin/categories/new" className="rounded-full bg-plum-deep px-6 py-3 text-xs font-bold uppercase tracking-[0.1em] text-btn-fg">Добавить категорию</Link>
       </div>
       <div className="mt-8 overflow-hidden rounded-[28px] border border-hair bg-paper-2">

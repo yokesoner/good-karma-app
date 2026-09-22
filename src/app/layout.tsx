@@ -1,10 +1,22 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Montserrat } from "next/font/google";
 import { ViewTransitions } from "next-view-transitions";
+import { AnnouncementBar } from "@/components/AnnouncementBar";
+import { NavProgress } from "@/components/NavProgress";
+import { RevealOnScroll } from "@/components/RevealOnScroll";
 import { ThemeScript } from "@/components/ThemeScript";
 import { SiteShell } from "@/components/SiteShell";
 import { ToastHost } from "@/components/ToastHost";
 import "./globals.css";
+
+// Цвет системной панели браузера на телефоне подстраивается под тему сайта
+// (те же --paper светлой и тёмной темы), а не остаётся белым/чёрным.
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F5F0E8" },
+    { media: "(prefers-color-scheme: dark)", color: "#141017" },
+  ],
+};
 
 const montserrat = Montserrat({
   subsets: ["latin", "cyrillic"],
@@ -45,7 +57,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ThemeScript />
         </head>
         <body className="font-sans antialiased">
-          <SiteShell>{children}</SiteShell>
+          <NavProgress />
+          <RevealOnScroll />
+          <SiteShell announcement={<AnnouncementBar />}>{children}</SiteShell>
           <ToastHost />
         </body>
       </html>

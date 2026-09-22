@@ -109,7 +109,15 @@ export async function priceOrder(params: {
     // только для строк с wokConfig — проверка ниже, в цикле по строкам.
     db.product.findMany({
       where: { id: { in: productIds } },
-      select: { id: true, name: true, priceCents: true, karma: true, isStopList: true, isHidden: true },
+      select: {
+        id: true,
+        name: true,
+        priceCents: true,
+        karma: true,
+        isStopList: true,
+        isHidden: true,
+        category: { select: { isStopList: true } },
+      },
     }),
     addonIds.length
       ? db.addon.findMany({
@@ -138,6 +146,7 @@ export async function priceOrder(params: {
     karma: number;
     isStopList: boolean;
     isHidden: boolean;
+    category: { isStopList: boolean };
   };
   type AddonRow = { id: string; name: string; priceCents: number };
   type WokRow = { id: string; name: string; extraCents: number };
@@ -169,9 +178,11 @@ export async function priceOrder(params: {
 
   for (const line of lines) {
     const product = productById.get(line.productId);
-    // Блюдо удалили или отправили в стоп-лист, пока гость собирал заказ —
-    // молча пропускаем, иначе заказ создастся с несуществующей позицией.
-    if (!product || product.isStopList) continue;
+    // Блюдо удалили или отправили в стоп-лист (само или вместе со всей
+    // категорией), пока гость собирал заказ — молча пропускаем, иначе заказ
+    // создастся с несуществующей позицией. Корзина заранее предупреждает
+    // об этом через getUnavailableProductIds (src/server/availability.ts).
+    if (!product || product.isStopList || product.category.isStopList) continue;
     // Скрытые товары (в т.ч. носитель конструктора вока) заказать напрямую
     // нельзя — только через валидный wokConfig, иначе это дыра для заказа
     // служебных позиций в обход каталога.

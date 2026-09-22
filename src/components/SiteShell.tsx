@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { Header } from "@/components/Header";
+import { CartBar } from "@/components/CartBar";
 import { CartDrawer } from "@/components/CartDrawer";
 import { MobileNav } from "@/components/MobileNav";
 import { cn } from "@/lib/cn";
@@ -16,7 +17,16 @@ import { cn } from "@/lib/cn";
 // закреплённая панель конструктора (цена, количество, «В корзину») —
 // два ряда контролов внизу экрана одновременно съели бы слишком много
 // места на компактном телефоне.
-export function SiteShell({ children }: { children: React.ReactNode }) {
+//
+// announcement — уже отрисованная на сервере анонс-полоска (баннер из
+// админки): клиентский компонент получает её как готовый узел.
+export function SiteShell({
+  children,
+  announcement,
+}: {
+  children: React.ReactNode;
+  announcement?: React.ReactNode;
+}) {
   const [cartOpen, setCartOpen] = useState(false);
   const pathname = usePathname();
   const isAdmin = pathname.startsWith("/admin");
@@ -28,10 +38,12 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      {announcement}
       <Header onCartClick={() => setCartOpen(true)} />
       {/* Отступ снизу освобождает место под фиксированную мобильную навигацию */}
       <div className={cn("site-canvas md:pb-0", hasOwnMobileBar ? "pb-0" : "pb-20")}>{children}</div>
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+      {!hasOwnMobileBar && <CartBar onOpen={() => setCartOpen(true)} />}
       {!hasOwnMobileBar && <MobileNav onCartClick={() => setCartOpen(true)} />}
     </>
   );

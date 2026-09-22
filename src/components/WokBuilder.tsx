@@ -271,16 +271,55 @@ export function WokBuilder({
   return (
     <>
       {/* ── МОБИЛЬНАЯ ВЕРСИЯ (< md) ───────────────────────────────
-          Большая статичная тарелка на телефоне только отнимает экран у
-          выбора (она всё равно не меняется от состава, см. компактный
-          бейдж ниже), поэтому вместо неё — закреплённые сверху бейдж
-          состава и табы шагов, и закреплённая снизу панель вместо
-          MobileNav (см. SiteShell.tsx: на этом роуте она скрыта, иначе
-          на телефоне было бы два ряда контролов внизу одновременно). */}
+          Крупная витрина миски вверху (не липкая — скроллится вместе со
+          страницей, как на десктопе, только компактнее) даёт то самое
+          «уже хочется попробовать» с первого экрана; ниже — закреплённые
+          компактный бейдж состава и табы шагов, и закреплённая снизу
+          панель вместо MobileNav (см. SiteShell.tsx: на этом роуте она
+          скрыта, иначе на телефоне было бы два ряда контролов одновременно). */}
       <div className="md:hidden">
+        <div className="relative mb-4 overflow-hidden rounded-[28px] border border-white/60 bg-gradient-to-br from-[#F7F1E8] via-[#FBF3EC] to-tint-sakura shadow-[0_26px_64px_-38px_rgba(69,38,54,.5)]">
+          <div
+            aria-hidden
+            className="absolute inset-0 opacity-70 transition-colors duration-700"
+            style={{ background: `radial-gradient(circle at 60% 38%, ${sauceTone}38, transparent 46%)` }}
+          />
+          <BackgroundFootage src={ASSETS.animations.steam} opacity={0.16} priority />
+          <div className="relative flex items-center justify-between px-4 pt-4">
+            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#9A536E]">Ваша миска</span>
+            <span className="rounded-full border border-[#493044]/10 bg-white/55 px-2.5 py-1.5 text-[8px] font-bold tracking-[0.14em] text-[#76636F] shadow-s backdrop-blur-md">
+              0{step + 1} / 03
+            </span>
+          </div>
+          <div className="relative mx-auto aspect-square w-full max-w-[240px] p-4">
+            <div aria-hidden className="absolute inset-[14%] rounded-full bg-white/45 blur-xl" />
+            <div
+              key={`${baseId}-${proteinId}-${sauceId}`}
+              className="wok-dish-swap absolute inset-[7%] drop-shadow-[0_18px_22px_rgba(65,34,45,.28)]"
+            >
+              <WokComposition
+                baseImage={baseImage}
+                proteinImage={proteinImage}
+                sauceColor={sauceTone}
+                label={`Вок: ${base.name}, ${protein.name}, соус ${sauce.name}`}
+              />
+            </div>
+          </div>
+          <div className="relative flex flex-wrap justify-center gap-1.5 px-4 pb-4">
+            {[base.name, protein.name, sauce.name].map((value) => (
+              <span
+                key={value}
+                className="whitespace-nowrap rounded-full border border-white/70 bg-white/65 px-2.5 py-1.5 text-[8px] font-bold uppercase tracking-[0.08em] text-[#4A3542] shadow-s backdrop-blur-md"
+              >
+                {value}
+              </span>
+            ))}
+          </div>
+        </div>
+
         <div className="sticky top-16 z-20 -mx-5 bg-paper/95 px-5 pb-3 pt-2 backdrop-blur-xl">
           <div className="flex items-center gap-3 py-2">
-            <div className="relative h-20 w-20 flex-none rounded-full border border-white/70 bg-paper-2/70 shadow-s">
+            <div className="relative h-11 w-11 flex-none rounded-full border border-white/70 bg-paper-2/70 shadow-s">
               <WokComposition
                 baseImage={baseImage}
                 proteinImage={proteinImage}
@@ -395,7 +434,7 @@ export function WokBuilder({
           })}
         </div>
 
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/60 bg-paper/94 pb-[env(safe-area-inset-bottom)] shadow-[0_-18px_48px_-28px_rgba(35,20,32,.5)] backdrop-blur-2xl">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/60 bg-paper/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-18px_48px_-28px_rgba(35,20,32,.5)] backdrop-blur-2xl">
           {justAdded ? (
             <div
               role="status"
@@ -427,7 +466,7 @@ export function WokBuilder({
               type="button"
               onClick={handleAdd}
               className={cn(
-                "flex h-11 flex-1 items-center justify-center rounded-full px-4 text-[10px] font-bold uppercase tracking-[0.06em] text-[#FFF8F2] transition duration-200 active:scale-95",
+                "btn-sheen flex h-11 flex-1 items-center justify-center rounded-full px-4 text-[10px] font-bold uppercase tracking-[0.06em] text-[#FFF8F2] transition duration-200 active:scale-95",
                 justAdded ? "bg-mint-deep" : "bg-[#3A2338]",
               )}
             >
@@ -478,7 +517,7 @@ export function WokBuilder({
             {[base.name, protein.name, sauce.name].map((value, index) => (
               <span
                 key={value}
-                className="whitespace-nowrap rounded-full border border-white/70 bg-white/62 px-3 py-2 text-[8px] font-bold uppercase tracking-[0.1em] text-[#4A3542] shadow-[0_12px_28px_-18px_rgba(58,35,56,.6)] backdrop-blur-xl"
+                className="whitespace-nowrap rounded-full border border-white/70 bg-white/60 px-3 py-2 text-[8px] font-bold uppercase tracking-[0.1em] text-[#4A3542] shadow-[0_12px_28px_-18px_rgba(58,35,56,.6)] backdrop-blur-xl"
               >
                 {index + 1}. {value}
               </span>
@@ -486,7 +525,7 @@ export function WokBuilder({
           </div>
         </div>
 
-        <div className="relative grid grid-cols-[1fr_auto] items-center gap-5 border-t border-[#493044]/8 bg-white/40 px-6 py-5 backdrop-blur-xl md:px-9">
+        <div className="relative grid grid-cols-[1fr_auto] items-center gap-5 border-t border-[#493044]/10 bg-white/40 px-6 py-5 backdrop-blur-xl md:px-9">
           <div>
             <span className="block text-[8px] font-bold uppercase tracking-[0.2em] text-[#8A7783]">Ваш вок</span>
             <b className="mt-1 block text-[25px] tracking-[-0.04em] text-[#3A2935]">{formatMoney(unitPriceCents)}</b>
@@ -567,9 +606,9 @@ export function WokBuilder({
             <button type="button" onClick={() => setStep((value) => value - 1)} className="rounded-full border border-hair px-5 py-4 text-[9.5px] font-bold uppercase tracking-[0.1em] text-ink-2 transition duration-200 active:scale-95 hover:bg-paper">Назад</button>
           ) : null}
           {step < STEPS.length - 1 ? (
-            <button type="button" onClick={() => setStep((value) => value + 1)} className="flex-1 rounded-full bg-[#3A2338] px-6 py-4 text-[10px] font-bold uppercase tracking-[0.11em] text-[#FFF8F2] shadow-[0_18px_34px_-20px_rgba(58,35,56,.72)] transition duration-300 active:scale-[0.98] hover:-translate-y-0.5 hover:bg-[#533649]">Далее · {STEPS[step + 1]}</button>
+            <button type="button" onClick={() => setStep((value) => value + 1)} className="btn-sheen flex-1 rounded-full bg-[#3A2338] px-6 py-4 text-[10px] font-bold uppercase tracking-[0.11em] text-[#FFF8F2] shadow-[0_18px_34px_-20px_rgba(58,35,56,.72)] transition duration-300 active:scale-[0.98] hover:-translate-y-0.5 hover:bg-[#533649]">Далее · {STEPS[step + 1]}</button>
           ) : (
-            <button type="button" onClick={handleAdd} className="flex-1 rounded-full bg-[#3A2338] px-6 py-4 text-[10px] font-bold uppercase tracking-[0.11em] text-[#FFF8F2] shadow-[0_18px_34px_-20px_rgba(58,35,56,.72)] transition duration-300 active:scale-[0.98] hover:-translate-y-0.5 hover:bg-[#533649]">{justAdded ? "Добавлено ✓" : `В корзину · ${formatMoney(unitPriceCents * qty)}`}</button>
+            <button type="button" onClick={handleAdd} className="btn-sheen flex-1 rounded-full bg-[#3A2338] px-6 py-4 text-[10px] font-bold uppercase tracking-[0.11em] text-[#FFF8F2] shadow-[0_18px_34px_-20px_rgba(58,35,56,.72)] transition duration-300 active:scale-[0.98] hover:-translate-y-0.5 hover:bg-[#533649]">{justAdded ? "Добавлено ✓" : `В корзину · ${formatMoney(unitPriceCents * qty)}`}</button>
           )}
         </div>
 

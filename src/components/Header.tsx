@@ -26,10 +26,12 @@ export function Header({ onCartClick }: { onCartClick: () => void }) {
   const count = mounted ? cartCount(lines) : 0;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/55 bg-paper/78 shadow-[0_12px_40px_-32px_rgba(58,35,56,.55)] backdrop-blur-2xl">
-      <div className="mx-auto flex max-w-wrap items-center gap-2 px-5 py-3 sm:gap-4 md:px-16">
-        <Link href="/" className="mr-auto flex shrink-0 items-center gap-3 whitespace-nowrap leading-none">
-          <BrandMark className="h-8 w-8 text-cherry" />
+    <header className="sticky top-0 z-40 border-b border-white/55 bg-paper/80 shadow-[0_12px_40px_-32px_rgba(58,35,56,.55)] backdrop-blur-2xl">
+      {/* Высота шапки на телефоне ровно 57 px — от неё считается top у липких
+          панелей (MenuCategoryNav), поэтому менять её нужно вместе с ними. */}
+      <div className="mx-auto flex max-w-wrap items-center gap-2 px-4 py-2 sm:gap-4 md:px-16 md:py-3">
+        <Link href="/" className="mr-auto flex shrink-0 items-center gap-2.5 whitespace-nowrap leading-none md:gap-3">
+          <BrandMark className="h-7 w-7 text-cherry md:h-8 md:w-8" />
           <span>
             <span className="block text-[15px] font-bold uppercase tracking-[0.085em]">
               Гуд Карма
@@ -40,7 +42,7 @@ export function Header({ onCartClick }: { onCartClick: () => void }) {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-0.5 rounded-full border border-white/65 bg-paper-2/58 p-1 shadow-[0_10px_26px_-22px_rgba(58,35,56,.55)] backdrop-blur-xl md:flex">
+        <nav className="hidden items-center gap-0.5 rounded-full border border-white/65 bg-paper-2/60 p-1 shadow-[0_10px_26px_-22px_rgba(58,35,56,.55)] backdrop-blur-xl md:flex">
           {NAV.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (

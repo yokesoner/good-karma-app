@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
+import { ArrowLeft } from "@/components/icons";
 import { ProductPurchasePanel } from "@/components/ProductPurchasePanel";
 
 type Params = { params: { slug: string } };
@@ -55,19 +56,20 @@ export default async function ProductPage({ params }: Params) {
 
   const addons = product.addonGroups.flatMap((link) => link.addonGroup.addons);
   const cover = product.images[0];
+  const unavailable = product.isStopList || product.category.isStopList;
 
   return (
-    <main className="product-page mx-auto max-w-wrap px-5 py-8 md:px-16 md:py-12">
+    <main className="product-page mx-auto max-w-wrap px-5 py-3 md:px-16 md:py-12">
       <Link
         href="/menu"
-        className="inline-flex items-center gap-2 rounded-full border border-hair bg-paper-2/65 px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.12em] text-ink-3 backdrop-blur-sm transition hover:border-cherry/40 hover:text-ink"
+        className="inline-flex items-center gap-2 rounded-full border border-hair bg-paper-2/65 px-3.5 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-ink-3 backdrop-blur-sm transition active:scale-95 hover:border-cherry/40 hover:text-ink md:px-4 md:py-2.5"
       >
-        <span aria-hidden>←</span> Назад в меню
+        <ArrowLeft className="h-3.5 w-3.5" /> Назад в меню
       </Link>
 
-      <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_0.95fr]">
+      <div className="mt-3 grid grid-cols-1 gap-4 md:mt-6 md:gap-5 lg:grid-cols-[1.05fr_0.95fr]">
         <div>
-          <div className="group relative aspect-[4/5] overflow-hidden rounded-[38px] border border-white/65 bg-paper-3 shadow-[0_38px_100px_-46px_rgba(53,29,45,.7)]">
+          <div className="group relative aspect-[5/4] overflow-hidden rounded-[26px] border border-white/65 bg-paper-3 shadow-[0_38px_100px_-46px_rgba(53,29,45,.7)] md:aspect-[4/5] md:rounded-[38px]">
             {cover && (
               <Image
                 src={cover.url}
@@ -80,11 +82,11 @@ export default async function ProductPage({ params }: Params) {
               />
             )}
             <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#21151F]/65 to-transparent" />
-            <div className="absolute bottom-6 left-6 flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.14em] text-white/80">
-              <span className="rounded-full border border-white/20 bg-black/10 px-3 py-2 backdrop-blur-sm">
+            <div className="absolute bottom-4 left-4 flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.14em] text-white/80 md:bottom-6 md:left-6">
+              <span className="rounded-full border border-white/20 bg-black/10 px-3 py-1.5 backdrop-blur-sm md:py-2">
                 {product.weight}
               </span>
-              <span className="rounded-full border border-white/20 bg-black/10 px-3 py-2 backdrop-blur-sm">
+              <span className="rounded-full border border-white/20 bg-black/10 px-3 py-1.5 backdrop-blur-sm md:py-2">
                 +{product.karma} кармы
               </span>
             </div>
@@ -103,7 +105,7 @@ export default async function ProductPage({ params }: Params) {
           )}
         </div>
 
-        <div className="relative overflow-hidden rounded-[38px] border border-white/70 bg-paper-2/86 p-7 shadow-[0_30px_80px_-48px_rgba(73,48,68,.55)] backdrop-blur-xl md:p-10 lg:p-12">
+        <div className="relative overflow-hidden rounded-[26px] border border-white/70 bg-paper-2/85 p-5 shadow-[0_30px_80px_-48px_rgba(73,48,68,.55)] backdrop-blur-xl md:rounded-[38px] md:p-10 lg:p-12">
           <span
             aria-hidden
             className="absolute -right-4 -top-12 text-[160px] font-bold leading-none text-plum/[0.035]"
@@ -121,17 +123,20 @@ export default async function ProductPage({ params }: Params) {
             </span>
           </div>
 
-          <h1 className="mt-4 max-w-[12ch] text-[38px] font-bold leading-[1.02] tracking-[-0.04em] md:text-[48px]">
+          <h1 className="mt-3 max-w-[16ch] text-[28px] font-bold leading-[1.04] tracking-[-0.035em] md:mt-4 md:max-w-[12ch] md:text-[48px] md:tracking-[-0.04em]">
             {product.name}
           </h1>
-          <p className="mt-6 text-[14px] leading-[1.75] text-ink-2">{product.description}</p>
+          <p className="mt-2 text-[22px] font-bold tracking-tight md:hidden">{formatMoney(product.priceCents)}</p>
+          <p className="mt-3 text-[13.5px] leading-[1.65] text-ink-2 md:mt-6 md:text-[14px] md:leading-[1.75]">
+            {product.description}
+          </p>
 
           {product.ingredients.length > 0 && (
-            <div className="mt-6 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap gap-1.5 md:mt-6 md:gap-2">
               {product.ingredients.map((ing) => (
                 <span
                   key={ing.id}
-                  className="rounded-full border border-hair bg-paper/45 px-3.5 py-2 text-[11.5px] text-ink-2"
+                  className="rounded-full border border-hair bg-paper/45 px-3 py-1.5 text-[11px] text-ink-2 md:px-3.5 md:py-2 md:text-[11.5px]"
                 >
                   {ing.name}
                 </span>
@@ -140,7 +145,7 @@ export default async function ProductPage({ params }: Params) {
           )}
 
           {product.nutrition && (
-            <div className="mt-5 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap gap-1.5 md:mt-5 md:gap-2">
               {(
                 [
                   ["ккал", product.nutrition.kcal],
@@ -151,7 +156,7 @@ export default async function ProductPage({ params }: Params) {
               ).map(([label, value]) => (
                 <span
                   key={label}
-                  className="rounded-[14px] bg-tint-plum px-3.5 py-2.5 text-[11px] text-ink-2"
+                  className="rounded-[12px] bg-tint-plum px-3 py-2 text-[11px] text-ink-2 md:rounded-[14px] md:px-3.5 md:py-2.5"
                 >
                   <b className="font-bold text-ink">{value}</b> {label}
                 </span>
@@ -159,12 +164,13 @@ export default async function ProductPage({ params }: Params) {
             </div>
           )}
 
-          <div className="mt-8 border-t border-hair pt-7">
+          <div className="mt-5 border-t border-hair pt-5 md:mt-8 md:pt-7">
             <ProductPurchasePanel
               productId={product.id}
               name={product.name}
               basePriceCents={product.priceCents}
               imageUrl={cover?.url ?? null}
+              unavailable={unavailable}
               addons={addons.map((a) => ({
                 id: a.id,
                 name: a.name,
@@ -172,11 +178,6 @@ export default async function ProductPage({ params }: Params) {
                 colorHex: a.colorHex,
               }))}
             />
-            {product.isStopList && (
-              <p className="mt-4 text-[13px] text-cherry">
-                Блюдо временно недоступно — закончились ингредиенты.
-              </p>
-            )}
           </div>
           </div>
         </div>

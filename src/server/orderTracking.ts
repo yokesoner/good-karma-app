@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getGrantedOrderNumbers, grantOrderAccess, hasOrderAccess } from "@/lib/orderAccess";
@@ -68,4 +69,44 @@ export async function getOrderStatus(number: string) {
     select: { status: true, fulfillment: true },
   });
   return order;
+}
+
+// «Заказ получен» — покупатель сам закрывает доставку, когда курьер уже
+// привёз (админ передаёт заказ Яндекс Доставке, статус становится
+// «Доставляется», а не «Выполнен»). Право на действие — та же подписанная
+// cookie, что открывает страницу заказа: чужой номер подтвердить нельзя.
+// Закрыть можно только доставку, которая уже в пути; повторное нажатие
+// безопасно и ничего не меняет.
+export async function confirmOrderReceived(number: string) {
+  const parsed = z.string().trim().min(1).max(20).safeParse(number);
+  if (!parsed.success) return { ok: false as const, error: "Некорректный номер заказа" };
+  if (!(await hasOrderAccess(parsed.data))) {
+    return { ok: false as const, error: "Нет доступа к заказу. Откройте его через раздел «Заказ»" };
+  }
+
+  const order = await db.order.findUnique({
+    where: { number: parsed.data },
+    select: { id: true, status: true, fulfillment: true },
+  });
+  if (!order) return { ok: false as const, error: "Заказ не найден" };
+  if (order.status === "DONE") return { ok: true as const };
+  if (order.fulfillment !== "DELIVERY" || !["HANDED_TO_COURIER", "DELIVERING"].includes(order.status)) {
+    return { ok: false as const, error: "Пока рано подтверждать: заказ ещё не передан курьеру" };
+  }
+
+  try {
+    // Условие на статус прямо в UPDATE: если админ успел отменить заказ
+    // между чтением и записью, покупатель не «оживит» его подтверждением.
+    const result = await db.order.updateMany({
+      where: { id: order.id, status: { in: ["HANDED_TO_COURIER", "DELIVERING"] } },
+      data: { status: "DONE" },
+    });
+    if (result.count === 0) return { ok: false as const, error: "Статус заказа изменился. Обновите страницу" };
+    revalidatePath("/admin/orders");
+    revalidatePath(`/admin/orders/${order.id}`);
+    revalidatePath(`/order/${parsed.data}`);
+    return { ok: true as const };
+  } catch {
+    return { ok: false as const, error: "Не удалось подтвердить получение. Попробуйте ещё раз" };
+  }
 }

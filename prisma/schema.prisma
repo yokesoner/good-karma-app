@@ -51,6 +51,11 @@ model Category {
   id        String        @id // "rolls", "wok", … — было cats[].id
   name      String
   sortOrder Int           @default(0)
+  // Стоп-лист на всю категорию одним переключателем в админке: пока true,
+  // все блюда категории недоступны для заказа. Собственные isStopList у
+  // блюд при этом не трогаются — включили категорию обратно, и каждое
+  // блюдо вернулось в то состояние, в котором было раньше.
+  isStopList Boolean      @default(false)
   meta      CategoryMeta?
   products  Product[]
 
@@ -284,6 +289,26 @@ model PromoHeroBanner {
 enum PromoType {
   PERCENT
   FIXED
+}
+
+// Редактируемые из админки тексты и картинки баннеров сайта (главная,
+// меню, анонс-полоска). Строка появляется только когда админ что-то
+// изменил — по умолчанию баннер рисуется из значений в src/lib/banners.ts,
+// поэтому сидировать ничего не нужно, а «сбросить к исходному» — это
+// просто удалить строку. null в поле = «оставить исходное».
+model SiteBanner {
+  key         String   @id // ключ слота из BANNER_SLOTS, напр. "home-hero"
+  eyebrow     String?
+  title       String?
+  text        String?
+  buttonLabel String?
+  href        String?
+  imageUrl    String?
+  // Нужен только слотам, которые можно скрыть целиком (анонс-полоска).
+  isActive    Boolean  @default(true)
+  updatedAt   DateTime @updatedAt
+
+  @@map("site_banners")
 }
 
 // ---------- карма-клуб ----------

@@ -12,6 +12,14 @@ import { ORDER_STATUS_LABELS } from "@/lib/orderLabels";
 import { LevelIcon } from "@/components/LevelIcon";
 import { KarmaPass } from "@/components/KarmaPass";
 import { ProfileLoading } from "@/components/ProfileLoading";
+import { ArrowUpRight } from "@/components/icons";
+import { ShowMore } from "@/components/Collapsible";
+
+// Сколько заказов и подарков показывать сразу — остальное за «Показать
+// ещё», чтобы длинная история не растягивала профиль на телефоне на
+// несколько экранов вниз ради данных, которые нужны не с первого взгляда.
+const ORDERS_PREVIEW_COUNT = 3;
+const REWARDS_PREVIEW_COUNT = 3;
 
 type ProfileData = NonNullable<Awaited<ReturnType<typeof getProfileData>>>;
 
@@ -113,7 +121,7 @@ export function ProfileView({
               <span className="mt-2 block text-[10px] text-ink-3">сохранено</span>
             </article>
             <Link href="/promotions#karma-club" className="col-span-2 flex items-center justify-between rounded-full bg-[#3A2338] px-6 py-3.5 text-[9.5px] font-bold uppercase tracking-[0.11em] text-[#FFF8F2] shadow-[0_16px_32px_-20px_rgba(58,35,56,.7)] transition hover:-translate-y-0.5">
-              Все привилегии клуба <span aria-hidden>↗</span>
+              Все привилегии клуба <ArrowUpRight className="text-[14px]" />
             </Link>
           </div>
         </section>
@@ -124,24 +132,29 @@ export function ProfileView({
       <section id="profile-orders" className="scroll-mt-24 rounded-[30px] border border-hair bg-paper-2/90 p-5 shadow-m sm:p-8">
         <h2 className="mb-5 text-[23px] font-bold tracking-tight">Ваши вкусные моменты</h2>
         {data.orders.length === 0 ? (
-          <div className="rounded-[20px] border border-dashed border-gold/30 bg-tint-cream p-6"><p className="text-[15px] font-semibold">Первое знакомство ещё впереди</p><p className="mt-2 text-[13px] leading-relaxed text-ink-2">Здесь появятся ваши заказы. Начнём с любимого блюда?</p><Link href="/menu" className="mt-4 inline-flex min-h-11 items-center gap-3 text-[12px] font-semibold text-cherry">Выбрать в меню <span aria-hidden>↗</span></Link></div>
+          <div className="rounded-[20px] border border-dashed border-gold/30 bg-tint-cream p-6"><p className="text-[15px] font-semibold">Первое знакомство ещё впереди</p><p className="mt-2 text-[13px] leading-relaxed text-ink-2">Здесь появятся ваши заказы. Начнём с любимого блюда?</p><Link href="/menu" className="mt-4 inline-flex min-h-11 items-center gap-3 text-[12px] font-semibold text-cherry">Выбрать в меню <ArrowUpRight className="text-[14px]" /></Link></div>
         ) : (
           <div className="flex flex-col">
-            {data.orders.map((o) => (
-              <Link
-                key={o.number}
-                href={`/order/${o.number}`}
-                className="grid min-w-0 grid-cols-2 items-center gap-x-3 gap-y-2 rounded-[16px] border-b border-hair-soft px-3 py-4 text-[12px] last:border-b-0 hover:bg-hair-soft md:flex md:gap-4 md:text-[13.5px]"
-              >
-                <span className="font-bold">{o.number}</span>
-                <span className="text-right text-ink-3 md:text-left">{o.createdAt.toLocaleDateString("ru-RU")}</span>
-                <span className="text-ink-3">{o.itemsCount} поз.</span>
-                <span className="col-span-2 row-start-3 w-fit rounded-full bg-tint-mint px-3 py-1 text-[11px] text-ink-2 md:ml-auto">
-                  {ORDER_STATUS_LABELS[o.status] ?? o.status}
-                </span>
-                <span className="col-start-2 row-start-2 text-right font-semibold tabular-nums md:w-[86px] md:shrink-0">{formatMoney(o.totalCents)}</span>
-              </Link>
-            ))}
+            <ShowMore
+              items={data.orders}
+              initialCount={ORDERS_PREVIEW_COUNT}
+              moreLabel={(n) => `Показать ещё ${n} из истории`}
+              render={(o) => (
+                <Link
+                  key={o.number}
+                  href={`/order/${o.number}`}
+                  className="grid min-w-0 grid-cols-2 items-center gap-x-3 gap-y-2 rounded-[16px] border-b border-hair-soft px-3 py-4 text-[12px] last:border-b-0 hover:bg-hair-soft md:flex md:gap-4 md:text-[13.5px]"
+                >
+                  <span className="font-bold">{o.number}</span>
+                  <span className="text-right text-ink-3 md:text-left">{o.createdAt.toLocaleDateString("ru-RU")}</span>
+                  <span className="text-ink-3">{o.itemsCount} поз.</span>
+                  <span className="col-span-2 row-start-3 w-fit rounded-full bg-tint-mint px-3 py-1 text-[11px] text-ink-2 md:ml-auto">
+                    {ORDER_STATUS_LABELS[o.status] ?? o.status}
+                  </span>
+                  <span className="col-start-2 row-start-2 text-right font-semibold tabular-nums md:w-[86px] md:shrink-0">{formatMoney(o.totalCents)}</span>
+                </Link>
+              )}
+            />
           </div>
         )}
       </section>
@@ -187,7 +200,12 @@ function RewardsSection({ data, onChanged }: { data: ProfileData; onChanged: () 
       {data.rewards.length === 0 && <p className="text-[13px] text-ink-2">Готовим новые подарки. Загляните чуть позже.</p>}
       {redeemError && <p role="alert" className="mb-4 text-[12.5px] text-cherry">{redeemError}</p>}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {data.rewards.map((r) => {
+        <ShowMore
+          items={data.rewards}
+          initialCount={REWARDS_PREVIEW_COUNT}
+          moreLabel={(n) => `Показать ещё ${n} подарков`}
+          className="col-span-full justify-self-center"
+          render={(r) => {
           // Награды переиспользуемые — доступность решает только текущий
           // баланс, без разового «получено навсегда» (иначе, например,
           // однажды полученный напиток нельзя было бы получить снова).
@@ -280,7 +298,8 @@ function RewardsSection({ data, onChanged }: { data: ProfileData; onChanged: () 
               )}
             </article>
           );
-        })}
+          }}
+        />
       </div>
 
       {data.discountGrants.length > 0 && (

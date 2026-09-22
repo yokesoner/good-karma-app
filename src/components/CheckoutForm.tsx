@@ -217,11 +217,11 @@ export function CheckoutForm() {
 
   const q = quote?.quote;
   const field =
-    "w-full rounded-[18px] border border-white/70 bg-paper/72 px-4 py-4 text-[14px] shadow-[inset_0_1px_0_rgba(255,255,255,.75)] outline-none transition focus:-translate-y-0.5 focus:border-cherry/35 focus:bg-paper-2 focus:ring-4 focus:ring-cherry/10";
+    "w-full rounded-[18px] border border-white/70 bg-paper/70 px-4 py-4 text-[14px] shadow-[inset_0_1px_0_rgba(255,255,255,.75)] outline-none transition focus:-translate-y-0.5 focus:border-cherry/35 focus:bg-paper-2 focus:ring-4 focus:ring-cherry/10";
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.08fr_0.92fr]">
-      <div className="rounded-[34px] border border-white/70 bg-paper-2/84 p-6 shadow-[0_28px_74px_-46px_rgba(73,48,68,.55)] backdrop-blur-xl md:p-9">
+      <div className="rounded-[34px] border border-white/70 bg-paper-2/85 p-6 shadow-[0_28px_74px_-46px_rgba(73,48,68,.55)] backdrop-blur-xl md:p-9">
         <section className="mb-8">
           <span className="mb-3 block text-[10px] font-bold uppercase tracking-[0.16em] text-ink-3">
             Способ получения
@@ -392,7 +392,7 @@ export function CheckoutForm() {
 
         <div className="mb-5 flex flex-col gap-3">
           {lines.map((l) => (
-            <div key={l.key} className="flex items-center gap-3 rounded-[20px] border border-white/70 bg-white/42 p-2.5 text-[13px] shadow-[0_12px_30px_-25px_rgba(73,48,68,.55)] backdrop-blur-md">
+            <div key={l.key} className="flex items-center gap-3 rounded-[20px] border border-white/70 bg-white/40 p-2.5 text-[13px] shadow-[0_12px_30px_-25px_rgba(73,48,68,.55)] backdrop-blur-md">
               <span className="relative h-12 w-12 flex-none overflow-hidden rounded-[15px] bg-paper-3">
                 {l.imageUrl ? <Image src={l.imageUrl} alt="" fill sizes="48px" className="object-cover" /> : null}
               </span>
@@ -451,7 +451,7 @@ export function CheckoutForm() {
             </div>
           )}
           {!selectedGrantId && (
-            <div className="flex gap-2 rounded-[18px] border border-white/70 bg-white/38 p-2 backdrop-blur-md">
+            <div className="flex gap-2 rounded-[18px] border border-white/70 bg-white/40 p-2 backdrop-blur-md">
               <input
                 className="min-w-0 flex-1 bg-transparent px-2 py-2 text-[13px] outline-none"
                 placeholder="Промокод"
@@ -520,7 +520,7 @@ export function CheckoutForm() {
           type="button"
           onClick={submit}
           disabled={pending || Boolean(quote?.addressError) || Boolean(quote?.rewardError)}
-          className="mt-5 w-full rounded-full bg-btn py-4 text-[10.5px] font-bold uppercase tracking-[0.08em] text-btn-fg shadow-[0_18px_34px_-20px_rgba(58,35,56,.72)] transition duration-300 active:scale-[0.98] hover:-translate-y-0.5 hover:shadow-m disabled:opacity-50 disabled:active:scale-100"
+          className="btn-sheen mt-5 w-full rounded-full bg-btn py-4 text-[10.5px] font-bold uppercase tracking-[0.08em] text-btn-fg shadow-[0_18px_34px_-20px_rgba(58,35,56,.72)] transition duration-300 active:scale-[0.98] hover:-translate-y-0.5 hover:shadow-m disabled:opacity-50 disabled:active:scale-100"
         >
           {pending ? "Оформляем…" : "Оформить заказ"}
         </button>

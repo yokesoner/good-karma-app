@@ -49,6 +49,81 @@ export async function updateAdminOrder(id: string, input: unknown) {
   }
 }
 
+function refreshOrderPages(orderId: string, number: string) {
+  revalidatePath("/admin/orders");
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath(`/order/${number}`);
+}
+
+// Закрытые заказы («Выполнен», «Отменён») одной кнопкой не переоткрываем:
+// если админ ошибся, это делается осознанно через форму статусов на карточке.
+const FINAL_STATUSES: readonly OrderStatus[] = ["DONE", "CANCELLED"];
+
+/**
+ * Один шаг вперёд по заказу кнопкой из списка («Принять в работу»,
+ * «Готов к выдаче», «Выдан клиенту»…). В отличие от updateAdminOrder не
+ * трогает статус оплаты и не требует открывать форму.
+ */
+export async function setAdminOrderStatus(id: string, status: unknown) {
+  await requireAdmin();
+  const parsedId = z.string().cuid().safeParse(id);
+  const parsedStatus = z.nativeEnum(OrderStatus).safeParse(status);
+  if (!parsedId.success || !parsedStatus.success) return { ok: false as const, error: "Некорректный статус заказа" };
+
+  const existing = await db.order.findUnique({
+    where: { id: parsedId.data },
+    select: { number: true, status: true, fulfillment: true },
+  });
+  if (!existing) return { ok: false as const, error: "Заказ не найден" };
+  if (!(ALLOWED_STATUSES_BY_FULFILLMENT[existing.fulfillment] as readonly string[]).includes(parsedStatus.data)) {
+    return { ok: false as const, error: "Этот статус недоступен для выбранного способа получения" };
+  }
+  if (FINAL_STATUSES.includes(existing.status) && existing.status !== parsedStatus.data) {
+    return { ok: false as const, error: "Заказ уже закрыт — изменить статус можно на его карточке" };
+  }
+
+  try {
+    await db.order.update({ where: { id: parsedId.data }, data: { status: parsedStatus.data } });
+    refreshOrderPages(parsedId.data, existing.number);
+    return { ok: true as const };
+  } catch {
+    return { ok: false as const, error: "Не удалось изменить статус" };
+  }
+}
+
+/**
+ * Админ нажал «Яндекс Доставка»: заказ уходит курьеру, статус сам становится
+ * «Доставляется», а дальше покупатель сам подтверждает получение на странице
+ * заказа (см. confirmOrderReceived). Сама ссылка на Яндекс открывается на
+ * клиенте, здесь — только смена статуса; повторное нажатие безопасно.
+ */
+export async function startYandexDelivery(id: string) {
+  await requireAdmin();
+  const parsedId = z.string().cuid().safeParse(id);
+  if (!parsedId.success) return { ok: false as const, error: "Некорректный заказ" };
+
+  const existing = await db.order.findUnique({
+    where: { id: parsedId.data },
+    select: { number: true, status: true, fulfillment: true },
+  });
+  if (!existing) return { ok: false as const, error: "Заказ не найден" };
+  if (existing.fulfillment !== "DELIVERY") {
+    return { ok: false as const, error: "Это самовывоз — курьер не нужен" };
+  }
+  if (existing.status === "DELIVERING") return { ok: true as const, changed: false as const };
+  if (FINAL_STATUSES.includes(existing.status)) {
+    return { ok: false as const, error: "Заказ уже закрыт" };
+  }
+
+  try {
+    await db.order.update({ where: { id: parsedId.data }, data: { status: "DELIVERING" } });
+    refreshOrderPages(parsedId.data, existing.number);
+    return { ok: true as const, changed: true as const };
+  } catch {
+    return { ok: false as const, error: "Не удалось отметить передачу курьеру" };
+  }
+}
+
 const RECENT_ORDERS_TAKE = 20;
 
 // Питает живую ленту уведомлений в шапке админки (AdminOrderAlerts) —

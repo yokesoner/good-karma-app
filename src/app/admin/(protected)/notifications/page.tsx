@@ -12,7 +12,7 @@ export default async function AdminNotificationsPage() {
     <div>
       <div>
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cherry">Личные настройки</p>
-        <h1 className="mt-2 text-4xl font-semibold tracking-tight">Уведомления</h1>
+        <h1 className="mt-2 text-[28px] font-semibold tracking-tight md:text-4xl">Уведомления</h1>
         <p className="mt-2 text-sm text-ink-2">
           Это только ваши каналы — у каждого администратора своя привязка и свои настройки браузера.
         </p>

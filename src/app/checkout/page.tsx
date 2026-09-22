@@ -22,7 +22,7 @@ export default function CheckoutPage() {
           Несколько деталей — и заказ отправится прямо на открытую кухню.
         </p>
       </div>
-      <div className="mb-7 grid grid-cols-3 gap-2 rounded-[22px] border border-white/70 bg-paper-2/64 p-2 shadow-s backdrop-blur-xl">
+      <div className="mb-7 grid grid-cols-3 gap-2 rounded-[22px] border border-white/70 bg-paper-2/65 p-2 shadow-s backdrop-blur-xl">
         {[
           ["01", "Корзина"],
           ["02", "Детали"],

@@ -252,11 +252,14 @@ html {
     animation: ornament-drift 24s ease-in-out infinite alternate;
   }
 
+  /* fill backwards, не both: после анимации transform не должен оставаться
+     на элементе — иначе position: fixed внутри (закреплённые панели на
+     телефоне) начинает считаться от этого блока, а не от экрана. */
   .wok-page > *,
   .profile-page > *,
   .product-page > *,
   .checkout-page > * {
-    animation: page-rise 620ms cubic-bezier(.2,.8,.2,1) both;
+    animation: page-rise 620ms cubic-bezier(.2,.8,.2,1) backwards;
   }
 
   .wok-heat {
@@ -548,4 +551,176 @@ html {
   ::view-transition-new(*) {
     animation-duration: 1ms !important;
   }
+}
+
+/* ---------- Мобильная плавность ---------- */
+:root {
+  --ease-out: cubic-bezier(.2, .8, .2, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+}
+
+/* Убирает серую вспышку при тапе и 300-мс задержку двойного тапа на iPhone —
+   без этого кнопки кажутся «ватными», даже если анимации красивые. */
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+a,
+button,
+summary,
+label,
+select,
+[role="button"],
+[role="tab"] {
+  touch-action: manipulation;
+}
+
+/* Глянцевый блик для главных кнопок-«пилюль» (Apple-style primary button):
+   тонкая светлая линия сверху и мягкая тень снизу изнутри — кнопка читается
+   как выпуклая, объёмная, вне зависимости от того, какой сплошной цвет
+   (bg-btn, bg-plum-deep, тёмно-сливовый в конструкторе вока) под ней. Не
+   заменяет сам цвет градиентом между токенами — те по-разному переставлены
+   местами в тёмной теме, а этот блик работает поверх любого из них одинаково. */
+.btn-sheen {
+  position: relative;
+  isolation: isolate;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+}
+
+/* Мягкая тёплая подложка вместо плоской заливки — на карточках товара,
+   категорий и промо, куда не подходит фотография. Радиальный блик сверху
+   слева + чуть более тёплый низ, тот же приём, что уже используют промо-
+   карточки (bg-gradient-to-br from-tint-* ...), но как готовый класс, а не
+   набор классов, который нужно подбирать заново на каждом новом месте. */
+.surface-soft {
+  background-image: radial-gradient(120% 140% at 15% -10%, rgb(var(--paper-2)) 0%, transparent 60%),
+    linear-gradient(165deg, rgb(var(--t-sakura) / 0.5), rgb(var(--t-gold) / 0.35));
+}
+
+/* Горизонтальные ленты (категории, вкладки): без полосы прокрутки и с
+   «прилипанием» к карточкам, как в нативных приложениях. */
+.snap-row {
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.snap-row::-webkit-scrollbar {
+  display: none;
+}
+
+.snap-row > * {
+  scroll-snap-align: start;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Каждый переход между страницами (app/template.tsx) — короткое
+     всплытие вместо резкой подмены экрана. Только from-кадр и fill
+     backwards: после анимации на элементе не остаётся ни transform, ни
+     opacity, поэтому sticky/fixed внутри страницы ведут себя как обычно. */
+  .page-enter {
+    animation: page-enter 320ms ease-out backwards;
+  }
+
+  /* Появление блоков при прокрутке (RevealOnScroll.tsx). До гидратации
+     класс .reveal-ready не выставлен, поэтому без JS всё видно сразу. */
+  .reveal-ready [data-reveal]:not(.is-in) {
+    opacity: 0;
+  }
+
+  [data-reveal].is-in {
+    animation: reveal-up 640ms var(--ease-out) var(--reveal-delay, 0ms) backwards;
+  }
+
+  [data-reveal="fade"].is-in {
+    animation-name: reveal-fade;
+  }
+
+  [data-reveal="scale"].is-in {
+    animation-name: reveal-scale;
+  }
+
+  .anim-pop {
+    animation: anim-pop 420ms var(--ease-spring) both;
+  }
+
+  .sheet-in {
+    animation: sheet-in 420ms var(--ease-out) both;
+  }
+
+  .cart-bar-in {
+    animation: cart-bar-in 460ms var(--ease-spring) both;
+  }
+
+  .chip-swap {
+    animation: chip-swap 260ms var(--ease-out) both;
+  }
+
+  .skeleton {
+    background-image: linear-gradient(100deg, transparent 20%, rgb(var(--paper) / 0.7) 50%, transparent 80%);
+    background-size: 220% 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  }
+}
+
+.skeleton {
+  background-color: rgb(var(--paper-3));
+}
+
+/* Только opacity, без transform: transform на обёртке страницы превратил бы её
+   в containing block для position: fixed внутри (панели на телефоне) и на
+   время анимации сдвинул бы их. Движение блокам даёт data-reveal. */
+@keyframes page-enter {
+  from { opacity: 0; }
+}
+
+@keyframes reveal-up {
+  from { opacity: 0; transform: translate3d(0, 22px, 0); }
+}
+
+@keyframes reveal-fade {
+  from { opacity: 0; }
+}
+
+@keyframes reveal-scale {
+  from { opacity: 0; transform: scale(.94); }
+}
+
+@keyframes anim-pop {
+  from { opacity: 0; transform: translate3d(0, 8px, 0) scale(.96); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes sheet-in {
+  from { transform: translate3d(0, 100%, 0); }
+  to { transform: none; }
+}
+
+@keyframes cart-bar-in {
+  from { opacity: 0; transform: translate3d(0, 24px, 0) scale(.96); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes chip-swap {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes skeleton-shimmer {
+  from { background-position: 120% 0; }
+  to { background-position: -120% 0; }
+}
+
+/* Кнопка на карточке товара, которую нельзя купить: фото приглушается,
+   а не прячется — гость видит, что блюдо есть, но временно недоступно. */
+.is-unavailable img {
+  filter: grayscale(0.85) brightness(0.96);
+  opacity: 0.7;
+}
+
+/* Полоска прогресса верхней навигации (NavProgress.tsx) */
+.nav-progress {
+  transition: transform 260ms var(--ease-out), opacity 220ms ease;
+  transform-origin: 0 50%;
 }

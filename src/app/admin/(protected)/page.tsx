@@ -70,7 +70,7 @@ export default async function AdminDashboardPage() {
     <div className="space-y-8">
       <div>
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cherry">Обзор</p>
-        <h1 className="mt-2 text-4xl font-semibold tracking-tight">Главная</h1>
+        <h1 className="mt-2 text-[28px] font-semibold tracking-tight md:text-4xl">Главная</h1>
       </div>
 
       <section className="relative overflow-hidden rounded-[30px] border border-white/70 bg-gradient-to-br from-tint-gold via-paper-2 to-tint-mint p-6 shadow-m sm:p-8">

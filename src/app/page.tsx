@@ -15,12 +15,9 @@ export default function HomePage() {
     <main>
       <Hero />
       <CulturalMarquee />
-      <Reveal>
-        <MenuSection />
-      </Reveal>
-      <Reveal>
-        <ExperienceSections />
-      </Reveal>
+      {/* Меню и баннеры без <Reveal>: их карточки появляются сами (data-reveal) */}
+      <MenuSection />
+      <ExperienceSections />
       <Reveal className="px-5 md:px-16">
         <PromotionsSection compact />
       </Reveal>

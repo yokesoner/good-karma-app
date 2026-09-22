@@ -8,7 +8,7 @@ export function AdminImageUploader({
   folder = "products",
 }: {
   onUploaded: (url: string, alt: string) => void;
-  folder?: "products" | "promotions" | "categories" | "wok" | "levels";
+  folder?: "products" | "promotions" | "categories" | "wok" | "levels" | "banners";
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);

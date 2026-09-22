@@ -6,6 +6,7 @@ import { confirmTelegramLink, logoutCustomer, requestLoginCode, verifyLoginCode 
 import { ProfileView } from "@/components/ProfileView";
 import { KarmaPass } from "@/components/KarmaPass";
 import { ProfileLoading } from "@/components/ProfileLoading";
+import { ArrowUpRight } from "@/components/icons";
 
 export function ProfileGate() {
   const identity = useIdentity((s) => s.identity);
@@ -125,7 +126,7 @@ export function ProfileGate() {
           {["Заказы", "Карма", "Адреса"].map((item) => (
             <span
               key={item}
-              className="rounded-full border border-[#493044]/10 bg-white/42 px-2 py-2 text-center text-[8px] font-bold uppercase tracking-[0.12em] text-[#76636F] backdrop-blur-md"
+              className="rounded-full border border-[#493044]/10 bg-white/40 px-2 py-2 text-center text-[8px] font-bold uppercase tracking-[0.12em] text-[#76636F] backdrop-blur-md"
             >
               {item}
             </span>
@@ -171,7 +172,7 @@ export function ProfileGate() {
             rel="noopener noreferrer"
             className="mt-5 flex min-h-12 items-center justify-center rounded-[16px] border border-cherry/30 bg-tint-sakura px-4 text-[13px] font-semibold text-ink transition active:scale-[0.98] hover:border-cherry/50"
           >
-            Открыть бота и нажать Start ↗
+            Открыть бота и нажать Start <ArrowUpRight className="ml-1" />
           </a>
         )}
         {step === "code" && (

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { KarmaPass } from "@/components/KarmaPass";
 import { KarmaClubBoard } from "@/components/KarmaClubBoard";
 import { LevelIcon } from "@/components/LevelIcon";
+import { ArrowUpRight } from "@/components/icons";
 import type { KarmaLevel, KarmaReward } from "@/lib/karma";
 
 export function KarmaClubShowcase({ levels, rewards }: { levels: KarmaLevel[]; rewards: KarmaReward[] }) {
@@ -22,7 +23,7 @@ export function KarmaClubShowcase({ levels, rewards }: { levels: KarmaLevel[]; r
               <b className="shrink-0 text-[27px] tracking-tight">10 ₽ <span className="text-gold">→</span> 1</b>
               <span className="max-w-[18ch] text-[11px] leading-relaxed text-ink-2">балл кармы за заказ</span>
             </div>
-            <Link href="/profile" className="mt-6 inline-flex min-h-12 items-center justify-between gap-6 rounded-full bg-btn px-6 py-3 text-[11px] font-bold text-btn-fg shadow-m transition hover:shadow-l motion-safe:hover:-translate-y-0.5">Открыть мою карту <span aria-hidden>↗</span></Link>
+            <Link href="/profile" className="mt-6 inline-flex min-h-12 items-center justify-between gap-6 rounded-full bg-btn px-6 py-3 text-[11px] font-bold text-btn-fg shadow-m transition hover:shadow-l motion-safe:hover:-translate-y-0.5">Открыть мою карту <ArrowUpRight className="text-[14px]" /></Link>
             <p className="mt-3 text-[12px] leading-relaxed text-ink-2">Личный баланс и история — в профиле.</p>
           </div>
           <div className="min-w-0 lg:pl-4">
@@ -43,7 +44,7 @@ export function KarmaClubShowcase({ levels, rewards }: { levels: KarmaLevel[]; r
       </div>
 
       {sortedRewards.length > 0 && <section className="mt-9" aria-label="Подарки клуба">
-        <div className="mb-5 flex flex-wrap items-end justify-between gap-3"><h3 className="text-[26px] font-bold tracking-tight">Приятные поводы вернуться</h3><Link href="/profile" className="inline-flex min-h-11 items-center text-[12px] font-semibold text-cherry">Мои награды <span aria-hidden className="ml-2">↗</span></Link></div>
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-3"><h3 className="text-[26px] font-bold tracking-tight">Приятные поводы вернуться</h3><Link href="/profile" className="inline-flex min-h-11 items-center text-[12px] font-semibold text-cherry">Мои награды <ArrowUpRight className="ml-2 text-[14px]" /></Link></div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {sortedRewards.map((reward, index) => <article key={reward.id} className="club-reward relative min-w-0 overflow-hidden rounded-[24px] border border-gold/20 bg-paper-2 p-6 shadow-s">
             <span aria-hidden className="absolute right-5 top-4 text-[36px] font-bold text-gold/15">{String(index + 1).padStart(2, "0")}</span>

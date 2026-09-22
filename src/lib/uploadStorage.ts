@@ -10,7 +10,7 @@ import path from "node:path";
 // на новый сервер нужно переносить public/uploads так же, как базу.
 export const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads");
 
-export type UploadFolder = "products" | "promotions" | "categories" | "wok" | "levels";
+export type UploadFolder = "products" | "promotions" | "categories" | "wok" | "levels" | "banners";
 
 export async function saveUploadedFile(params: {
   folder: UploadFolder;

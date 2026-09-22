@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ArrowUpRight } from "@/components/icons";
 import {
   confirmAdminTelegramLink,
   requestAdminTelegramLink,
@@ -98,7 +99,7 @@ export function AdminTelegramLinkCard({ initialLinked }: { initialLinked: boolea
             rel="noopener noreferrer"
             className="flex min-h-12 items-center justify-center rounded-2xl border border-cherry/30 bg-tint-sakura px-4 text-sm font-semibold text-ink transition hover:border-cherry/50"
           >
-            Открыть бота и нажать Start ↗
+            Открыть бота и нажать Start <ArrowUpRight className="ml-1" />
           </a>
           <button
             type="button"

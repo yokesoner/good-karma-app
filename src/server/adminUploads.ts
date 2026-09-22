@@ -11,7 +11,7 @@ const MetaSchema = z.object({
   contentType: z.enum(["image/jpeg", "image/png", "image/webp", "image/avif"]),
   // Только имя папки — не даём вызывающему коду задавать произвольный путь,
   // чтобы не расползались случайные префиксы в public/uploads.
-  folder: z.enum(["products", "promotions", "categories", "wok", "levels"]).default("products"),
+  folder: z.enum(["products", "promotions", "categories", "wok", "levels", "banners"]).default("products"),
 });
 
 const extensionByType: Record<z.infer<typeof MetaSchema>["contentType"], string> = {

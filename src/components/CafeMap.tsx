@@ -1,3 +1,4 @@
+import { ArrowUpRight } from "@/components/icons";
 import { CAFE, CAFE_ADDRESS } from "@/lib/delivery";
 
 // Виджет Яндекс.Карт (map-widget) — обычная "поделиться → встроить на сайт"
@@ -18,8 +19,8 @@ export function CafeMap({ className = "" }: { className?: string }) {
       />
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[12px]">
         <span className="text-current opacity-75">{CAFE_ADDRESS}</span>
-        <a href={openUrl} target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-2 hover:opacity-80">
-          Открыть карту крупнее ↗
+        <a href={openUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-semibold underline underline-offset-2 hover:opacity-80">
+          Открыть карту крупнее <ArrowUpRight />
         </a>
       </div>
     </div>

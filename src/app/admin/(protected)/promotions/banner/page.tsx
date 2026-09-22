@@ -16,7 +16,7 @@ export default async function AdminPromoHeroBannerPage() {
   return (
     <div>
       <Link href="/admin/promotions" className="text-xs font-bold uppercase tracking-[0.1em] text-ink-2 hover:text-ink">← Акции</Link>
-      <h1 className="mb-2 mt-4 text-4xl font-semibold tracking-tight">Главный баннер</h1>
+      <h1 className="mb-2 mt-4 text-[28px] font-semibold tracking-tight md:text-4xl">Главный баннер</h1>
       <p className="mb-8 text-sm text-ink-2">Редакционный блок вверху публичной страницы /promotions — один на весь сайт.</p>
       <AdminPromoHeroForm initial={banner ?? FALLBACK} />
     </div>

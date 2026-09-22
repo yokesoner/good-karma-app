@@ -7,10 +7,12 @@ import { useCart, cartCount } from "@/lib/cart";
 import { NavIcon } from "@/components/NavIcon";
 import { cn } from "@/lib/cn";
 
+// Меню — центральный, самый частый пункт (3-й из 5 вместе с Корзиной),
+// по обе стороны от него — Акции и Заказ, крайние — Профиль и Корзина.
 const NAV = [
-  { href: "/menu", label: "Меню", icon: "grid" },
   { href: "/promotions", label: "Акции", icon: "spark" },
   { href: "/track", label: "Заказ", icon: "receipt" },
+  { href: "/menu", label: "Меню", icon: "grid" },
   { href: "/profile", label: "Профиль", icon: "user" },
 ] as const;
 
@@ -25,7 +27,7 @@ export function MobileNav({ onCartClick }: { onCartClick: () => void }) {
   return (
     <nav
       aria-label="Мобильная навигация"
-      className="fixed inset-x-0 bottom-0 z-40 flex border-t border-white/60 bg-paper/86 pb-[env(safe-area-inset-bottom)] shadow-[0_-18px_48px_-28px_rgba(35,20,32,.55)] backdrop-blur-2xl md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 flex border-t border-white/60 bg-paper/85 pb-[env(safe-area-inset-bottom)] shadow-[0_-18px_48px_-28px_rgba(35,20,32,.55)] backdrop-blur-2xl md:hidden"
     >
       {NAV.map((item) => {
         const active = pathname === item.href || pathname.startsWith(`${item.href}/`);

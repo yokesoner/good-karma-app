@@ -1,62 +1,55 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AdminDeleteButton } from "@/components/admin/AdminDeleteButton";
+import { AdminMenuManager } from "@/components/admin/AdminMenuManager";
 import { db } from "@/lib/db";
-import { formatMoney } from "@/lib/money";
-import { deleteAdminProduct } from "@/server/adminProducts";
 
-export const metadata: Metadata = { title: "Товары — админка Гуд Карма" };
+export const metadata: Metadata = { title: "Меню — админка Гуд Карма" };
 
 export default async function AdminProductsPage() {
-  const products = await db.product.findMany({
-    orderBy: [{ category: { sortOrder: "asc" } }, { name: "asc" }],
+  const categories = await db.category.findMany({
+    orderBy: { sortOrder: "asc" },
     include: {
-      category: { select: { name: true } },
-      images: { orderBy: { sortOrder: "asc" }, take: 1 },
+      products: {
+        orderBy: { name: "asc" },
+        include: { images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+      },
     },
   });
 
   return (
-    <div>
-      <div className="flex flex-wrap items-end justify-between gap-5">
+    <div className="mx-auto max-w-3xl">
+      <div className="flex items-end justify-between gap-4">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cherry">Каталог</p>
-          <h1 className="mt-2 text-4xl font-semibold tracking-tight">Товары</h1>
-          <p className="mt-2 text-sm text-ink-2">{products.length} позиций</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cherry">Каталог и стоп-лист</p>
+          <h1 className="mt-1.5 text-[28px] font-semibold tracking-tight md:text-4xl">Меню</h1>
         </div>
-        <Link href="/admin/products/new" className="rounded-full bg-plum-deep px-6 py-3 text-xs font-bold uppercase tracking-[0.1em] text-btn-fg">Добавить товар</Link>
+        <Link
+          href="/admin/products/new"
+          className="shrink-0 rounded-full bg-plum-deep px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.08em] text-btn-fg transition active:scale-95 md:px-6 md:py-3 md:text-xs"
+        >
+          + Блюдо
+        </Link>
       </div>
+      <p className="mt-2 text-[13px] leading-snug text-ink-2">
+        Ползунок справа — блюдо в продаже или на стопе. Ползунок у категории ставит на стоп все её блюда сразу.
+      </p>
 
-      <div className="mt-8 overflow-hidden rounded-[28px] border border-hair bg-paper-2">
-        <div className="hidden grid-cols-[72px_1fr_160px_120px_150px] gap-4 border-b border-hair px-5 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-ink-3 lg:grid">
-          <span>Фото</span><span>Товар</span><span>Категория</span><span>Цена</span><span className="text-right">Действия</span>
-        </div>
-        {products.map((product) => (
-          <article key={product.id} className="grid gap-4 border-b border-hair p-5 last:border-b-0 sm:grid-cols-[72px_1fr_auto] sm:items-center lg:grid-cols-[72px_1fr_160px_120px_150px]">
-            <div
-              role="img"
-              aria-label={product.images[0]?.alt || product.name}
-              className="h-[72px] w-[72px] rounded-2xl bg-paper-3 bg-cover bg-center"
-              style={product.images[0]?.url ? { backgroundImage: `url(${product.images[0].url})` } : undefined}
-            />
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="truncate font-semibold">{product.name}</h2>
-                {product.badge && <span className="rounded-full bg-tint-blush px-2 py-1 text-[9px] font-bold text-cherry">{product.badge}</span>}
-                {product.isStopList && <span className="rounded-full bg-tint-gold px-2 py-1 text-[9px] font-bold">СТОП</span>}
-                {product.isHidden && <span className="rounded-full bg-paper-3 px-2 py-1 text-[9px] font-bold">СКРЫТ</span>}
-              </div>
-              <p className="mt-1 truncate text-xs text-ink-3">/{product.slug}</p>
-            </div>
-            <p className="text-sm text-ink-2">{product.category.name}</p>
-            <p className="font-semibold">{formatMoney(product.priceCents)}</p>
-            <div className="flex items-center justify-between gap-4 sm:col-start-2 lg:col-start-auto lg:justify-end">
-              <Link href={`/admin/products/${product.id}/edit`} className="text-[10px] font-bold uppercase tracking-[0.1em] text-plum hover:underline">Изменить</Link>
-              <AdminDeleteButton identifier={product.id} label={product.name} action={deleteAdminProduct} />
-            </div>
-          </article>
-        ))}
-        {products.length === 0 && <p className="p-10 text-center text-sm text-ink-2">Каталог пуст.</p>}
+      <div className="mt-5">
+        <AdminMenuManager
+          categories={categories.map((category) => ({
+            id: category.id,
+            name: category.name,
+            isStopList: category.isStopList,
+            products: category.products.map((product) => ({
+              id: product.id,
+              name: product.name,
+              priceCents: product.priceCents,
+              imageUrl: product.images[0]?.url ?? null,
+              isStopList: product.isStopList,
+              isHidden: product.isHidden,
+            })),
+          }))}
+        />
       </div>
     </div>
   );

@@ -9,17 +9,22 @@ export function AdminDeleteButton({
   identifier,
   label,
   action,
+  redirectTo,
+  className,
 }: {
   identifier: string;
   label: string;
   action: (identifier: string) => Promise<DeleteResult>;
+  /** Куда перейти после удаления (для кнопки на странице самого объекта). */
+  redirectTo?: string;
+  className?: string;
 }) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
 
   return (
-    <div className="text-right">
+    <div className={className ?? "text-right"}>
       <button
         type="button"
         disabled={pending}
@@ -29,6 +34,7 @@ export function AdminDeleteButton({
           startTransition(async () => {
             const result = await action(identifier);
             if (!result.ok) setError(result.error);
+            else if (redirectTo) router.replace(redirectTo);
             else router.refresh();
           });
         }}

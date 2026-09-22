@@ -9,7 +9,7 @@ const NOTES = [
 
 export function CulturalMarquee() {
   return (
-    <section aria-label="Философия кухни" className="culture-marquee border-y border-hair-soft bg-paper-2/52 py-3.5 backdrop-blur-xl">
+    <section aria-label="Философия кухни" className="culture-marquee border-y border-hair-soft bg-paper-2/50 py-3.5 backdrop-blur-xl">
       <div className="culture-marquee__track flex w-max items-center">
         {[...NOTES, ...NOTES].map(([mark, label], index) => (
           <span

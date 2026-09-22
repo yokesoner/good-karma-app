@@ -22,7 +22,7 @@ export default async function AdminWokBuilderPage() {
     <div className="space-y-12">
       <div>
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cherry">Noodle Lab</p>
-        <h1 className="mt-2 text-4xl font-semibold tracking-tight">Конструктор вока</h1>
+        <h1 className="mt-2 text-[28px] font-semibold tracking-tight md:text-4xl">Конструктор вока</h1>
         <p className="mt-2 text-sm text-ink-2">
           Ингредиенты читаются напрямую конструктором на сайте и расчётом цены — правки применяются сразу.
           Если для нового ID нет фотографии в реестре ассетов, на сайте покажется нейтральная иконка вместо фото.

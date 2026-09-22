@@ -6,6 +6,7 @@ import { OrderStatusLive } from "@/components/OrderStatusLive";
 import { CAFE_ADDRESS } from "@/lib/delivery";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
+import { formatCafeDateTime } from "@/lib/cafeTime";
 import { hasOrderAccess } from "@/lib/orderAccess";
 
 export const metadata: Metadata = {
@@ -43,8 +44,8 @@ export default async function OrderPage({ params }: { params: { number: string }
   const onlinePaymentPending = order.paymentMethod === "CARD_ONLINE" && order.paymentStatus === "PENDING";
 
   return (
-    <main className="mx-auto max-w-wrap px-5 py-10 md:px-16">
-      <div className="rounded-l border border-hair bg-paper-2 p-6 md:p-10">
+    <main className="mx-auto max-w-wrap px-5 py-5 md:px-16 md:py-10">
+      <div className="rounded-[26px] border border-hair bg-paper-2 p-5 md:rounded-l md:p-10">
         <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-ink-3">
           Спасибо за заказ
         </span>
@@ -94,7 +95,7 @@ export default async function OrderPage({ params }: { params: { number: string }
         <OrderStatusLive number={order.number} fulfillment={order.fulfillment} initialStatus={order.status} />
       </div>
 
-      <div className="mt-10 grid grid-cols-1 gap-10 md:grid-cols-2">
+      <div className="mt-8 grid grid-cols-1 gap-8 md:mt-10 md:grid-cols-2 md:gap-10">
         <div>
           <span className="mb-4 block text-[10px] font-bold uppercase tracking-[0.16em] text-ink-3">
             Состав заказа
@@ -132,7 +133,7 @@ export default async function OrderPage({ params }: { params: { number: string }
             {(
               [
                 ["Номер", order.number],
-                ["Оформлен", order.createdAt.toLocaleString("ru-RU")],
+                ["Оформлен", formatCafeDateTime(order.createdAt)],
                 ["Способ", order.fulfillment === "PICKUP" ? "самовывоз" : "доставка"],
                 [
                   order.fulfillment === "PICKUP" ? "Адрес кафе" : "Адрес",

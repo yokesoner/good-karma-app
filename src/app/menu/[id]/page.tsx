@@ -53,14 +53,14 @@ export default async function CategoryPage({ params }: Params) {
   const heroImageUrl = category.meta?.imageUrl ?? category.products[0]?.images[0]?.url;
 
   return (
-    <main className="mx-auto max-w-wrap px-5 py-8 md:px-16">
+    <main className="mx-auto max-w-wrap px-5 py-4 md:px-16 md:py-8">
       <CategoryStrip categories={categories} />
 
       {/* «Визуальный мир» категории из прототипа: фото, японская подпись
           и слоган. Фон — градиент по CategoryMeta.theme; декоративный
           узор волн поверх него — только когда pattern="seigaiha", это
           единственное значение паттерна с готовым ассетом сейчас. */}
-      <section className={`relative mt-6 flex h-[190px] items-end overflow-hidden rounded-l bg-gradient-to-br ${categoryThemeGradient(category.meta?.theme)} md:h-[220px]`}>
+      <section className={`relative mt-3 flex h-[132px] items-end overflow-hidden rounded-[22px] bg-gradient-to-br ${categoryThemeGradient(category.meta?.theme)} md:mt-6 md:h-[220px] md:rounded-l`}>
         {category.meta?.pattern === "seigaiha" && (
           <Image
             src={ASSETS.decor.seigaihaWave}
@@ -80,15 +80,20 @@ export default async function CategoryPage({ params }: Params) {
             className="object-cover opacity-40"
           />
         )}
-        <div className="relative z-10 bg-gradient-to-r from-paper/90 to-transparent p-6 md:p-8">
+        <div className="relative z-10 bg-gradient-to-r from-paper/90 to-transparent p-4 md:p-8">
           {category.meta?.jpTagline && (
-            <span className="mb-2 block text-[13px] tracking-[0.3em] text-ink opacity-40">
+            <span className="mb-1 block text-[12px] tracking-[0.3em] text-ink opacity-40 md:mb-2 md:text-[13px]">
               {category.meta.jpTagline}
             </span>
           )}
-          <h1 className="text-[26px] font-bold tracking-tight md:text-[32px]">{category.name}</h1>
+          <h1 className="text-[24px] font-bold tracking-tight md:text-[32px]">{category.name}</h1>
           {category.meta?.tagline && (
-            <p className="mt-1.5 text-[13px] text-ink-2">{category.meta.tagline}</p>
+            <p className="mt-1 text-[12.5px] text-ink-2 md:mt-1.5 md:text-[13px]">{category.meta.tagline}</p>
+          )}
+          {category.isStopList && (
+            <p className="mt-2 inline-block rounded-full bg-tint-gold px-3 py-1 text-[9px] font-bold uppercase tracking-[0.12em]">
+              Сегодня недоступно
+            </p>
           )}
         </div>
       </section>
@@ -101,10 +106,15 @@ export default async function CategoryPage({ params }: Params) {
           </Link>
         </div>
       ) : (
-        <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-6 md:grid-cols-4 md:gap-x-8 md:gap-y-9">
+        <div className="mt-5 grid grid-cols-2 gap-x-2.5 gap-y-3.5 md:mt-8 md:grid-cols-4 md:gap-x-8 md:gap-y-9">
           {category.id === "wok" && <WokBuilderCTA />}
-          {category.products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+          {category.products.map((product, index) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              categoryStopped={category.isStopList}
+              index={index}
+            />
           ))}
         </div>
       )}
