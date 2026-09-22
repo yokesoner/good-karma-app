@@ -4,8 +4,9 @@ import { db } from "@/lib/db";
 import { WokBuilder } from "@/components/WokBuilder";
 
 export const metadata: Metadata = {
-  title: "Собери свой ВОК — Гуд Карма",
+  title: "Собери свой ВОК",
   description: "Конструктор вока: выберите основу, начинку и соус — мы приготовим по вашему рецепту.",
+  alternates: { canonical: "/wok-builder" },
 };
 
 export default async function WokBuilderPage() {

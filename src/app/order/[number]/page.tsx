@@ -10,7 +10,7 @@ import { formatCafeDateTime } from "@/lib/cafeTime";
 import { hasOrderAccess } from "@/lib/orderAccess";
 
 export const metadata: Metadata = {
-  title: "Заказ — Гуд Карма",
+  title: "Заказ",
   robots: { index: false },
 };
 

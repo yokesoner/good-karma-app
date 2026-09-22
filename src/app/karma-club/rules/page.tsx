@@ -3,7 +3,8 @@ import { db } from "@/lib/db";
 import { formatDiscount } from "@/lib/money";
 
 export const metadata: Metadata = {
-  title: "Правила Karma Club — Гуд Карма",
+  title: "Правила Karma Club",
+  alternates: { canonical: "/karma-club/rules" },
 };
 
 // Не статичный текст — таблица ниже собрана из реальных настроек наград

@@ -135,7 +135,8 @@
       "fromKarma": 0,
       "toKarma": 500,
       "icon": "seed",
-      "perk": "Первые шаги — 1 балл за каждые 10 ₽"
+      "perk": "Базовое начисление — 1 балл за каждые 10 ₽ заказа",
+      "perkKind": "NONE"
     },
     {
       "key": "blossom",
@@ -143,7 +144,10 @@
       "fromKarma": 500,
       "toKarma": 1200,
       "icon": "blossom",
-      "perk": "Напиток в подарок к каждому третьему заказу"
+      "perk": "Напиток в подарок к каждому третьему заказу",
+      "perkKind": "MILESTONE_GIFT",
+      "perkEveryNOrders": 3,
+      "perkProductSlug": "лимонад-юдзу-14"
     },
     {
       "key": "moon",
@@ -151,42 +155,82 @@
       "fromKarma": 1200,
       "toKarma": 2500,
       "icon": "moon",
-      "perk": "Приоритетная сборка и ранний доступ к новинкам"
+      "perk": "Гёдза с креветкой в подарок к каждому третьему заказу",
+      "perkKind": "MILESTONE_GIFT",
+      "perkEveryNOrders": 3,
+      "perkProductSlug": "гёдза-с-креветкой-12"
     },
     {
       "key": "karma",
       "name": "Karma",
       "fromKarma": 2500,
-      "toKarma": 6000,
+      "toKarma": 4000,
       "icon": "karma",
-      "perk": "Личный сет от шефа и двойные баллы весь год"
+      "perk": "Личный сет от шеф-повара — раз в месяц по запросу",
+      "perkKind": "CLAIMABLE",
+      "perkClaimEveryDays": 30,
+      "perkDescription": "Сет из 3 блюд на выбор шеф-повара. После заявки мы свяжемся в Telegram, чтобы договориться о составе и времени."
+    },
+    {
+      "key": "satori",
+      "name": "Satori",
+      "fromKarma": 4000,
+      "toKarma": 999999,
+      "icon": "karma",
+      "perk": "Скидка 10% на каждый заказ, пока действует уровень",
+      "perkKind": "ALWAYS_DISCOUNT",
+      "perkDiscountPct": 10
     }
   ],
   "karmaRewards": [
     {
       "costPoints": 500,
       "title": "Напиток в подарок",
-      "description": "Матча, юдзу-лимонад или чай"
+      "description": "Юдзу-лимонад или матча латте",
+      "kind": "PRODUCT",
+      "productSlugs": [
+        "лимонад-юдзу-14",
+        "матча-латте-15"
+      ]
     },
     {
       "costPoints": 1000,
       "title": "Десерт в подарок",
-      "description": "Моти, чизкейк или мороженое"
+      "description": "Моти с клубникой или манго-чизкейк",
+      "kind": "PRODUCT",
+      "productSlugs": [
+        "моти-клубника-16",
+        "манго-чизкейк-17"
+      ]
     },
     {
       "costPoints": 1500,
       "title": "Ролл Филадельфия",
-      "description": "Классика на лососе, 8 штук"
+      "description": "Классика на лососе, 8 штук",
+      "kind": "PRODUCT",
+      "productSlugs": [
+        "филадельфия-1"
+      ]
     },
     {
       "costPoints": 2000,
-      "title": "Сет на выбор",
-      "description": "Любой сет из меню до 1 500 ₽"
+      "title": "Блюдо на выбор",
+      "description": "Одно блюдо из меню на ваш вкус — ролл, вок или рамен",
+      "kind": "PRODUCT",
+      "productSlugs": [
+        "dragon-18",
+        "ролл-с-угрём-3",
+        "рамен-тонкоцу-5",
+        "вок-с-говядиной-7"
+      ]
     },
     {
       "costPoints": 3000,
       "title": "−20% на любой заказ",
-      "description": "Действует месяц с момента обмена"
+      "description": "Действует на один заказ с момента обмена",
+      "kind": "DISCOUNT",
+      "discountType": "PERCENT",
+      "discountPct": 20
     }
   ],
   "deliveryZones": [

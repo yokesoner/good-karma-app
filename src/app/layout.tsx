@@ -7,6 +7,8 @@ import { RevealOnScroll } from "@/components/RevealOnScroll";
 import { ThemeScript } from "@/components/ThemeScript";
 import { SiteShell } from "@/components/SiteShell";
 import { ToastHost } from "@/components/ToastHost";
+import { StructuredData } from "@/components/StructuredData";
+import { SITE_URL } from "@/lib/siteUrl";
 import "./globals.css";
 
 // Цвет системной панели браузера на телефоне подстраивается под тему сайта
@@ -27,19 +29,26 @@ const montserrat = Montserrat({
 
 // Метаданные генерируются на сервере — это то, чего прототип как статичный
 // HTML не мог сделать динамически (og:image для акции дня, например).
-// На первом этапе значения статичные, один в один унаследованы от
-// index.html; дальше их можно доставать из БД по акции/товару страницы.
+// metadataBase раньше указывал на "goodkarma.cafe" — домен-заглушку из
+// прототипа, которого не существует: все canonical- и og:url-ссылки на
+// сайте были битыми. SITE_URL — тот же домен, что уже используется для
+// QR-кода Karma Club и ссылок в Telegram-уведомлениях (см. siteUrl.ts),
+// один источник истины вместо каждый раз захардкоженного домена.
+const siteUrl = new URL(SITE_URL);
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://goodkarma.cafe"),
-  title: "Гуд Карма — паназиатское кафе",
+  metadataBase: siteUrl,
+  title: { default: "Гуд Карма — паназиатское кафе", template: "%s — Гуд Карма" },
   description:
-    "Роллы, рамен и вок на открытой кухне. Доставим за 30—40 минут или отдадим с собой.",
+    "Роллы, рамен и вок на открытой кухне в Ставрополе. Доставим за 30—40 минут или отдадим с собой.",
+  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     locale: "ru_RU",
     siteName: "Гуд Карма",
     title: "Гуд Карма — паназиатское кафе",
-    description: "Роллы, рамен и вок на открытой кухне. Доставка за 30—40 минут.",
+    description: "Роллы, рамен и вок на открытой кухне в Ставрополе. Доставка за 30—40 минут.",
+    images: ["/assets/backgrounds/hero_two_worlds.png"],
   },
   twitter: {
     card: "summary_large_image",
@@ -57,6 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ThemeScript />
         </head>
         <body className="font-sans antialiased">
+          <StructuredData />
           <NavProgress />
           <RevealOnScroll />
           <SiteShell announcement={<AnnouncementBar />}>{children}</SiteShell>

@@ -12,9 +12,10 @@ import { ArrowRight, ArrowUpRight } from "@/components/icons";
 import { getBanner } from "@/server/siteBanners";
 
 export const metadata: Metadata = {
-  title: "Меню — Гуд Карма",
+  title: "Меню",
   description:
     "Полное меню паназиатского кафе Гуд Карма: роллы, рамен, вок, пицца, супы, закуски, напитки и десерты.",
+  alternates: { canonical: "/menu" },
 };
 
 export default async function MenuPage() {

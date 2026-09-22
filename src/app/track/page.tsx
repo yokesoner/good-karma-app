@@ -5,7 +5,7 @@ import { TrackOrderForm } from "@/components/TrackOrderForm";
 import { getMyRecentOrders } from "@/server/orderTracking";
 
 export const metadata: Metadata = {
-  title: "Отследить заказ — Гуд Карма",
+  title: "Отследить заказ",
   robots: { index: false },
 };
 

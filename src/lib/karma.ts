@@ -16,10 +16,10 @@ export type KarmaReward = {
 
 export type RewardState = "LOCKED" | "AVAILABLE" | "CLAIMED";
 
-export type KarmaSnapshot = {
+export type KarmaSnapshot<L extends KarmaLevel = KarmaLevel> = {
   points: number;
-  level: KarmaLevel;
-  nextLevel: KarmaLevel | null;
+  level: L;
+  nextLevel: L | null;
   pointsToNext: number;
   progressPct: number;
   /** Ближайшая недоступная награда — «осталось совсем немного». */
@@ -31,19 +31,26 @@ export type KarmaSnapshot = {
 // запрашивают все вызывающие — orderBy: { fromKarma: "asc" }). Вынесено
 // отдельно от karmaSnapshot, чтобы ту же логику подбора уровня можно было
 // переиспользовать на сервере (см. checkRewardEligibility в
-// src/server/karmaRewards.ts — там же level-gate наград).
-export function pickLevel(points: number, levels: KarmaLevel[]): KarmaLevel | null {
+// src/server/karmaRewards.ts, resolveLevelPerk в src/server/karmaLevels.ts —
+// там же level-gate наград и разрешение реальной привилегии уровня).
+//
+// Generic по L (а не жёстко KarmaLevel) — вызывающие передают полный
+// Prisma-тип уровня (с perkKind и остальными полями привилегии), и функция
+// должна возвращать ЕГО ЖЕ, а не обрезать до этих шести полей: иначе
+// вызывающий код, которому нужен, например, perkKind текущего уровня,
+// терял бы его прямо на этом шаге.
+export function pickLevel<L extends KarmaLevel>(points: number, levels: L[]): L | null {
   const first = levels[0];
   if (!first) return null;
   return levels.find((l) => points >= l.fromKarma && points < l.toKarma) ?? levels[levels.length - 1] ?? first;
 }
 
 /** Всё состояние клуба выводится из одного числа — количества баллов. */
-export function karmaSnapshot(
+export function karmaSnapshot<L extends KarmaLevel>(
   points: number,
-  levels: KarmaLevel[],
+  levels: L[],
   rewards: KarmaReward[],
-): KarmaSnapshot | null {
+): KarmaSnapshot<L> | null {
   const level = pickLevel(points, levels);
   if (!level) return null;
 

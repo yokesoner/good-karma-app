@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
 import { ArrowLeft } from "@/components/icons";
 import { ProductPurchasePanel } from "@/components/ProductPurchasePanel";
+import { SITE_URL } from "@/lib/siteUrl";
 
 type Params = { params: { slug: string } };
 
@@ -40,8 +41,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   if (!product) return { title: "Блюдо не найдено" };
   const image = product.images[0]?.url;
   return {
-    title: `${product.name} — Гуд Карма`,
+    title: product.name,
     description: product.description,
+    alternates: { canonical: `/product/${product.slug}` },
     openGraph: {
       title: product.name,
       description: product.description,
@@ -58,8 +60,30 @@ export default async function ProductPage({ params }: Params) {
   const cover = product.images[0];
   const unavailable = product.isStopList || product.category.isStopList;
 
+  // Product + Offer, не Restaurant/MenuItem: блюда здесь не просто пункты
+  // меню на бумаге, у них есть цена и их можно купить прямо на сайте —
+  // то, для чего schema.org Product с ценой и наличием и предназначен.
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description,
+    image: cover ? [cover.url.startsWith("http") ? cover.url : `${SITE_URL}${cover.url}`] : undefined,
+    offers: {
+      "@type": "Offer",
+      url: `${SITE_URL}/product/${product.slug}`,
+      priceCurrency: "RUB",
+      price: (product.priceCents / 100).toFixed(2),
+      availability: unavailable ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
+    },
+    ...(parseFloat(String(product.rating)) > 0 && product.ratingCount > 0
+      ? { aggregateRating: { "@type": "AggregateRating", ratingValue: String(product.rating), reviewCount: product.ratingCount } }
+      : {}),
+  };
+
   return (
     <main className="product-page mx-auto max-w-wrap px-5 py-3 md:px-16 md:py-12">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
       <Link
         href="/menu"
         className="inline-flex items-center gap-2 rounded-full border border-hair bg-paper-2/65 px-3.5 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-ink-3 backdrop-blur-sm transition active:scale-95 hover:border-cherry/40 hover:text-ink md:px-4 md:py-2.5"

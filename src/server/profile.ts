@@ -4,6 +4,9 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentCustomerId } from "@/lib/customerAuth";
 import { checkRewardEligibility } from "@/server/karmaRewards";
+import { generateLoyaltyQrDataUrl } from "@/lib/qrcode";
+import { getClaimablePerkStatus } from "@/server/karmaLevels";
+import { SITE_URL } from "@/lib/siteUrl";
 
 /**
  * Данные личного кабинета. Профиль — целиком клиентская страница (identity
@@ -22,9 +25,9 @@ export async function getProfileData() {
   });
   if (!user) return null;
 
-  const [agg, levels, rewards, orders, discountGrants] = await Promise.all([
+  const [agg, levels, rewards, orders, discountGrants, claimablePerk, qrDataUrl] = await Promise.all([
     db.karmaLedgerEntry.aggregate({ where: { userId }, _sum: { points: true } }),
-    db.karmaLevel.findMany({ orderBy: { fromKarma: "asc" } }),
+    db.karmaLevel.findMany({ orderBy: { fromKarma: "asc" }, include: { perkProduct: { select: { name: true } } } }),
     db.karmaReward.findMany({
       where: { isActive: true },
       orderBy: { costPoints: "asc" },
@@ -49,6 +52,12 @@ export async function getProfileData() {
       orderBy: { createdAt: "desc" },
       include: { reward: { select: { title: true } } },
     }),
+    getClaimablePerkStatus(),
+    // QR ведёт на защищённую логином-в-админку страницу сотрудника
+    // (/admin/loyalty/<code>) — сам код в ссылке бесполезен без входа в
+    // /admin, поэтому можно спокойно генерировать его на любой странице
+    // профиля, не опасаясь, что кто-то подсмотрит и спишет баллы сам себе.
+    generateLoyaltyQrDataUrl(`${SITE_URL}/admin/loyalty/${user.loyaltyCode}`),
   ]);
 
   // Уровень/недельный лимит — правило конкретной награды, не про баланс
@@ -57,7 +66,9 @@ export async function getProfileData() {
   const eligibility = await Promise.all(rewards.map((r) => checkRewardEligibility(userId, r)));
 
   return {
-    user: { id: user.id, name: user.name ?? "", phone: user.phone },
+    user: { id: user.id, name: user.name ?? "", phone: user.phone, avatarUrl: user.avatarUrl },
+    qrDataUrl,
+    claimablePerk,
     addresses: user.addresses.map((a) => ({
       id: a.id,
       label: a.label,

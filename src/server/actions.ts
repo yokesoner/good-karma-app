@@ -11,6 +11,7 @@ import { getCurrentCustomerId } from "@/lib/customerAuth";
 import { grantOrderAccess } from "@/lib/orderAccess";
 import { notifyAdminsOfNewOrder } from "@/server/adminNotify";
 import { checkRewardEligibility } from "@/server/karmaRewards";
+import { resolveLevelPerkForPhone, resolveLevelPerkForUser } from "@/server/karmaLevels";
 
 // Награды Karma Club оплачиваются баллами, а не деньгами — баллы
 // принадлежат аутентифицированному профилю (/profile, вход по
@@ -212,6 +213,11 @@ export async function quoteOrder(input: unknown) {
   }
 
   const promoAlreadyUsedByPhone = await isPromoAlreadyUsedByPhone(effectivePromoCode, phone);
+  // Только для предпросмотра "у вас будет подарок/скидка уровня" — по
+  // телефону, который гость уже успел ввести в форму, без создания User
+  // (тот появится только при оформлении, см. placeOrder). Пока телефон не
+  // введён или ещё не встречался — просто null, это не ошибка.
+  const levelPerk = await resolveLevelPerkForPhone(phone && isValidPhone(phone) ? normalizePhone(phone) : null);
 
   const priced = await priceOrder({
     lines: effectiveLines as IncomingLine[],
@@ -220,6 +226,7 @@ export async function quoteOrder(input: unknown) {
     isPickup,
     promoAlreadyUsedByPhone,
     karmaDiscount,
+    levelPerk,
   });
 
   return {
@@ -291,6 +298,18 @@ export async function placeOrder(input: unknown) {
 
   const promoAlreadyUsedByPhone = await isPromoAlreadyUsedByPhone(effectivePromoCode, data.phone);
 
+  // User нужен ДО ценообразования — реальная привилегия уровня (подарок
+  // к N-му заказу, автоскидка) считается по его карма-балансу и истории
+  // заказов, см. src/server/karmaLevels.ts. Upsert безопасно вызывать
+  // раньше: он идемпотентен и не зависит от результата priceOrder.
+  const phoneDigits = normalizePhone(data.phone);
+  const user = await db.user.upsert({
+    where: { phone: phoneDigits },
+    update: { name: data.name },
+    create: { phone: phoneDigits, name: data.name },
+  });
+  const levelPerk = await resolveLevelPerkForUser(user.id);
+
   const priced = await priceOrder({
     lines: data.lines as IncomingLine[],
     promoCode: effectivePromoCode,
@@ -298,18 +317,12 @@ export async function placeOrder(input: unknown) {
     isPickup: data.isPickup,
     promoAlreadyUsedByPhone,
     karmaDiscount: karmaDiscountGrant,
+    levelPerk,
   });
 
   if (priced.lines.length === 0) {
     return { ok: false as const, error: "Корзина пуста или блюда недоступны" };
   }
-
-  const phoneDigits = normalizePhone(data.phone);
-  const user = await db.user.upsert({
-    where: { phone: phoneDigits },
-    update: { name: data.name },
-    create: { phone: phoneDigits, name: data.name },
-  });
 
   // Баллы списывает resolveRewardLines с userId из сессии — телефон,
   // вписанный в форму заказа, обязан относиться к тому же профилю, иначе

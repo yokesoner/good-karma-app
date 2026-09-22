@@ -100,6 +100,9 @@ model Product {
   addonGroups ProductAddonGroup[]
   orderItems  OrderItem[]
   rewardLinks KarmaRewardProduct[]
+  // Товар, который уровень Karma Club дарит клиенту (perkKind =
+  // MILESTONE_GIFT) — см. KarmaLevel ниже.
+  levelPerks  KarmaLevel[]
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
 
@@ -315,15 +318,68 @@ model SiteBanner {
 // Было karmaLevels[] в JS — четыре уровня, каждый со своим порогом и текстом.
 
 model KarmaLevel {
-  key       String @id // "seed" | "blossom" | "moon" | "karma"
+  key       String @id // "seed" | "blossom" | "moon" | "karma" | "satori"
   name      String
   fromKarma Int
   toKarma   Int
   icon      String
+  // Свободный текст для витрины (публичная страница, демо-доска) — то, что
+  // раньше было ЕДИНСТВЕННЫМ источником правды про привилегию уровня, и
+  // поэтому ничего не проверяло на сервере ("бонус на словах"). Теперь это
+  // просто человекочитаемое описание того, что делают поля perk* ниже —
+  // держим оба в согласии в AdminKarmaLevelForm, а не как две независимые вещи.
   perk      String
   rewards   KarmaReward[]
 
+  // ---------- реальная привилегия уровня ----------
+  // NONE — только базовое начисление (см. Product.karma per order), без
+  // отдельного бонуса. MILESTONE_GIFT — бесплатный товар к каждому N-му
+  // заказу (считается по placeOrder, см. src/server/karmaLevels.ts).
+  // CLAIMABLE — можно раз в perkClaimEveryDays дней запросить в профиле;
+  // заявка просто уведомляет админа в Telegram (пример — «личный сет от
+  // шефа», у которого нет фиксированного SKU для автоматической выдачи).
+  // ALWAYS_DISCOUNT — процент скидки на каждый заказ, пока действует
+  // уровень; тот же "слот" скидки на чекауте, что промокод и Karma-грант,
+  // но ниже их по приоритету (см. src/server/pricing.ts).
+  perkKind           LevelPerkKind @default(NONE)
+  // MILESTONE_GIFT: каждый N-й неотменённый заказ пользователя.
+  perkEveryNOrders   Int?
+  // MILESTONE_GIFT: какой товар дарим. onDelete: SetNull — удаление товара
+  // не ломает уровень, просто снимает привязку (perkKind останется, но
+  // подарок перестанет добавляться, пока админ не выберет другой товар).
+  perkProduct        Product?      @relation(fields: [perkProductId], references: [id], onDelete: SetNull)
+  perkProductId      String?
+  // ALWAYS_DISCOUNT: процент скидки.
+  perkDiscountPct    Int?
+  // CLAIMABLE: раз в сколько дней можно запросить (30 = раз в месяц) и что
+  // именно попросить (показывается клиенту в профиле как есть).
+  perkClaimEveryDays Int?
+  perkDescription    String?
+  perkClaims         KarmaPerkClaim[]
+
   @@map("karma_levels")
+}
+
+enum LevelPerkKind {
+  NONE
+  MILESTONE_GIFT
+  CLAIMABLE
+  ALWAYS_DISCOUNT
+}
+
+// Заявки на CLAIMABLE-привилегию («личный сет от шефа раз в месяц» и т.п.) —
+// без этой таблицы нечем было бы ограничить «раз в месяц» и нечего было бы
+// показать администратору, кроме сообщения в Telegram, которое легко потерять.
+model KarmaPerkClaim {
+  id        String     @id @default(cuid())
+  user      User       @relation(fields: [userId], references: [id])
+  userId    String
+  level     KarmaLevel @relation(fields: [levelKey], references: [key], onDelete: Cascade)
+  levelKey  String
+  claimedAt DateTime   @default(now())
+
+  @@index([userId, levelKey])
+  @@map("karma_perk_claims")
 }
 
 model KarmaEvent {
@@ -447,11 +503,24 @@ model User {
   id             String             @id @default(cuid())
   phone          String             @unique
   name           String?
+  // Своя фотография в профиле — грузится на диск сервера тем же
+  // механизмом, что и остальные картинки (src/lib/uploadStorage.ts),
+  // отдельная папка "avatars". null — на карте и в шапке профиля вместо
+  // фото показывается логотип-кот (см. KarmaPass.tsx).
+  avatarUrl      String?
+  // Непубличный идентификатор для QR-кода карты Karma Club: сотрудник
+  // сканирует его на кассе и попадает на /admin/loyalty/<код> — страница
+  // сама требует входа в админку, так что код без доступа в админку
+  // бесполезен, даже если кто-то его сфотографирует. @default(cuid()) —
+  // как у обычного id, только отдельное поле, чтобы не светить настоящий
+  // userId в QR (id используется как FK во всей базе, его лучше не палить).
+  loyaltyCode    String             @unique @default(cuid())
   createdAt      DateTime           @default(now())
   addresses      Address[]
   orders         Order[]
   karmaEntries   KarmaLedgerEntry[]
   discountGrants KarmaDiscountGrant[]
+  perkClaims     KarmaPerkClaim[]
 
   @@map("users")
 }

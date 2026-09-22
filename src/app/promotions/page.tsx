@@ -3,9 +3,10 @@ import { KarmaClubSection } from "@/components/KarmaClubSection";
 import { PromotionsSection } from "@/components/PromotionsSection";
 
 export const metadata: Metadata = {
-  title: "Акции — Гуд Карма",
+  title: "Акции",
   description:
     "Акции, промокоды и Karma Club Гуд Карма: скидки, баллы, уровни и подарки в одном месте.",
+  alternates: { canonical: "/promotions" },
 };
 
 export default function PromotionsPage() {

@@ -15,8 +15,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const category = await db.category.findUnique({ where: { id: params.id } });
   if (!category) return { title: "Категория не найдена" };
   return {
-    title: `${category.name} — Гуд Карма`,
+    title: category.name,
     description: `${category.name} в паназиатском кафе Гуд Карма. Доставка за 30—40 минут.`,
+    alternates: { canonical: `/menu/${category.id}` },
   };
 }
 

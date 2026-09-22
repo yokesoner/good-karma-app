@@ -20,6 +20,7 @@ const adminNavigation = [
   ["Акции", "/admin/promotions"],
   ["Баннеры", "/admin/banners"],
   ["Karma Club", "/admin/karma-club"],
+  ["Карта клиента", "/admin/loyalty"],
   ["Доставка", "/admin/delivery-zones"],
   ["Уведомления", "/admin/notifications"],
 ] as const;

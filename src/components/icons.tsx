@@ -136,6 +136,34 @@ export function Pin(props: IconProps) {
   );
 }
 
+export function QrIcon(props: IconProps) {
+  return (
+    <Svg {...props} strokeWidth={props.strokeWidth ?? 1.6}>
+      <rect x="4" y="4" width="6" height="6" rx="1" />
+      <rect x="14" y="4" width="6" height="6" rx="1" />
+      <rect x="4" y="14" width="6" height="6" rx="1" />
+      <path d="M14 14h2.5v2.5H14zM17.5 14H20v2.5h-2.5zM14 17.5h2.5V20H14zM17.5 17.5H20V20h-2.5z" fill="currentColor" stroke="none" />
+    </Svg>
+  );
+}
+
+export function Camera(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1-2h7l1 2h2A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5Z" />
+      <circle cx="12" cy="13" r="3.4" />
+    </Svg>
+  );
+}
+
+export function Close(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M6 6l12 12M18 6 6 18" />
+    </Svg>
+  );
+}
+
 // ---- админка ----
 
 export type AdminIconName =
@@ -152,7 +180,8 @@ export type AdminIconName =
   | "team"
   | "banner"
   | "logout"
-  | "home";
+  | "home"
+  | "qr";
 
 export function AdminIcon({ name, ...props }: IconProps & { name: AdminIconName }) {
   return (
@@ -241,6 +270,14 @@ export function AdminIcon({ name, ...props }: IconProps & { name: AdminIconName 
         <>
           <path d="M4 11.2 12 4.5l8 6.7" />
           <path d="M6 10v9.5h4.5v-5.5h3v5.5H18V10" />
+        </>
+      )}
+      {name === "qr" && (
+        <>
+          <rect x="4" y="4" width="6" height="6" rx="1" />
+          <rect x="14" y="4" width="6" height="6" rx="1" />
+          <rect x="4" y="14" width="6" height="6" rx="1" />
+          <path d="M14 14h2.5v2.5H14zM17.5 14H20v2.5h-2.5zM14 17.5h2.5V20H14zM17.5 17.5H20V20h-2.5z" fill="currentColor" stroke="none" />
         </>
       )}
     </Svg>

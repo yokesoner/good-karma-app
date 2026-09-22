@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CAFE_ADDRESS } from "@/lib/delivery";
 
 export const metadata: Metadata = {
-  title: "Пользовательское соглашение — Гуд Карма",
+  title: "Пользовательское соглашение",
 };
 
 // Стартовый, разумный шаблон под доставку еды — не юридическая

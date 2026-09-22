@@ -27,6 +27,7 @@ const groups: { title: string; rows: Row[] }[] = [
   {
     title: "Работа кафе",
     rows: [
+      { href: "/admin/loyalty", label: "Карта клиента", hint: "QR на кассе — начислить или списать баллы", icon: "qr" },
       { href: "/admin/delivery-zones", label: "Доставка", hint: "Зоны, цены, бесплатная доставка", icon: "delivery" },
       { href: "/admin/notifications", label: "Уведомления", hint: "Telegram и звук о новых заказах", icon: "bell" },
     ],

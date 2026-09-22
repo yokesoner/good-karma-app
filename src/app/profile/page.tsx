@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ProfileGate } from "@/components/ProfileGate";
 
 export const metadata: Metadata = {
-  title: "Личный кабинет — Гуд Карма",
+  title: "Личный кабинет",
   robots: { index: false },
 };
 

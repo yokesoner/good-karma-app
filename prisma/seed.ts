@@ -206,13 +206,33 @@ async function main() {
   });
 
   console.log("Сеем карма-клуб…");
-  for (const lvl of design.karmaLevels) {
-    const { key, ...rest } = lvl;
-    await db.karmaLevel.upsert({ where: { key }, update: rest, create: lvl });
+  // Раньше design-data.json задавал только текстовое описание привилегии
+  // (perk) и товары наград (productIds), но create() ниже никогда не читал
+  // productIds — join-таблица karma_reward_products не создавалась вообще.
+  // Итог: почти все награды на сайте молча были "Нет товаров — обменять
+  // нельзя", а уровни 2–5 не делали ничего, кроме текста. Теперь у уровней
+  // и наград в JSON — perkProductSlug/productSlugs (человекочитаемые, не
+  // id), их резолвим в реальные productId по уже засеянным товарам.
+  const productBySlug = new Map((await db.product.findMany({ select: { id: true, slug: true } })).map((p) => [p.slug, p.id]));
+  const resolveProductSlug = (s: string | undefined) => {
+    if (!s) return null;
+    const id = productBySlug.get(s);
+    if (!id) console.warn(`  ⚠ товар со slug "${s}" не найден — привязка пропущена`);
+    return id ?? null;
+  };
+
+  for (const lvl of design.karmaLevels as any[]) {
+    const { key, perkProductSlug, ...rest } = lvl;
+    const data = { ...rest, perkProductId: resolveProductSlug(perkProductSlug) };
+    await db.karmaLevel.upsert({ where: { key }, update: data, create: { key, ...data } });
   }
   await db.karmaReward.deleteMany({});
-  for (const reward of design.karmaRewards) {
-    await db.karmaReward.create({ data: reward });
+  for (const reward of design.karmaRewards as any[]) {
+    const { productSlugs, ...rest } = reward;
+    const productIds = ((productSlugs as string[] | undefined) ?? []).map(resolveProductSlug).filter((id): id is string => Boolean(id));
+    await db.karmaReward.create({
+      data: { ...rest, products: { create: productIds.map((productId) => ({ productId })) } },
+    });
   }
 
   console.log("Сеем зоны доставки…");

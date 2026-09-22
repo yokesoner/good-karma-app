@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { getDeliveryZone, deliveryCostCents, type DeliveryZone } from "@/lib/delivery";
 import { isPromotionCurrentlyActive } from "@/lib/promoSchedule";
 import { calculateWokPriceCents } from "@/lib/wok";
+import type { ResolvedLevelPerk } from "@/server/karmaLevels";
 
 // Общая формула скидки — переиспользуется и промокодом (Promotion), и
 // персональной скидкой Karma Club (KarmaDiscountGrant): при FIXED раньше
@@ -55,6 +56,10 @@ export type PricedOrder = {
     customConfig?: PricedLineWokConfig | null;
     isReward?: boolean;
     rewardId?: string | null;
+    // Бесплатный подарок уровня Karma Club (MILESTONE_GIFT) — как isReward,
+    // но не тратит баллы и не привязан к конкретной KarmaReward: это
+    // привилегия САМОГО уровня, см. src/server/karmaLevels.ts.
+    isLevelGift?: boolean;
   }[];
   subtotalCents: number;
   discountCents: number;
@@ -69,6 +74,11 @@ export type PricedOrder = {
   // применяется/погашается по-другому (см. actions.ts) — поэтому не
   // смешиваю с promoCode/promoError, отдельная пара полей.
   karmaDiscountApplied: boolean;
+  // Автоматическая скидка уровня (ALWAYS_DISCOUNT, например Satori −10%) —
+  // третий "слот" скидки, ниже приоритетом, чем промокод и Karma-грант
+  // (см. порядок проверки ниже): применяется молча, без действия клиента.
+  levelDiscountApplied: boolean;
+  levelDiscountLabel: string | null;
   redeemedRewards: { rewardId: string; costPoints: number; productName: string }[];
 };
 
@@ -93,10 +103,17 @@ export async function priceOrder(params: {
   // (сессия, принадлежность гранта, isUsed). Взаимоисключает promoCode —
   // если задана, promoCode для расчёта скидки не используется вообще.
   karmaDiscount?: { type: PromoType; discountPct: number; discountFixedCents: number } | null;
+  // Реальная привилегия уровня Karma Club для этого телефона — уже
+  // разрешена в actions.ts (src/server/karmaLevels.ts), сюда приходит
+  // готовый результат. MILESTONE_GIFT добавляет бесплатную строку,
+  // ALWAYS_DISCOUNT занимает "слот" скидки ниже приоритетом, чем промокод
+  // и Karma-грант (см. порядок ниже).
+  levelPerk?: ResolvedLevelPerk;
 }): Promise<PricedOrder> {
-  const { lines, promoCode, distanceKm, isPickup, promoAlreadyUsedByPhone, karmaDiscount } = params;
+  const { lines, promoCode, distanceKm, isPickup, promoAlreadyUsedByPhone, karmaDiscount, levelPerk } = params;
 
   const productIds = [...new Set(lines.map((l) => l.productId))];
+  if (levelPerk?.kind === "MILESTONE_GIFT") productIds.push(levelPerk.productId);
   const addonIds = [...new Set(lines.flatMap((l) => l.addonIds))];
   const baseIds = [...new Set(lines.flatMap((l) => (l.wokConfig ? [l.wokConfig.baseId] : [])))];
   const proteinIds = [...new Set(lines.flatMap((l) => (l.wokConfig ? [l.wokConfig.proteinId] : [])))];
@@ -252,6 +269,27 @@ export async function priceOrder(params: {
     });
   }
 
+  // Подарок уровня Karma Club (MILESTONE_GIFT) — добавляется отдельной
+  // бесплатной строкой, независимо от того, что уже в корзине (даже если
+  // тот же товар куплен и отдельно, см. комментарий у isLevelGift в типе
+  // PricedOrder). Проверяем доступность точно так же, как и обычную
+  // строку: товар мог уйти в стоп-лист или пропасть между предпросмотром
+  // и оформлением — тогда просто не дарим, без ошибки для клиента.
+  if (levelPerk?.kind === "MILESTONE_GIFT") {
+    const giftProduct = productById.get(levelPerk.productId);
+    if (giftProduct && !giftProduct.isStopList && !giftProduct.category.isStopList) {
+      pricedLines.push({
+        productId: giftProduct.id,
+        name: `🎁 ${giftProduct.name} — подарок уровня`,
+        qty: 1,
+        unitPriceCents: 0,
+        addons: [],
+        customConfig: null,
+        isLevelGift: true,
+      });
+    }
+  }
+
   // Промокод и персональная скидка Karma Club взаимоисключают друг друга —
   // actions.ts уже гарантирует, что оба сразу сюда не попадут, но порядок
   // проверки ниже (karmaDiscount раньше promoCode) на всякий случай тоже
@@ -289,6 +327,19 @@ export async function priceOrder(params: {
     }
   }
 
+  // Автоматическая скидка уровня — самый низкий приоритет: если клиент
+  // явно применил промокод или Karma-грант, его выбор не подменяется
+  // молчаливой скидкой уровня. Срабатывает только когда выше ничего не
+  // применилось (иначе discountCents уже больше нуля или promoError занят
+  // текстом ошибки, который важнее молча перезаписывать).
+  let levelDiscountApplied = false;
+  let levelDiscountLabel: string | null = null;
+  if (discountCents === 0 && !karmaDiscount && !promoCode && levelPerk?.kind === "ALWAYS_DISCOUNT") {
+    discountCents = Math.round((subtotalCents * levelPerk.discountPct) / 100);
+    levelDiscountApplied = true;
+    levelDiscountLabel = `Скидка уровня ${levelPerk.levelName} −${levelPerk.discountPct}%`;
+  }
+
   const zone = isPickup ? null : getDeliveryZone(deliveryZones, distanceKm ?? null);
   const deliveryCents = isPickup
     ? 0
@@ -305,6 +356,8 @@ export async function priceOrder(params: {
     promoCode: appliedPromo,
     promoError,
     karmaDiscountApplied,
+    levelDiscountApplied,
+    levelDiscountLabel,
     redeemedRewards,
   };
 }

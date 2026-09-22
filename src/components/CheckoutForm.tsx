@@ -427,6 +427,16 @@ export function CheckoutForm() {
           ))}
         </div>
 
+        {/* Подарок уровня Karma Club (MILESTONE_GIFT) — серверная строка,
+            которой нет в клиентской корзине (lines выше), поэтому
+            показываем её отдельным баннером из живого пересчёта q.lines,
+            а не пытаемся втиснуть в список товаров над этим блоком. */}
+        {q?.lines.some((l) => l.isLevelGift) && (
+          <div className="mb-4 rounded-[18px] border border-gold/25 bg-tint-gold/40 px-4 py-3 text-[12.5px] font-semibold leading-snug">
+            {q.lines.filter((l) => l.isLevelGift).map((l) => l.name).join(", ")}
+          </div>
+        )}
+
         <div className="mb-5 border-t border-hair pt-5">
           {discountGrants.length > 0 && (
             <div className="mb-3">
@@ -473,6 +483,9 @@ export function CheckoutForm() {
           )}
           {q?.karmaDiscountApplied && (
             <p className="mt-2 text-[12px] text-mint-deep">Скидка Karma Club применена</p>
+          )}
+          {q?.levelDiscountApplied && (
+            <p className="mt-2 text-[12px] text-mint-deep">{q.levelDiscountLabel}</p>
           )}
           {quote?.discountError && <p className="mt-2 text-[12px] text-cherry">{quote.discountError}</p>}
         </div>

@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { BrandMark } from "@/components/BrandMark";
 import { LevelIcon } from "@/components/LevelIcon";
+import { Close, QrIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
 
 type KarmaPassProps = {
@@ -15,6 +17,8 @@ type KarmaPassProps = {
   className?: string;
   compact?: boolean;
   preview?: boolean;
+  /** Data URL QR-кода карты — показывать кассиру для начисления/списания баллов. */
+  qrDataUrl?: string | null;
 };
 
 const maskedPhone = (phone?: string | null) => {
@@ -32,12 +36,16 @@ export function KarmaPass({
   className,
   compact = false,
   preview = false,
+  qrDataUrl,
 }: KarmaPassProps) {
   // Наклон следует за курсором, а не фиксированный угол на :hover — эффект
   // карты в Apple Wallet. JS включается только там, где уже разрешён CSS-
   // вариант (мышь, наведение, no-preference): touch и reduced-motion молча
   // получают статичную карту.
   const [tilt, setTilt] = useState<{ x: number; y: number } | null>(null);
+  const [qrOpen, setQrOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
     if (event.pointerType !== "mouse") return;
@@ -87,10 +95,22 @@ export function KarmaPass({
               </span>
             </div>
           </div>
-          <span className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-2 text-[8px] font-bold uppercase tracking-[0.14em] backdrop-blur-md">
-            <LevelIcon name={levelIcon} className="h-3.5 w-3.5 text-[#F7D9A6]" />
-            {preview ? "Club" : level}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-2 text-[8px] font-bold uppercase tracking-[0.14em] backdrop-blur-md">
+              <LevelIcon name={levelIcon} className="h-3.5 w-3.5 text-[#F7D9A6]" />
+              {preview ? "Club" : level}
+            </span>
+            {!preview && qrDataUrl && (
+              <button
+                type="button"
+                onClick={() => setQrOpen(true)}
+                aria-label="Показать QR-код кассиру"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/15 bg-white/10 backdrop-blur-md transition active:scale-90 hover:bg-white/20"
+              >
+                <QrIcon className="h-4 w-4 text-[#F7D9A6]" />
+              </button>
+            )}
+          </div>
         </div>
 
         <div>
@@ -120,6 +140,37 @@ export function KarmaPass({
           </div>
         </div>
       </div>
+
+      {mounted && qrOpen && qrDataUrl &&
+        createPortal(
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="QR-код карты Karma Club"
+            className="fixed inset-0 z-[100] grid place-items-center bg-black/70 p-6 backdrop-blur-sm"
+            onClick={() => setQrOpen(false)}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-[340px] rounded-[28px] bg-white p-7 text-center shadow-[0_40px_90px_-30px_rgba(0,0,0,.6)]"
+            >
+              <button
+                type="button"
+                onClick={() => setQrOpen(false)}
+                aria-label="Закрыть"
+                className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full text-ink-3 transition hover:bg-paper-2"
+              >
+                <Close className="h-5 w-5" />
+              </button>
+              <b className="block text-[13px] font-bold uppercase tracking-[0.12em] text-[#2A2029]">Покажите на кассе</b>
+              <p className="mt-1 text-[11.5px] text-ink-3">Сотрудник отсканирует камерой телефона — спишет или начислит баллы</p>
+              {/* eslint-disable-next-line @next/next/no-img-element -- data URL, next/image не нужен */}
+              <img src={qrDataUrl} alt="QR-код карты Karma Club" className="mx-auto mt-5 h-[220px] w-[220px]" />
+              <p className="mt-4 text-[11px] font-semibold text-ink-2">{name || "Гость Гуд Кармы"} · {level}</p>
+            </div>
+          </div>,
+          document.body,
+        )}
     </article>
   );
 }

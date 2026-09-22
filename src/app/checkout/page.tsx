@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CheckoutForm } from "@/components/CheckoutForm";
 
 export const metadata: Metadata = {
-  title: "Оформление заказа — Гуд Карма",
+  title: "Оформление заказа",
   robots: { index: false },
 };
 
