@@ -10,6 +10,11 @@ import { cn } from "@/lib/cn";
  * выбрал фото → готово), поверх — тот же паттерн, что у AdminImageUploader,
  * только через клиентский customerUploads.ts (папка "avatars" зашита в
  * действии, folder клиент не выбирает).
+ *
+ * Оформление — золотое кольцо (тот же приём, что в Instagram/Stories, но
+ * в палитре сайта) плюс маленький значок камеры в углу вместо тёмной
+ * плашки на всё фото при наведении: значок виден всегда, отдельной кнопкой,
+ * не перекрывает само фото.
  */
 export function AvatarUploader({
   avatarUrl,
@@ -64,31 +69,53 @@ export function AvatarUploader({
 
   const initial = name.trim().charAt(0).toUpperCase() || "К";
   const dark = variant === "dark";
-  const dim = size === "lg" ? "h-16 w-16" : "h-14 w-14";
+  const dim = size === "lg" ? "h-20 w-20" : "h-16 w-16";
+  const badgeDim = size === "lg" ? "h-8 w-8" : "h-7 w-7";
 
   return (
-    <div className="flex items-center gap-3">
-      <button
-        type="button"
-        disabled={busy}
-        onClick={() => inputRef.current?.click()}
-        aria-label={avatarUrl ? "Сменить фото профиля" : "Добавить фото профиля"}
-        className={cn(
-          "group relative grid shrink-0 place-items-center overflow-hidden rounded-full border-2 shadow-[0_10px_26px_-14px_rgba(0,0,0,.5)] transition active:scale-95 disabled:opacity-60",
-          dim,
-          dark ? "border-white/70 bg-white/15" : "border-gold/30 bg-tint-sakura",
-        )}
-      >
-        {avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- аватарки пользователей вне next/image (произвольные размеры, диск сервера)
-          <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-        ) : (
-          <span className={cn("text-[18px] font-bold", dark ? "text-white/85" : "text-cherry")}>{initial}</span>
-        )}
-        <span className="absolute inset-0 hidden place-items-center bg-black/45 group-hover:grid">
-          <Camera className="h-5 w-5 text-white" />
-        </span>
-      </button>
+    <div className="flex items-center gap-3.5">
+      <div className="relative shrink-0">
+        <div
+          className={cn(
+            "rounded-full bg-gradient-to-br from-gold via-cherry/70 to-plum-deep p-[2.5px] shadow-[0_10px_26px_-14px_rgba(58,35,56,.55)]",
+            busy && "animate-pulse",
+          )}
+        >
+          <div className={cn("rounded-full p-[2px]", dark ? "bg-[#3A2338]" : "bg-paper")}>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => inputRef.current?.click()}
+              aria-label={avatarUrl ? "Сменить фото профиля" : "Добавить фото профиля"}
+              className={cn(
+                "grid place-items-center overflow-hidden rounded-full transition active:scale-95 disabled:opacity-60",
+                dim,
+                dark ? "bg-white/10" : "bg-tint-sakura",
+              )}
+            >
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element -- аватарки пользователей вне next/image (произвольные размеры, диск сервера)
+                <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <span className={cn("text-[20px] font-bold", dark ? "text-white/85" : "text-cherry")}>{initial}</span>
+              )}
+            </button>
+          </div>
+        </div>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => inputRef.current?.click()}
+          aria-label={avatarUrl ? "Сменить фото профиля" : "Добавить фото профиля"}
+          className={cn(
+            "absolute -bottom-0.5 -right-0.5 grid place-items-center rounded-full border-2 shadow-s transition active:scale-90 disabled:opacity-60",
+            badgeDim,
+            dark ? "border-[#3A2338] bg-[#F7D9A6] text-[#3A2338]" : "border-paper bg-plum-deep text-white",
+          )}
+        >
+          <Camera className="h-[13px] w-[13px]" />
+        </button>
+      </div>
       <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={upload} className="sr-only" />
       <div className="min-w-0 text-[11px]">
         <button

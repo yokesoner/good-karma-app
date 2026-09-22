@@ -5,13 +5,32 @@ import { isAdminAlertSoundEnabled, playAdminAlertSound, setAdminAlertSoundEnable
 
 type PermissionState = NotificationPermission | "unsupported";
 
+// iOS Safari не отдаёт window.Notification, пока сайт открыт обычной
+// вкладкой — API появляется только у установленного на экран «Домой»
+// сайта (display: standalone, см. manifest.ts) на iOS 16.4+, и то, только
+// если открыть именно с иконки, а не из Safari. Это ограничение самой iOS,
+// не что-то, что можно обойти кодом — но плоское «Не поддерживается» без
+// объяснения выглядит как баг сайта, а не как факт про iOS.
+function isIOS() {
+  if (typeof navigator === "undefined") return false;
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+function isStandalone() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia?.("(display-mode: standalone)").matches || (navigator as unknown as { standalone?: boolean }).standalone === true;
+}
+
 export function AdminBrowserAlertsSettings() {
   const [permission, setPermission] = useState<PermissionState>("default");
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [iosNotInstalled, setIosNotInstalled] = useState(false);
 
   useEffect(() => {
     setSoundEnabled(isAdminAlertSoundEnabled());
-    setPermission(typeof Notification === "undefined" ? "unsupported" : Notification.permission);
+    const unsupported = typeof Notification === "undefined";
+    setPermission(unsupported ? "unsupported" : Notification.permission);
+    setIosNotInstalled(unsupported && isIOS() && !isStandalone());
   }, []);
 
   async function enableNotifications() {
@@ -40,8 +59,11 @@ export function AdminBrowserAlertsSettings() {
           {permission === "granted" && (
             <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-ink-2">Включены</span>
           )}
-          {permission === "unsupported" && (
+          {permission === "unsupported" && !iosNotInstalled && (
             <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-ink-3">Не поддерживается</span>
+          )}
+          {iosNotInstalled && (
+            <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-ink-3">Нужна установка</span>
           )}
           {permission === "denied" && (
             <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-cherry">Заблокированы в браузере</span>
@@ -56,6 +78,21 @@ export function AdminBrowserAlertsSettings() {
             </button>
           )}
         </div>
+        {iosNotInstalled && (
+          <div className="rounded-2xl border border-gold/25 bg-tint-cream px-4 py-3.5 text-[12.5px] leading-relaxed text-ink-2">
+            <p className="font-semibold text-ink">На iPhone это работает только из установленного сайта</p>
+            <p className="mt-1.5">
+              Так устроен сам iOS Safari — обычная вкладка браузера уведомления не поддерживает никогда, это не
+              баг сайта. Установите админку на экран «Домой»:
+            </p>
+            <ol className="mt-2 list-decimal space-y-1 pl-4">
+              <li>Нажмите «Поделиться» (значок со стрелкой вверх) внизу экрана</li>
+              <li>Выберите «На экран «Домой»»</li>
+              <li>Откройте админку с новой иконки — не из Safari</li>
+            </ol>
+            <p className="mt-2 text-ink-3">Нужен iOS 16.4 или новее.</p>
+          </div>
+        )}
         <div className="flex items-center justify-between gap-4 rounded-2xl bg-paper-3 px-4 py-3">
           <span className="text-sm">Звук</span>
           <button
