@@ -2,7 +2,7 @@
 
 import { ChangeEvent, useRef, useState } from "react";
 import { removeCustomerAvatar, uploadCustomerAvatar } from "@/server/customerUploads";
-import { Camera } from "@/components/icons";
+import { Camera, Close } from "@/components/icons";
 import { cn } from "@/lib/cn";
 
 /**
@@ -12,9 +12,12 @@ import { cn } from "@/lib/cn";
  * действии, folder клиент не выбирает).
  *
  * Оформление — золотое кольцо (тот же приём, что в Instagram/Stories, но
- * в палитре сайта) плюс маленький значок камеры в углу вместо тёмной
- * плашки на всё фото при наведении: значок виден всегда, отдельной кнопкой,
- * не перекрывает само фото.
+ * в палитре сайта) и два маленьких значка прямо на кольце вместо текстовых
+ * ссылок «Сменить фото / Убрать» рядом: камера снизу-справа (везде
+ * узнаваемый жест «нажми, чтобы сменить фото», подпись не нужна), крестик
+ * сверху-справа — только когда фото уже есть. Раньше текстовые ссылки
+ * визуально спорили с самой карточкой аватарки — теперь это одна цельная
+ * картинка-виджет, без подписей.
  */
 export function AvatarUploader({
   avatarUrl,
@@ -73,7 +76,7 @@ export function AvatarUploader({
   const badgeDim = size === "lg" ? "h-8 w-8" : "h-7 w-7";
 
   return (
-    <div className="flex items-center gap-3.5">
+    <div className="inline-flex flex-col items-start gap-1.5">
       <div className="relative shrink-0">
         <div
           className={cn(
@@ -102,6 +105,22 @@ export function AvatarUploader({
             </button>
           </div>
         </div>
+
+        {avatarUrl && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={remove}
+            aria-label="Убрать фото профиля"
+            className={cn(
+              "absolute -right-1 -top-1 grid h-6 w-6 place-items-center rounded-full border-2 shadow-s transition active:scale-90 disabled:opacity-60",
+              dark ? "border-[#3A2338] bg-white/90 text-[#3A2338] hover:bg-white" : "border-paper bg-paper-2 text-ink-3 hover:text-cherry",
+            )}
+          >
+            <Close className="h-3 w-3" />
+          </button>
+        )}
+
         <button
           type="button"
           disabled={busy}
@@ -117,22 +136,8 @@ export function AvatarUploader({
         </button>
       </div>
       <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={upload} className="sr-only" />
-      <div className="min-w-0 text-[11px]">
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => inputRef.current?.click()}
-          className={cn("font-semibold underline underline-offset-2 disabled:opacity-50", dark ? "text-white decoration-white/40" : "text-ink decoration-hair")}
-        >
-          {busy ? "Загрузка…" : avatarUrl ? "Сменить фото" : "Добавить фото"}
-        </button>
-        {avatarUrl && (
-          <button type="button" disabled={busy} onClick={remove} className={cn("ml-3 disabled:opacity-50", dark ? "text-white/60 hover:text-white" : "text-ink-3 hover:text-cherry")}>
-            Убрать
-          </button>
-        )}
-        {error && <p role="alert" className={cn("mt-1", dark ? "text-[#FFD8D8]" : "text-cherry")}>{error}</p>}
-      </div>
+      {busy && <span className={cn("text-[10px] font-medium", dark ? "text-white/60" : "text-ink-3")}>Загрузка…</span>}
+      {error && <p role="alert" className={cn("max-w-[22ch] text-[10px] leading-snug", dark ? "text-[#FFD8D8]" : "text-cherry")}>{error}</p>}
     </div>
   );
 }
