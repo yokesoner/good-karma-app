@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LevelIcon } from "@/components/LevelIcon";
+import { ArrowLeft } from "@/components/icons";
 import type { getLoyaltyCustomer } from "@/server/adminLoyalty";
 import { adminAdjustPoints, adminRedeemReward } from "@/server/adminLoyalty";
 import { adminFieldClass, adminLabelClass } from "@/components/admin/formStyles";
@@ -63,6 +65,9 @@ export function AdminLoyaltyPanel({ code, initial }: { code: string; initial: Cu
 
   return (
     <div className="mx-auto max-w-[640px] space-y-6">
+      <Link href="/admin/loyalty" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-ink-2 hover:text-ink">
+        <ArrowLeft className="h-3.5 w-3.5" /> К поиску клиента
+      </Link>
       <article className="overflow-hidden rounded-[28px] border border-gold/25 bg-gradient-to-br from-[#3A2338] to-[#4A2C46] p-6 text-[#FFF8F2] shadow-m">
         <div className="flex items-center gap-4">
           <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full border-2 border-white/70 bg-white/15 text-[22px] font-bold">

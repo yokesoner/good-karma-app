@@ -7,26 +7,37 @@ import { karmaSnapshot } from "@/lib/karma";
 import { checkRewardEligibility } from "@/server/karmaRewards";
 import { normalizePhone } from "@/lib/phone";
 
-// Страница /admin/loyalty/<code> — то, что открывается по QR с карты
-// клиента (см. src/lib/qrcode.ts, KarmaPass.tsx). Сам код бесполезен без
-// входа в /admin (эта функция и вся ветка (protected) требуют
-// requireAdmin), поэтому его можно спокойно печатать прямо на карте, не
-// опасаясь, что кто-то посторонний спишет или начислит себе баллы сам.
+// Страница /admin/loyalty/<code> — карта клиента для сотрудника на кассе.
+// Найти её можно только через поиск по телефону (см. AdminLoyaltySearch —
+// раньше был ещё QR на карте клиента, но от него отказались в пользу
+// одного простого способа). loyaltyCode в URL — просто непрозрачный id,
+// сам поиск и вся ветка (protected) требуют requireAdmin.
 
-const PhoneLookupSchema = z.object({ phone: z.string().min(4) });
+const SearchSchema = z.object({ phone: z.string().min(1) });
 
-// Резервный путь, когда сканировать нечем или клиент не открыл профиль:
-// сотрудник ищет по телефону вручную вместо QR.
-export async function findLoyaltyCodeByPhone(input: unknown) {
+/**
+ * Поиск клиентов по части номера телефона — живой список с аватаркой,
+ * именем и телефоном, а не «найдено/не найдено» по полному номеру: на
+ * кассе удобнее вводить последние цифры, которые продиктовал гость, чем
+ * требовать точное совпадение. Лимит 8 — это список для клика, а не
+ * полная выгрузка базы.
+ */
+export async function searchLoyaltyCustomers(input: unknown) {
   await requireAdmin();
-  const parsed = PhoneLookupSchema.safeParse(input);
+  const parsed = SearchSchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: "Введите номер телефона" };
 
   const digits = normalizePhone(parsed.data.phone);
-  const user = await db.user.findUnique({ where: { phone: digits }, select: { loyaltyCode: true } });
-  if (!user) return { ok: false as const, error: "Клиент с таким номером не найден" };
+  if (digits.length < 3) return { ok: true as const, results: [] };
 
-  return { ok: true as const, loyaltyCode: user.loyaltyCode };
+  const users = await db.user.findMany({
+    where: { phone: { contains: digits } },
+    select: { name: true, phone: true, avatarUrl: true, loyaltyCode: true },
+    take: 8,
+    orderBy: { createdAt: "desc" },
+  });
+
+  return { ok: true as const, results: users };
 }
 
 export async function getLoyaltyCustomer(loyaltyCode: string) {

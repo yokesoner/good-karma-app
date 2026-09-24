@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { KarmaPass } from "@/components/KarmaPass";
 import { KarmaClubBoard } from "@/components/KarmaClubBoard";
+import { RewardsPath } from "@/components/RewardsPath";
 import { LevelIcon } from "@/components/LevelIcon";
 import { ArrowUpRight } from "@/components/icons";
 import type { KarmaLevel, KarmaReward } from "@/lib/karma";
@@ -44,15 +45,9 @@ export function KarmaClubShowcase({ levels, rewards }: { levels: KarmaLevel[]; r
       </div>
 
       {sortedRewards.length > 0 && <section className="mt-9" aria-label="Подарки клуба">
-        <div className="mb-5 flex flex-wrap items-end justify-between gap-3"><h3 className="text-[26px] font-bold tracking-tight">Приятные поводы вернуться</h3><Link href="/profile" className="inline-flex min-h-11 items-center text-[12px] font-semibold text-cherry">Мои награды <ArrowUpRight className="ml-2 text-[14px]" /></Link></div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {sortedRewards.map((reward, index) => <article key={reward.id} className="club-reward relative min-w-0 overflow-hidden rounded-[24px] border border-gold/20 bg-paper-2 p-6 shadow-s">
-            <span aria-hidden className="absolute right-5 top-4 text-[36px] font-bold text-gold/15">{String(index + 1).padStart(2, "0")}</span>
-            <span className="relative text-[11px] font-bold text-cherry">{reward.costPoints.toLocaleString("ru-RU")} баллов</span>
-            <h4 className="relative mt-4 text-[17px] font-bold leading-snug">{reward.title}</h4>
-            <p className="relative mt-2 text-[12px] leading-relaxed text-ink-2">{reward.description}</p>
-          </article>)}
-        </div>
+        <div className="mb-1 flex flex-wrap items-end justify-between gap-3"><h3 className="text-[26px] font-bold tracking-tight">Приятные поводы вернуться</h3><Link href="/profile" className="inline-flex min-h-11 items-center text-[12px] font-semibold text-cherry">Мои награды <ArrowUpRight className="ml-2 text-[14px]" /></Link></div>
+        <p className="mb-4 text-[12.5px] text-ink-2">Путь баллов — чем больше заказов, тем больше остановок открыто. Личный прогресс — в профиле.</p>
+        <RewardsPath rewards={sortedRewards} showcase />
       </section>}
 
       <details className="club-demo mt-7 rounded-[24px] border border-hair bg-paper-2 p-4 sm:p-6">

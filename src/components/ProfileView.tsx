@@ -94,7 +94,11 @@ export function ProfileView({
       </nav>
 
       {snap && (
-        <section className="grid gap-6 lg:grid-cols-[1.14fr_0.86fr]">
+        // items-start — без него grid растягивает обе колонки по высоте
+        // более высокой (правая выросла, когда добавилась LevelPerkCard),
+        // а внутренний flex justify-between в KarmaPass раздвигал контент
+        // карты под эту высоту огромным пустым отступом.
+        <section className="grid items-start gap-6 lg:grid-cols-[1.14fr_0.86fr]">
           <KarmaPass
             name={data.user.name || "Гость Гуд Кармы"}
             phone={data.user.phone}
@@ -102,7 +106,6 @@ export function ProfileView({
             level={snap.level.name}
             levelIcon={snap.level.icon}
             progressPct={snap.progressPct}
-            qrDataUrl={data.qrDataUrl}
           />
 
           <div className="grid grid-cols-2 gap-3">

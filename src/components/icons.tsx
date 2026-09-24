@@ -136,17 +136,6 @@ export function Pin(props: IconProps) {
   );
 }
 
-export function QrIcon(props: IconProps) {
-  return (
-    <Svg {...props} strokeWidth={props.strokeWidth ?? 1.6}>
-      <rect x="4" y="4" width="6" height="6" rx="1" />
-      <rect x="14" y="4" width="6" height="6" rx="1" />
-      <rect x="4" y="14" width="6" height="6" rx="1" />
-      <path d="M14 14h2.5v2.5H14zM17.5 14H20v2.5h-2.5zM14 17.5h2.5V20H14zM17.5 17.5H20V20h-2.5z" fill="currentColor" stroke="none" />
-    </Svg>
-  );
-}
-
 export function Camera(props: IconProps) {
   return (
     <Svg {...props}>
@@ -181,7 +170,7 @@ export type AdminIconName =
   | "banner"
   | "logout"
   | "home"
-  | "qr";
+  | "search";
 
 export function AdminIcon({ name, ...props }: IconProps & { name: AdminIconName }) {
   return (
@@ -272,12 +261,10 @@ export function AdminIcon({ name, ...props }: IconProps & { name: AdminIconName 
           <path d="M6 10v9.5h4.5v-5.5h3v5.5H18V10" />
         </>
       )}
-      {name === "qr" && (
+      {name === "search" && (
         <>
-          <rect x="4" y="4" width="6" height="6" rx="1" />
-          <rect x="14" y="4" width="6" height="6" rx="1" />
-          <rect x="4" y="14" width="6" height="6" rx="1" />
-          <path d="M14 14h2.5v2.5H14zM17.5 14H20v2.5h-2.5zM14 17.5h2.5V20H14zM17.5 17.5H20V20h-2.5z" fill="currentColor" stroke="none" />
+          <circle cx="10.5" cy="10.5" r="6.5" />
+          <path d="m20 20-4.8-4.8" />
         </>
       )}
     </Svg>

@@ -7,9 +7,9 @@ import { ASSETS } from "@/lib/assets";
 import { cn } from "@/lib/cn";
 import { LevelIcon } from "@/components/LevelIcon";
 import { BackgroundFootage } from "@/components/BackgroundFootage";
+import { RewardsPath } from "@/components/RewardsPath";
 import {
   karmaSnapshot,
-  rewardState,
   type KarmaLevel,
   type KarmaReward,
 } from "@/lib/karma";
@@ -133,68 +133,18 @@ export function KarmaClubBoard({
       </section>
 
       <div className="grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-[1.6fr_1fr]">
-        {/* ── НАГРАДЫ ──────────────────────────────────────── */}
+        {/* ── НАГРАДЫ: путь, а не сетка карточек ──────────────── */}
         <section className="min-w-0 rounded-[28px] border border-hair bg-paper-2 p-4 sm:p-7">
-          <div className="mb-6 flex flex-wrap items-baseline justify-between gap-3">
+          <div className="mb-1 flex flex-wrap items-baseline justify-between gap-3">
             <h2 className="font-sans text-[26px] tracking-tight md:text-[30px]">
               Награды Karma Club
             </h2>
             <span className="text-[11.5px] text-ink-3">
-              Меняйте баллы в кафе или при заказе доставки
+              Двигайте ползунок выше — дорожка открывается вместе с баллами
             </span>
           </div>
-
-          <div className="grid min-w-0 gap-4 sm:grid-cols-2">
-            {sortedRewards.map((reward) => {
-              const state = rewardState(reward, points, claimed);
-              return (
-                <article
-                  key={reward.id}
-                  className={cn(
-                    "group relative min-w-0 overflow-hidden rounded-[22px] border p-4 transition-all duration-500",
-                    state === "LOCKED"
-                      ? "border-hair bg-paper opacity-60"
-                      : "border-cherry/30 bg-gradient-to-br from-paper-2 to-tint-sakura hover:-translate-y-1 hover:shadow-m",
-                  )}
-                >
-                  <Image
-                    src={ASSETS.decor.sakuraFlower}
-                    alt=""
-                    aria-hidden
-                    width={54}
-                    height={54}
-                    className="pointer-events-none absolute -right-2 -top-2 w-11 object-contain opacity-40 transition-transform duration-700 group-hover:rotate-12"
-                  />
-                  <b className="font-sans text-[26px] leading-none">{reward.costPoints}</b>
-                  <span className="ml-1.5 text-[11px] uppercase tracking-[0.14em] text-ink-3">
-                    баллов
-                  </span>
-                  <p className="mt-3 text-[14px] font-semibold leading-snug">{reward.title}</p>
-                  <p className="mt-1 text-[12px] leading-relaxed text-ink-3">
-                    {reward.description}
-                  </p>
-
-                  {state === "CLAIMED" ? (
-                    <span className="mt-4 inline-block text-[11px] font-bold uppercase tracking-[0.12em] text-mint-deep">
-                      Пример: получено ✓
-                    </span>
-                  ) : state === "AVAILABLE" ? (
-                    <button
-                      type="button"
-                      onClick={() => setClaimed((c) => [...c, reward.id])}
-                      className="mt-4 rounded-full bg-plum-deep px-5 py-2.5 text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#F7EFF4] transition hover:opacity-90"
-                    >
-                      Попробовать в демо
-                    </button>
-                  ) : (
-                    <span className="mt-4 inline-block text-[11px] text-ink-3">
-                      Ещё {reward.costPoints - points} баллов
-                    </span>
-                  )}
-                </article>
-              );
-            })}
-          </div>
+          <p className="mb-2 text-[12.5px] text-ink-2">Нажмите на открывшуюся остановку, чтобы получить награду в демо.</p>
+          <RewardsPath rewards={sortedRewards} points={points} claimedIds={claimed} onStopClick={(id) => setClaimed((c) => [...c, id])} />
         </section>
 
         {/* ── БОКОВАЯ КОЛОНКА ──────────────────────────────── */}
