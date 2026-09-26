@@ -13,30 +13,21 @@ const KarmaLevelSchema = z.object({
   toKarma: z.number().int().min(1).max(10_000_001),
   icon: z.string().trim().min(1).max(40),
   perk: z.string().trim().min(1).max(300),
-  // Реальная привилегия уровня — см. подробный комментарий у LevelPerkKind
-  // в schema.prisma. Поля ниже валидны только для своего perkKind, но
-  // superRefine ниже это не разносит по отдельным ошибкам полей: форма и
-  // так показывает только актуальный набор полей для выбранного вида.
-  perkKind: z.enum(["NONE", "MILESTONE_GIFT", "CLAIMABLE", "ALWAYS_DISCOUNT"]),
-  perkEveryNOrders: z.number().int().min(1).max(50).nullable(),
-  perkProductId: z.string().trim().max(60).nullable(),
-  perkDiscountPct: z.number().int().min(1).max(100).nullable(),
-  perkClaimEveryDays: z.number().int().min(1).max(365).nullable(),
-  perkDescription: z.string().trim().max(400).nullable(),
+  // Скидка уровня и её недельный лимит — см. комментарий у KarmaLevel в
+  // schema.prisma. Оба поля задаются вместе или оба пустые (уровень без
+  // скидки): скидка без лимита применений и лимит без скидки одинаково
+  // бессмысленны, поэтому это проверяется, а не «чинится» молча.
+  discountPct: z.number().int().min(1).max(100).nullable(),
+  discountsPerWeek: z.number().int().min(1).max(50).nullable(),
 }).refine((value) => value.toKarma > value.fromKarma, {
   path: ["toKarma"],
   message: "Верхняя граница должна быть больше нижней",
 }).superRefine((value, ctx) => {
-  if (value.perkKind === "MILESTONE_GIFT") {
-    if (!value.perkEveryNOrders) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["perkEveryNOrders"], message: "Укажите, каждый какой заказ дарит подарок" });
-    if (!value.perkProductId) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["perkProductId"], message: "Выберите товар-подарок" });
+  if (value.discountPct && !value.discountsPerWeek) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["discountsPerWeek"], message: "Укажите, сколько раз в неделю действует скидка" });
   }
-  if (value.perkKind === "ALWAYS_DISCOUNT" && !value.perkDiscountPct) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["perkDiscountPct"], message: "Укажите процент скидки" });
-  }
-  if (value.perkKind === "CLAIMABLE") {
-    if (!value.perkClaimEveryDays) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["perkClaimEveryDays"], message: "Укажите период в днях" });
-    if (!value.perkDescription) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["perkDescription"], message: "Опишите, что именно можно попросить" });
+  if (value.discountsPerWeek && !value.discountPct) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["discountPct"], message: "Укажите процент скидки" });
   }
 });
 
@@ -104,12 +95,8 @@ export async function updateAdminKarmaLevel(key: string, input: unknown) {
         toKarma: parsed.data.toKarma,
         icon: parsed.data.icon,
         perk: parsed.data.perk,
-        perkKind: parsed.data.perkKind,
-        perkEveryNOrders: parsed.data.perkEveryNOrders,
-        perkProductId: parsed.data.perkProductId,
-        perkDiscountPct: parsed.data.perkDiscountPct,
-        perkClaimEveryDays: parsed.data.perkClaimEveryDays,
-        perkDescription: parsed.data.perkDescription,
+        discountPct: parsed.data.discountPct,
+        discountsPerWeek: parsed.data.discountsPerWeek,
       },
     });
     refreshKarmaPages();

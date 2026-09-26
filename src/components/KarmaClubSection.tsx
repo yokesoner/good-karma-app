@@ -2,9 +2,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { ASSETS } from "@/lib/assets";
-import { KarmaClubBoard } from "@/components/KarmaClubBoard";
+import { getCurrentCustomerId } from "@/lib/customerAuth";
 import { BackgroundFootage } from "@/components/BackgroundFootage";
 import { KarmaClubShowcase } from "@/components/KarmaClubShowcase";
+
+/** Баллы вошедшего покупателя; null — гость (или сессия истекла). */
+async function currentCustomerPoints(): Promise<number | null> {
+  const userId = await getCurrentCustomerId();
+  if (!userId) return null;
+  const agg = await db.karmaLedgerEntry.aggregate({ where: { userId }, _sum: { points: true } });
+  return agg._sum.points ?? 0;
+}
 
 export async function KarmaClubSection({
   compact = false,
@@ -13,9 +21,13 @@ export async function KarmaClubSection({
   compact?: boolean;
   embedded?: boolean;
 }) {
-  const [levels, rewards] = await Promise.all([
+  const [levels, rewards, points] = await Promise.all([
     db.karmaLevel.findMany({ orderBy: { fromKarma: "asc" } }),
     db.karmaReward.findMany({ where: { isActive: true }, orderBy: { costPoints: "asc" } }),
+    // Если покупатель вошёл — показываем его реальный прогресс прямо на
+    // витрине, а не обезличенную схему: путь читается совсем иначе, когда
+    // на нём видно своё место. Гостю просто не передаём баллы.
+    currentCustomerPoints(),
   ]);
   if (levels.length === 0) return null;
 
@@ -26,6 +38,8 @@ export async function KarmaClubSection({
     toKarma: l.toKarma,
     icon: l.icon,
     perk: l.perk,
+    discountPct: l.discountPct,
+    discountsPerWeek: l.discountsPerWeek,
   }));
   const rewardData = rewards.map((r) => ({
     id: r.id,
@@ -73,7 +87,7 @@ export async function KarmaClubSection({
 
   if (embedded) {
     return (
-      <KarmaClubShowcase levels={levelData} rewards={rewardData} />
+      <KarmaClubShowcase levels={levelData} rewards={rewardData} points={points} />
     );
   }
 
@@ -139,7 +153,7 @@ export async function KarmaClubSection({
         />
       </section>
 
-      <KarmaClubBoard levels={levelData} rewards={rewardData} />
+      <KarmaClubShowcase levels={levelData} rewards={rewardData} points={points} />
 
       {/* ── ФИНАЛЬНЫЙ CTA ────────────────────────────────────── */}
       <section className="relative overflow-hidden rounded-[32px] bg-plum-deep px-7 py-9 text-[#F4ECF2] md:px-12 md:py-11">

@@ -100,9 +100,6 @@ model Product {
   addonGroups ProductAddonGroup[]
   orderItems  OrderItem[]
   rewardLinks KarmaRewardProduct[]
-  // Товар, который уровень Karma Club дарит клиенту (perkKind =
-  // MILESTONE_GIFT) — см. KarmaLevel ниже.
-  levelPerks  KarmaLevel[]
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
 
@@ -323,63 +320,29 @@ model KarmaLevel {
   fromKarma Int
   toKarma   Int
   icon      String
-  // Свободный текст для витрины (публичная страница, демо-доска) — то, что
-  // раньше было ЕДИНСТВЕННЫМ источником правды про привилегию уровня, и
-  // поэтому ничего не проверяло на сервере ("бонус на словах"). Теперь это
-  // просто человекочитаемое описание того, что делают поля perk* ниже —
-  // держим оба в согласии в AdminKarmaLevelForm, а не как две независимые вещи.
+  // Короткая подпись уровня для витрины. Саму механику описывают поля ниже,
+  // а не этот текст: чип «−10% · 2 раза в неделю» на странице собирается из
+  // них, поэтому подпись и реальная скидка не могут разъехаться.
   perk      String
   rewards   KarmaReward[]
 
-  // ---------- реальная привилегия уровня ----------
-  // NONE — только базовое начисление (см. Product.karma per order), без
-  // отдельного бонуса. MILESTONE_GIFT — бесплатный товар к каждому N-му
-  // заказу (считается по placeOrder, см. src/server/karmaLevels.ts).
-  // CLAIMABLE — можно раз в perkClaimEveryDays дней запросить в профиле;
-  // заявка просто уведомляет админа в Telegram (пример — «личный сет от
-  // шефа», у которого нет фиксированного SKU для автоматической выдачи).
-  // ALWAYS_DISCOUNT — процент скидки на каждый заказ, пока действует
-  // уровень; тот же "слот" скидки на чекауте, что промокод и Karma-грант,
-  // но ниже их по приоритету (см. src/server/pricing.ts).
-  perkKind           LevelPerkKind @default(NONE)
-  // MILESTONE_GIFT: каждый N-й неотменённый заказ пользователя.
-  perkEveryNOrders   Int?
-  // MILESTONE_GIFT: какой товар дарим. onDelete: SetNull — удаление товара
-  // не ломает уровень, просто снимает привязку (perkKind останется, но
-  // подарок перестанет добавляться, пока админ не выберет другой товар).
-  perkProduct        Product?      @relation(fields: [perkProductId], references: [id], onDelete: SetNull)
-  perkProductId      String?
-  // ALWAYS_DISCOUNT: процент скидки.
-  perkDiscountPct    Int?
-  // CLAIMABLE: раз в сколько дней можно запросить (30 = раз в месяц) и что
-  // именно попросить (показывается клиенту в профиле как есть).
-  perkClaimEveryDays Int?
-  perkDescription    String?
-  perkClaims         KarmaPerkClaim[]
+  // ---------- что уровень реально даёт ----------
+  // Ровно одна механика на все уровни: скидка на заказ, доступная
+  // ограниченное число раз в неделю. Уровни отличаются только размером
+  // скидки и числом применений, всё остальное (иконка, название) —
+  // оформление. Раньше здесь было четыре разных вида привилегий (подарок
+  // к N-му заказу, заявка раз в месяц, постоянная скидка) — сложно и для
+  // покупателя, и для админки, при одинаковой ценности для кафе.
+  //
+  // null у обоих полей = стартовый уровень без скидки: работает только
+  // базовое начисление баллов за заказ.
+  discountPct      Int?
+  // Сколько заказов в неделю можно оформить со скидкой уровня. Считается
+  // скользящим окном 7 дней по Order.levelDiscountPct — тем же приёмом,
+  // что недельный лимит обменов награды (см. checkRewardEligibility).
+  discountsPerWeek Int?
 
   @@map("karma_levels")
-}
-
-enum LevelPerkKind {
-  NONE
-  MILESTONE_GIFT
-  CLAIMABLE
-  ALWAYS_DISCOUNT
-}
-
-// Заявки на CLAIMABLE-привилегию («личный сет от шефа раз в месяц» и т.п.) —
-// без этой таблицы нечем было бы ограничить «раз в месяц» и нечего было бы
-// показать администратору, кроме сообщения в Telegram, которое легко потерять.
-model KarmaPerkClaim {
-  id        String     @id @default(cuid())
-  user      User       @relation(fields: [userId], references: [id])
-  userId    String
-  level     KarmaLevel @relation(fields: [levelKey], references: [key], onDelete: Cascade)
-  levelKey  String
-  claimedAt DateTime   @default(now())
-
-  @@index([userId, levelKey])
-  @@map("karma_perk_claims")
 }
 
 model KarmaEvent {
@@ -508,19 +471,17 @@ model User {
   // отдельная папка "avatars". null — на карте и в шапке профиля вместо
   // фото показывается логотип-кот (см. KarmaPass.tsx).
   avatarUrl      String?
-  // Непубличный идентификатор для QR-кода карты Karma Club: сотрудник
-  // сканирует его на кассе и попадает на /admin/loyalty/<код> — страница
-  // сама требует входа в админку, так что код без доступа в админку
-  // бесполезен, даже если кто-то его сфотографирует. @default(cuid()) —
-  // как у обычного id, только отдельное поле, чтобы не светить настоящий
-  // userId в QR (id используется как FK во всей базе, его лучше не палить).
+  // Непубличный идентификатор карты Karma Club: сотрудник находит клиента
+  // по телефону и попадает на /admin/loyalty/<код>. Страница сама требует
+  // входа в админку, так что код без доступа в админку бесполезен.
+  // @default(cuid()) — как у обычного id, только отдельное поле, чтобы не
+  // светить настоящий userId (он используется как FK во всей базе).
   loyaltyCode    String             @unique @default(cuid())
   createdAt      DateTime           @default(now())
   addresses      Address[]
   orders         Order[]
   karmaEntries   KarmaLedgerEntry[]
   discountGrants KarmaDiscountGrant[]
-  perkClaims     KarmaPerkClaim[]
 
   @@map("users")
 }
@@ -619,6 +580,11 @@ model Order {
   promoCode     String?
   subtotalCents Int
   discountCents Int                @default(0)
+  // Процент скидки уровня Karma Club, если она была применена к этому
+  // заказу (null — не применялась). По этому полю считается, сколько
+  // применений уровня покупатель уже израсходовал за скользящую неделю,
+  // см. KarmaLevel.discountsPerWeek и src/server/karmaLevels.ts.
+  levelDiscountPct Int?
   deliveryCents Int                @default(0)
   totalCents    Int
   karmaEarned   Int                @default(0)

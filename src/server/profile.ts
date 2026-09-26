@@ -4,7 +4,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentCustomerId } from "@/lib/customerAuth";
 import { checkRewardEligibility } from "@/server/karmaRewards";
-import { getClaimablePerkStatus } from "@/server/karmaLevels";
+import { resolveLevelDiscountForUser } from "@/server/karmaLevels";
 
 /**
  * Данные личного кабинета. Профиль — целиком клиентская страница (identity
@@ -23,9 +23,9 @@ export async function getProfileData() {
   });
   if (!user) return null;
 
-  const [agg, levels, rewards, orders, discountGrants, claimablePerk] = await Promise.all([
+  const [agg, levels, rewards, orders, discountGrants, levelDiscount] = await Promise.all([
     db.karmaLedgerEntry.aggregate({ where: { userId }, _sum: { points: true } }),
-    db.karmaLevel.findMany({ orderBy: { fromKarma: "asc" }, include: { perkProduct: { select: { name: true } } } }),
+    db.karmaLevel.findMany({ orderBy: { fromKarma: "asc" } }),
     db.karmaReward.findMany({
       where: { isActive: true },
       orderBy: { costPoints: "asc" },
@@ -50,7 +50,7 @@ export async function getProfileData() {
       orderBy: { createdAt: "desc" },
       include: { reward: { select: { title: true } } },
     }),
-    getClaimablePerkStatus(),
+    resolveLevelDiscountForUser(userId),
   ]);
 
   // Уровень/недельный лимит — правило конкретной награды, не про баланс
@@ -60,7 +60,9 @@ export async function getProfileData() {
 
   return {
     user: { id: user.id, name: user.name ?? "", phone: user.phone, avatarUrl: user.avatarUrl },
-    claimablePerk,
+    // Скидка текущего уровня и остаток применений на неделе — показываем
+    // её в профиле тем же чипом, что и на витрине клуба.
+    levelDiscount,
     addresses: user.addresses.map((a) => ({
       id: a.id,
       label: a.label,

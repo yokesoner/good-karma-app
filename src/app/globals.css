@@ -645,6 +645,31 @@ select,
     animation: anim-pop 420ms var(--ease-spring) both;
   }
 
+  /* Дорожка Karma Club (KarmaJourney.tsx). Заливка и метка «вы здесь»
+     едут к своей позиции уже после монтирования — прогресс читается как
+     движение, а не как заранее нарисованная полоска. Остановки всплывают
+     по очереди: задержку каждой задаёт инлайновая --stop-delay, потому
+     что порядок остановок знает только компонент. */
+  .journey-fill,
+  .journey-marker {
+    transition: left 900ms var(--ease-out), width 900ms var(--ease-out);
+  }
+
+  .journey-stop {
+    animation: journey-stop-in 520ms var(--ease-spring) var(--stop-delay, 0ms) backwards;
+  }
+
+  /* Пульс вокруг текущей остановки — тот же приём, что у точки «вы здесь»
+     на картах: показывает своё место на пути, ничего не двигая в макете. */
+  .journey-here::after {
+    content: "";
+    position: absolute;
+    inset: -5px;
+    border-radius: 9999px;
+    border: 2px solid rgb(var(--cherry) / 0.5);
+    animation: journey-pulse 2.4s ease-out infinite;
+  }
+
   .sheet-in {
     animation: sheet-in 420ms var(--ease-out) both;
   }
@@ -690,6 +715,16 @@ select,
 @keyframes anim-pop {
   from { opacity: 0; transform: translate3d(0, 8px, 0) scale(.96); }
   to { opacity: 1; transform: none; }
+}
+
+@keyframes journey-stop-in {
+  from { opacity: 0; transform: translate3d(0, 10px, 0) scale(.72); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes journey-pulse {
+  0% { opacity: .85; transform: scale(1); }
+  70%, 100% { opacity: 0; transform: scale(1.7); }
 }
 
 @keyframes sheet-in {

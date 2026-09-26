@@ -48,7 +48,7 @@ export async function getLoyaltyCustomer(loyaltyCode: string) {
 
   const [agg, levels, rewards] = await Promise.all([
     db.karmaLedgerEntry.aggregate({ where: { userId: user.id }, _sum: { points: true } }),
-    db.karmaLevel.findMany({ orderBy: { fromKarma: "asc" }, include: { perkProduct: { select: { name: true } } } }),
+    db.karmaLevel.findMany({ orderBy: { fromKarma: "asc" } }),
     db.karmaReward.findMany({
       where: { isActive: true },
       orderBy: { costPoints: "asc" },
@@ -96,7 +96,7 @@ const RedeemSchema = z.object({ loyaltyCode: z.string().min(1), rewardId: z.stri
  * Обмен награды прямо на кассе — товар выдаётся руками, заказ в системе не
  * создаётся, только списание баллов (тот же принцип, что у
  * redeemDiscountReward в karmaRewards.ts, но инициирует не сам клиент, а
- * сотрудник со страницы QR).
+ * сотрудник со страницы карты клиента).
  */
 export async function adminRedeemReward(input: unknown) {
   await requireAdmin();

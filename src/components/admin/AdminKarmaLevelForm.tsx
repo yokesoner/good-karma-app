@@ -9,25 +9,15 @@ import { createAdminKarmaLevel, type AdminKarmaLevelInput, updateAdminKarmaLevel
 
 const PRESET_ICONS = ["seed", "blossom", "moon", "karma"] as const;
 
-const PERK_KIND_LABELS = {
-  NONE: "Нет — только базовое начисление",
-  MILESTONE_GIFT: "Подарок к каждому N-му заказу",
-  CLAIMABLE: "Можно запросить раз в N дней",
-  ALWAYS_DISCOUNT: "Скидка на каждый заказ",
-} as const;
-
-export function AdminKarmaLevelForm({
-  initial,
-  products,
-}: {
-  initial?: AdminKarmaLevelInput;
-  products: { id: string; name: string }[];
-}) {
+export function AdminKarmaLevelForm({ initial }: { initial?: AdminKarmaLevelInput }) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
   const [icon, setIcon] = useState(initial?.icon ?? "seed");
-  const [perkKind, setPerkKind] = useState<AdminKarmaLevelInput["perkKind"]>(initial?.perkKind ?? "NONE");
+  // Скидка включается одним переключателем: либо уровень её даёт (тогда
+  // оба поля обязательны), либо нет. Так форма не даёт сохранить «процент
+  // без лимита» — сочетание, которое сервер всё равно отклонит.
+  const [hasDiscount, setHasDiscount] = useState(Boolean(initial?.discountPct));
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -36,10 +26,6 @@ export function AdminKarmaLevelForm({
       const value = form.get(name);
       return value === null || value === "" ? null : Number(value);
     };
-    const str = (name: string) => {
-      const value = String(form.get(name) ?? "").trim();
-      return value || null;
-    };
     const input: AdminKarmaLevelInput = {
       key: String(form.get("key") ?? ""),
       name: String(form.get("name") ?? ""),
@@ -47,12 +33,8 @@ export function AdminKarmaLevelForm({
       toKarma: Number(form.get("toKarma")),
       icon,
       perk: String(form.get("perk") ?? ""),
-      perkKind,
-      perkEveryNOrders: perkKind === "MILESTONE_GIFT" ? num("perkEveryNOrders") : null,
-      perkProductId: perkKind === "MILESTONE_GIFT" ? str("perkProductId") : null,
-      perkDiscountPct: perkKind === "ALWAYS_DISCOUNT" ? num("perkDiscountPct") : null,
-      perkClaimEveryDays: perkKind === "CLAIMABLE" ? num("perkClaimEveryDays") : null,
-      perkDescription: perkKind === "CLAIMABLE" ? str("perkDescription") : null,
+      discountPct: hasDiscount ? num("discountPct") : null,
+      discountsPerWeek: hasDiscount ? num("discountsPerWeek") : null,
     };
     setError("");
     startTransition(async () => {
@@ -62,6 +44,7 @@ export function AdminKarmaLevelForm({
       router.refresh();
     });
   }
+
   return (
     <form onSubmit={submit} className="space-y-6">
       <section className={adminPanelClass}>
@@ -95,41 +78,25 @@ export function AdminKarmaLevelForm({
             <AdminImageUploader folder="levels" onUploaded={(url) => setIcon(url)} />
           </div>
         </div>
-        <label className="md:col-span-2"><span className={adminLabelClass}>Витрина (текст)</span><textarea name="perk" required maxLength={300} rows={2} defaultValue={initial?.perk} className={adminFieldClass} />
-          <p className="mt-1.5 text-xs text-ink-3">Показывается на публичной странице и демо-доске. Держите в согласии с настройками ниже — они сами по себе ничего не пишут покупателю.</p>
+        <label className="md:col-span-2"><span className={adminLabelClass}>Подпись на витрине</span><textarea name="perk" required maxLength={300} rows={2} defaultValue={initial?.perk} className={adminFieldClass} />
+          <p className="mt-1.5 text-xs text-ink-3">Короткая фраза под названием уровня. Сам размер скидки покупателю показывается отдельным чипом — из полей ниже, так что дублировать его в тексте не нужно.</p>
         </label>
       </section>
 
       <section className={adminPanelClass}>
-        <label className="md:col-span-2">
-          <span className={adminLabelClass}>Реальная привилегия</span>
-          <select value={perkKind} onChange={(e) => setPerkKind(e.target.value as AdminKarmaLevelInput["perkKind"])} className={adminFieldClass}>
-            {Object.entries(PERK_KIND_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-          </select>
-          <p className="mt-1.5 text-xs text-ink-3">Это то, что реально происходит на заказе или в профиле — не просто слова в тексте выше.</p>
+        <label className="flex items-center gap-3 md:col-span-2">
+          <input type="checkbox" checked={hasDiscount} onChange={(e) => setHasDiscount(e.target.checked)} className="h-5 w-5 accent-plum-deep" />
+          <span>
+            <span className="block text-sm font-semibold">Уровень даёт скидку на заказ</span>
+            <span className="mt-0.5 block text-xs text-ink-3">Без галочки уровень чисто статусный — работает только обычное начисление баллов.</span>
+          </span>
         </label>
 
-        {perkKind === "MILESTONE_GIFT" && (
+        {hasDiscount && (
           <>
-            <label><span className={adminLabelClass}>Каждый который заказ</span><input name="perkEveryNOrders" type="number" min={1} max={50} step={1} defaultValue={initial?.perkEveryNOrders ?? 3} className={adminFieldClass} /></label>
-            <label><span className={adminLabelClass}>Товар-подарок</span>
-              <select name="perkProductId" defaultValue={initial?.perkProductId ?? ""} className={adminFieldClass}>
-                <option value="">— выберите товар —</option>
-                {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
-            </label>
-          </>
-        )}
-
-        {perkKind === "ALWAYS_DISCOUNT" && (
-          <label><span className={adminLabelClass}>Процент скидки</span><input name="perkDiscountPct" type="number" min={1} max={100} step={1} defaultValue={initial?.perkDiscountPct ?? 10} className={adminFieldClass} /></label>
-        )}
-
-        {perkKind === "CLAIMABLE" && (
-          <>
-            <label><span className={adminLabelClass}>Раз в сколько дней</span><input name="perkClaimEveryDays" type="number" min={1} max={365} step={1} defaultValue={initial?.perkClaimEveryDays ?? 30} className={adminFieldClass} /></label>
-            <label className="md:col-span-2"><span className={adminLabelClass}>Что можно попросить</span><textarea name="perkDescription" rows={2} maxLength={400} defaultValue={initial?.perkDescription ?? ""} className={adminFieldClass} />
-              <p className="mt-1.5 text-xs text-ink-3">Покажется клиенту в профиле. Заявка не создаёт заказ — просто уведомляет вас в Telegram, дальше вы договариваетесь напрямую.</p>
+            <label><span className={adminLabelClass}>Процент скидки</span><input name="discountPct" type="number" min={1} max={100} step={1} defaultValue={initial?.discountPct ?? 10} className={adminFieldClass} /></label>
+            <label><span className={adminLabelClass}>Раз в неделю</span><input name="discountsPerWeek" type="number" min={1} max={50} step={1} defaultValue={initial?.discountsPerWeek ?? 1} className={adminFieldClass} />
+              <p className="mt-1.5 text-xs text-ink-3">Сколько заказов за скользящие 7 дней получают эту скидку. Отменённые заказы применение не тратят.</p>
             </label>
           </>
         )}

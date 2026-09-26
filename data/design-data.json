@@ -135,8 +135,9 @@
       "fromKarma": 0,
       "toKarma": 500,
       "icon": "seed",
-      "perk": "Базовое начисление — 1 балл за каждые 10 ₽ заказа",
-      "perkKind": "NONE"
+      "perk": "Начало пути — копите баллы с каждого заказа",
+      "discountPct": null,
+      "discountsPerWeek": null
     },
     {
       "key": "blossom",
@@ -144,10 +145,9 @@
       "fromKarma": 500,
       "toKarma": 1200,
       "icon": "blossom",
-      "perk": "Напиток в подарок к каждому третьему заказу",
-      "perkKind": "MILESTONE_GIFT",
-      "perkEveryNOrders": 3,
-      "perkProductSlug": "лимонад-юдзу-14"
+      "perk": "Первая привилегия клуба",
+      "discountPct": 5,
+      "discountsPerWeek": 1
     },
     {
       "key": "moon",
@@ -155,10 +155,9 @@
       "fromKarma": 1200,
       "toKarma": 2500,
       "icon": "moon",
-      "perk": "Гёдза с креветкой в подарок к каждому третьему заказу",
-      "perkKind": "MILESTONE_GIFT",
-      "perkEveryNOrders": 3,
-      "perkProductSlug": "гёдза-с-креветкой-12"
+      "perk": "Чаще заходите — чаще выгода",
+      "discountPct": 7,
+      "discountsPerWeek": 2
     },
     {
       "key": "karma",
@@ -166,10 +165,9 @@
       "fromKarma": 2500,
       "toKarma": 4000,
       "icon": "karma",
-      "perk": "Личный сет от шеф-повара — раз в месяц по запросу",
-      "perkKind": "CLAIMABLE",
-      "perkClaimEveryDays": 30,
-      "perkDescription": "Сет из 3 блюд на выбор шеф-повара. После заявки мы свяжемся в Telegram, чтобы договориться о составе и времени."
+      "perk": "Для тех, кто с нами всерьёз",
+      "discountPct": 10,
+      "discountsPerWeek": 2
     },
     {
       "key": "satori",
@@ -177,9 +175,9 @@
       "fromKarma": 4000,
       "toKarma": 999999,
       "icon": "karma",
-      "perk": "Скидка 10% на каждый заказ, пока действует уровень",
-      "perkKind": "ALWAYS_DISCOUNT",
-      "perkDiscountPct": 10
+      "perk": "Высший уровень клуба",
+      "discountPct": 15,
+      "discountsPerWeek": 3
     }
   ],
   "karmaRewards": [
@@ -218,7 +216,7 @@
       "description": "Одно блюдо из меню на ваш вкус — ролл, вок или рамен",
       "kind": "PRODUCT",
       "productSlugs": [
-        "dragon-18",
+        "дракон-18",
         "ролл-с-угрём-3",
         "рамен-тонкоцу-5",
         "вок-с-говядиной-7"

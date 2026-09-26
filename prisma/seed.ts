@@ -206,12 +206,11 @@ async function main() {
   });
 
   console.log("Сеем карма-клуб…");
-  // Раньше design-data.json задавал только текстовое описание привилегии
-  // (perk) и товары наград (productIds), но create() ниже никогда не читал
+  // Раньше design-data.json задавал только текстовое описание уровня (perk)
+  // и товары наград (productIds), но create() ниже никогда не читал
   // productIds — join-таблица karma_reward_products не создавалась вообще.
   // Итог: почти все награды на сайте молча были "Нет товаров — обменять
-  // нельзя", а уровни 2–5 не делали ничего, кроме текста. Теперь у уровней
-  // и наград в JSON — perkProductSlug/productSlugs (человекочитаемые, не
+  // нельзя". Теперь у наград в JSON — productSlugs (человекочитаемые, не
   // id), их резолвим в реальные productId по уже засеянным товарам.
   const productBySlug = new Map((await db.product.findMany({ select: { id: true, slug: true } })).map((p) => [p.slug, p.id]));
   const resolveProductSlug = (s: string | undefined) => {
@@ -222,8 +221,7 @@ async function main() {
   };
 
   for (const lvl of design.karmaLevels as any[]) {
-    const { key, perkProductSlug, ...rest } = lvl;
-    const data = { ...rest, perkProductId: resolveProductSlug(perkProductSlug) };
+    const { key, ...data } = lvl;
     await db.karmaLevel.upsert({ where: { key }, update: data, create: { key, ...data } });
   }
   await db.karmaReward.deleteMany({});

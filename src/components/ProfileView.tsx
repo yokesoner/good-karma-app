@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getProfileData, addAddress, removeAddress } from "@/server/profile";
 import { redeemDiscountReward } from "@/server/karmaRewards";
-import { claimLevelPerk } from "@/server/karmaLevels";
 import { formatDiscount, formatMoney } from "@/lib/money";
 import { karmaSnapshot } from "@/lib/karma";
 import { useCart } from "@/lib/cart";
@@ -109,7 +108,7 @@ export function ProfileView({
           />
 
           <div className="grid grid-cols-2 gap-3">
-            <LevelPerkCard level={snap.level} claimablePerk={data.claimablePerk} onChanged={load} />
+            <LevelDiscountCard level={snap.level} levelDiscount={data.levelDiscount} />
             <article className="col-span-2 rounded-[28px] border border-white/70 bg-gradient-to-br from-tint-sakura via-paper-2 to-tint-lavender p-6 shadow-[0_22px_54px_-38px_rgba(73,48,68,.55)]">
               <span className="text-[8.5px] font-bold uppercase tracking-[0.18em] text-ink-3">Следующий уровень</span>
               <div className="mt-3 flex items-center gap-3">
@@ -180,83 +179,37 @@ export function ProfileView({
 
 type RewardProduct = ProfileData["rewards"][number]["products"][number];
 type SnapLevel = ProfileData["levels"][number];
-type ClaimablePerk = ProfileData["claimablePerk"];
+type LevelDiscount = ProfileData["levelDiscount"];
 
-// Что уровень реально делает — не переизложение текста из админки, а то же
-// самое condition-дерево, что и на сервере (resolveLevelPerkForUser,
-// getClaimablePerkStatus). Level 1 (perkKind NONE) не хранит "10₽ = 1 балл"
-// нигде в БД отдельным полем — это натуральное следствие того, что karma
-// каждого товара в каталоге уже посчитана как round(цена/10), см. seed.json.
-function LevelPerkCard({
-  level,
-  claimablePerk,
-  onChanged,
-}: {
-  level: SnapLevel;
-  claimablePerk: ClaimablePerk;
-  onChanged: () => void;
-}) {
-  const showToast = useToast((s) => s.show);
-  const [claiming, setClaiming] = useState(false);
-  const [claimError, setClaimError] = useState<string | null>(null);
-
-  async function claim() {
-    if (claiming) return;
-    setClaimError(null);
-    setClaiming(true);
-    try {
-      const result = await claimLevelPerk({});
-      if (!result.ok) {
-        setClaimError(result.error);
-        return;
-      }
-      showToast("Заявка отправлена — мы свяжемся с вами");
-      onChanged();
-    } catch {
-      setClaimError("Не удалось отправить заявку. Попробуйте ещё раз.");
-    } finally {
-      setClaiming(false);
-    }
-  }
-
-  const perkText =
-    level.perkKind === "MILESTONE_GIFT"
-      ? `${level.perkProduct?.name ?? "Подарок"} — дарим к каждому ${level.perkEveryNOrders}-му заказу`
-      : level.perkKind === "ALWAYS_DISCOUNT"
-        ? `−${level.perkDiscountPct}% на каждый заказ, пока действует уровень`
-        : level.perkKind === "CLAIMABLE"
-          ? claimablePerk?.description ?? level.perkDescription ?? level.perk
-          : "10 ₽ покупок = 1 балл кармы";
+// Скидка уровня и остаток применений на неделе. Цифры приходят с сервера
+// (resolveLevelDiscountForUser) — здесь их только показываем, чтобы карточка
+// в профиле и реальный расчёт на чекауте не могли разойтись. У стартового
+// уровня скидки нет, и тогда показываем базовое правило начисления: karma
+// каждого товара в каталоге посчитана как round(цена/10), см. seed.json.
+function LevelDiscountCard({ level, levelDiscount }: { level: SnapLevel; levelDiscount: LevelDiscount }) {
+  const exhausted = levelDiscount !== null && levelDiscount.left === 0;
 
   return (
     <article className="col-span-2 rounded-[25px] border border-gold/25 bg-gradient-to-br from-[#3A2338] to-[#4A2C46] p-5 text-[#FFF8F2] shadow-[0_18px_44px_-34px_rgba(58,35,56,.7)]">
       <div className="flex items-center gap-2.5">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[13px] bg-white/10"><LevelIcon name={level.icon} className="h-[18px] w-[18px] text-[#F7D9A6]" /></span>
         <div className="min-w-0">
-          <span className="block text-[8px] font-bold uppercase tracking-[0.18em] text-white/50">Привилегия уровня «{level.name}»</span>
-          <p className="mt-0.5 text-[13px] font-semibold leading-snug">{perkText}</p>
+          <span className="block text-[8px] font-bold uppercase tracking-[0.18em] text-white/50">Уровень «{level.name}»</span>
+          <p className="mt-0.5 text-[13px] font-semibold leading-snug">
+            {levelDiscount
+              ? `−${levelDiscount.pct}% на заказ · ${levelDiscount.perWeek} раз(а) в неделю`
+              : "10 ₽ покупок = 1 балл кармы"}
+          </p>
         </div>
       </div>
 
-      {level.perkKind === "CLAIMABLE" && claimablePerk && (
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          {claimablePerk.available ? (
-            <button
-              type="button"
-              disabled={claiming}
-              onClick={claim}
-              className="min-h-10 rounded-full bg-[#F7D9A6] px-5 text-[11px] font-bold text-[#3A2338] transition active:scale-95 disabled:opacity-60"
-            >
-              {claiming ? "Отправляем…" : "Запросить"}
-            </button>
-          ) : (
-            <span className="text-[11.5px] text-white/70">
-              Уже запрошено · снова доступно {claimablePerk.nextAvailableAt ? new Date(claimablePerk.nextAvailableAt).toLocaleDateString("ru-RU") : "скоро"}
-            </span>
-          )}
-        </div>
+      {levelDiscount && (
+        <p className={`mt-3 text-[11.5px] ${exhausted ? "text-[#FFD8D8]" : "text-white/70"}`}>
+          {exhausted
+            ? "Скидки на этой неделе закончились — применятся снова, когда обновится неделя."
+            : `Осталось ${levelDiscount.left} из ${levelDiscount.perWeek} на этой неделе. Применяется на чекауте сама.`}
+        </p>
       )}
-      {claimError && <p role="alert" className="mt-2 text-[11.5px] text-[#FFD8D8]">{claimError}</p>}
     </article>
   );
 }
