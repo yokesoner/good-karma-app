@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { OrderAccessGate } from "@/components/OrderAccessGate";
 import { OrderStatusLive } from "@/components/OrderStatusLive";
 import { CAFE_ADDRESS } from "@/lib/delivery";
+import { CAFE_PHONE } from "@/lib/contacts";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
 import { formatCafeDateTime } from "@/lib/cafeTime";
@@ -16,8 +17,10 @@ export const metadata: Metadata = {
 
 // Телефон и внешняя страница отслеживания вынесены в константы, как в
 // прототипе: если появится агрегатор или своя страница трекинга, меняется
-// одна строка. Пустой URL — значит используем телефон.
-const DELIVERY_PHONE = "+7 (999) 000-00-00";
+// одна строка. Пустой URL — значит используем телефон. Своей службы доставки
+// с отдельным номером нет — вопросы по заказу идут на телефон кафе (раньше
+// здесь стояла заглушка +7 (999) 000-00-00).
+const DELIVERY_PHONE = CAFE_PHONE;
 const DELIVERY_TRACKING_URL = "";
 
 export default async function OrderPage({ params }: { params: { number: string } }) {

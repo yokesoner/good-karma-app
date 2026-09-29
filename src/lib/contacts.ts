@@ -5,7 +5,9 @@
 // (см. order/[number]/page.tsx).
 export { CAFE_ADDRESS } from "@/lib/delivery";
 
-export const CAFE_PHONE = "+7 (812) 000-00-00";
+export const CAFE_PHONE = "+7 (962) 440-50-52";
+// Почта — всё ещё заглушка (домена goodkarma.cafe нет): поэтому её нет в
+// разметке schema.org (StructuredData.tsx), в отличие от телефона.
 export const CAFE_EMAIL = "hi@goodkarma.cafe";
 
 export const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;

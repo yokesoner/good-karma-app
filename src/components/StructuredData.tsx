@@ -1,4 +1,5 @@
 import { CAFE, CAFE_ADDRESS, CAFE_CITY } from "@/lib/delivery";
+import { CAFE_PHONE } from "@/lib/contacts";
 import { SITE_URL } from "@/lib/siteUrl";
 
 // JSON-LD для локального поиска и карт (Google, Яндекс) — schema.org
@@ -6,20 +7,17 @@ import { SITE_URL } from "@/lib/siteUrl";
 // вынужден сам угадывать адрес/часы/кухню; с разметкой — показывает
 // карточку заведения (адрес, режим работы, карта) прямо в выдаче.
 //
-// telephone/email намеренно не указаны: и в Footer.tsx, и в прототипе,
-// откуда он унаследован, там до сих пор стоят плейсхолдеры
-// (+7 (812) 000-00-00 — код Петербурга для кафе в Ставрополе, и
-// hi@goodkarma.cafe — несуществующий домен). Публиковать их в
-// машиночитаемой разметке для поисковика хуже, чем не публиковать вообще:
-// это будет воспринято как настоящие контакты бизнеса. Добавьте оба поля
-// сюда и замените плейсхолдеры в Footer.tsx, как только появятся реальные
-// телефон и почта.
+// Телефон — настоящий (src/lib/contacts.ts). email намеренно не указан:
+// hi@goodkarma.cafe — заглушка на несуществующем домене, а публиковать
+// выдуманный контакт в машиночитаемой разметке для поисковика хуже, чем не
+// публиковать вообще. Добавьте email сюда, когда появится настоящая почта.
 export function StructuredData() {
   const data = {
     "@context": "https://schema.org",
     "@type": "Restaurant",
     name: "Гуд Карма",
     url: SITE_URL,
+    telephone: CAFE_PHONE,
     image: `${SITE_URL}/assets/backgrounds/hero_two_worlds.png`,
     servesCuisine: ["Japanese", "Asian", "Pan-Asian"],
     priceRange: "₽₽",
