@@ -47,6 +47,7 @@ reg.ru (см. «Юридическое» в AGENTS.md/CLAUDE.md): нужен и�
 | `TELEGRAM_BOT_TOKEN` | тот же боевой токен от @BotFather, что уже используется | да (иначе вход в профиль отключён) |
 | `YOOKASSA_SHOP_ID`, `YOOKASSA_SECRET_KEY` | не нужны сейчас — оплата отложена | нет |
 | `SITE_URL` | боевой домен, без завершающего слэша — для ссылки в Telegram-уведомлении о заказе | нет, но желательно |
+| `UPLOADS_DIR` | абсолютный путь вне сборки, например `/var/www/good-karma-uploads` — см. раздел 6.1 | да (иначе загрузки стираются при пересборке) |
 
 Секреты `ADMIN_SESSION_SECRET`/`CUSTOMER_SESSION_SECRET` в текущем `.env`
 помечены комментарием «не для продакшена» — это буквально так, сгенерируйте
@@ -137,8 +138,67 @@ pm2 save
 pm2 startup   # выведет команду для автозапуска после перезагрузки — выполнить её
 ```
 
-После правки кода на сервере: `npm run build`, затем повторить два `cp` из
-блока выше и `pm2 restart good-karma`.
+Обновление уже работающего сайта — только по разделу 6.1 ниже: простое
+`npm run build` поверх рабочей версии небезопасно.
+
+## 6.1 Обновление существующей установки
+
+`next build` первым делом удаляет `.next` целиком — вместе с
+`.next/standalone`, из которого PM2 отдаёт сайт. Если сборка упадёт (например,
+новая версия читает колонку, которой ещё нет в базе), живой сайт уже сломан.
+Поэтому новая версия собирается в отдельном каталоге и подменяет старую только
+после успешной сборки.
+
+```bash
+cd /var/www
+# 1. Бэкап базы и загрузок — до любых изменений
+pg_dump -Fc "$DATABASE_URL" > /root/backup/goodkarma-$(date +%F-%H%M).dump
+tar czf /root/backup/uploads-$(date +%F-%H%M).tgz -C /var/www good-karma-uploads
+
+# 2. Новая версия — рядом со старой
+git clone --depth 1 <репозиторий> good-karma-next && cd good-karma-next
+cp ../good-karma/.env .env
+npm ci && npx prisma generate
+
+# 3. Посмотреть, что изменится в схеме, и применить. Если diff показывает
+#    DROP чего-то нужного — остановиться и разобраться; --accept-data-loss
+#    не использовать.
+npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --script
+npx prisma db push
+
+# 4. Сборка (читает базу для статических страниц — поэтому после db push)
+npm run build
+cp -r public .next/standalone/public
+cp -r .next/static .next/standalone/.next/static
+cp .env .next/standalone/.env
+
+# 5. Подмена и перезапуск
+cd /var/www && mv good-karma good-karma-prev && mv good-karma-next good-karma
+pm2 restart good-karma   # старая версия лежит в good-karma-prev на случай отката
+```
+
+**`npm run db:seed` на боевой базе с живыми данными не запускать.** Он
+перезаписывает каталог из JSON (откатывает правки из админки) и пересоздаёт
+награды Karma Club. Сид — для пустой базы; новые слайды главного экрана и
+без него берутся из значений по умолчанию, а «Добавить исходные слайды» в
+/admin/banners/hero превращает их в редактируемые записи.
+
+**Загрузки из админки — вне каталога сборки.** Задайте в `.env`
+`UPLOADS_DIR=/var/www/good-karma-uploads` (абсолютный путь). Без него
+standalone-сервер писал бы файлы внутрь `.next/standalone/public/uploads`, и
+каждая пересборка их стирала. Отдаёт файлы маршрут `/uploads/*` приложения;
+быстрее — Nginx до Node:
+
+```nginx
+location /uploads/ {
+    alias /var/www/good-karma-uploads/;
+    expires 1y;
+    add_header Cache-Control "public, immutable";
+}
+```
+
+Перенос старых загрузок один раз:
+`rsync -a /var/www/good-karma/.next/standalone/public/uploads/ /var/www/good-karma-uploads/`.
 
 ## 7. Nginx как reverse proxy + HTTPS
 

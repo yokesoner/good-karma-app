@@ -18,7 +18,7 @@ Tailwind + Prisma/PostgreSQL.
 
 ```bash
 npm run dev              # запуск
-npm run db:seed          # засеять/обновить данные (идемпотентно)
+npm run db:seed          # засеять пустую базу (перезаписывает каталог — НЕ на боевой базе с данными)
 npx prisma db push       # применить схему к базе
 npm run check:delivery   # проверка границ зон доставки
 npx tsc --noEmit         # типы

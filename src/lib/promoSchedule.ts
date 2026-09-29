@@ -116,26 +116,54 @@ function dayMatches(promo: PromoScheduleFields, weekday: number, dayOfMonth: num
   return true;
 }
 
-/** Ближайшее начало окна повторяющейся акции в пределах недели, либо null. */
-function nextWindowStart(promo: PromoScheduleFields, now: Date): { at: Date; dayOffset: number } | null {
+const cafeDayKey = new Intl.DateTimeFormat("en-CA", { timeZone: CAFE_TIMEZONE, year: "numeric", month: "2-digit", day: "2-digit" });
+
+/** Сколько календарных дней кафе между датами: 0 — сегодня, 1 — завтра. */
+function cafeDayOffset(from: Date, to: Date) {
+  return Math.round((Date.parse(cafeDayKey.format(to)) - Date.parse(cafeDayKey.format(from))) / DAY_MS);
+}
+
+/** Длительность окна времени суток; окно может переходить через полночь. */
+function windowDurationMs(promo: PromoScheduleFields) {
+  const start = parseTimeToMinutes(promo.recurrenceStartTime);
+  const end = parseTimeToMinutes(promo.recurrenceEndTime);
+  if (start === null || end === null) return DAY_MS;
+  return (((end - start + 1440) % 1440) || 1440) * 60_000;
+}
+
+/**
+ * Ближайшее начало действия повторяющейся акции в пределах недели, либо null.
+ * Если кампания (activeFrom) начинается посреди окна — началом считается
+ * activeFrom, а не начало окна: иначе анонс называл бы не тот день или
+ * вовсе прятал акцию, которая стартует сегодня в 16:00 при окне 15–18.
+ */
+function nextWindowStart(promo: PromoScheduleFields, now: Date): Date | null {
   const start = parseTimeToMinutes(promo.recurrenceStartTime) ?? 0;
+  const duration = windowDurationMs(promo);
   const today = cafeNow(now);
   for (let d = 0; d <= ANNOUNCE_AHEAD_DAYS; d++) {
-    if (d === 0 && start <= today.minutesSinceMidnight) continue;
     const day = cafeNow(new Date(now.getTime() + d * DAY_MS));
     if (!dayMatches(promo, day.weekday, day.dayOfMonth)) continue;
-    const at = new Date(now.getTime() + d * DAY_MS + (start - today.minutesSinceMidnight) * 60_000);
-    if (promo.activeFrom && at < promo.activeFrom) continue;
+    const windowStart = new Date(now.getTime() + d * DAY_MS + (start - today.minutesSinceMidnight) * 60_000);
+    const windowEnd = new Date(windowStart.getTime() + duration);
+    const at = promo.activeFrom && promo.activeFrom > windowStart ? promo.activeFrom : windowStart;
+    if (at <= now || at >= windowEnd) continue;
     if (promo.activeTo && at >= promo.activeTo) return null;
-    return { at, dayOffset: d };
+    return at;
   }
   return null;
 }
 
-function dayLabel(dayOffset: number, at: Date) {
-  if (dayOffset === 0) return "сегодня";
-  if (dayOffset === 1) return "завтра";
+function dayLabel(at: Date, now: Date) {
+  const offset = cafeDayOffset(now, at);
+  if (offset === 0) return "сегодня";
+  if (offset === 1) return "завтра";
   return WEEKDAY_ACCUSATIVE[cafeNow(at).weekday] ?? "";
+}
+
+/** «до 18:00», а если это уже завтра — «до 10:00 завтра». */
+function untilNote(end: Date, now: Date) {
+  return cafeDayOffset(now, end) === 0 ? `до ${cafeTime.format(end)}` : `до ${cafeTime.format(end)} завтра`;
 }
 
 /** null — акцию на витрине не показываем (выключена, истекла, далеко в будущем). */
@@ -145,11 +173,17 @@ export function promoTiming(promo: PromoScheduleFields, now: Date = new Date()):
 
   if (isPromotionCurrentlyActive(promo, now)) {
     if (promo.recurrence !== "NONE" && promo.recurrenceEndTime) {
-      return { state: "live", note: `до ${promo.recurrenceEndTime}` };
+      // Конец сегодняшнего окна, но не позже конца всей кампании: при окне
+      // 15–18 и activeTo сегодня в 16:00 промокод перестанет действовать в 16.
+      const endMinutes = parseTimeToMinutes(promo.recurrenceEndTime) ?? 0;
+      const minutesLeft = ((endMinutes - cafeNow(now).minutesSinceMidnight + 1440) % 1440) || 1440;
+      const windowEnd = new Date(now.getTime() + minutesLeft * 60_000);
+      const end = promo.activeTo && promo.activeTo < windowEnd ? promo.activeTo : windowEnd;
+      return { state: "live", note: untilNote(end, now) };
     }
     if (promo.activeTo) {
       const left = promo.activeTo.getTime() - now.getTime();
-      if (left < DAY_MS) return { state: "live", note: `до ${cafeTime.format(promo.activeTo)}` };
+      if (left < DAY_MS) return { state: "live", note: untilNote(promo.activeTo, now) };
       if (left < ANNOUNCE_AHEAD_DAYS * DAY_MS) return { state: "live", note: `ещё ${pluralDays(Math.ceil(left / DAY_MS))}` };
       return { state: "live", note: `до ${cafeDate.format(promo.activeTo)}` };
     }
@@ -165,7 +199,7 @@ export function promoTiming(promo: PromoScheduleFields, now: Date = new Date()):
 
   const next = nextWindowStart(promo, now);
   if (!next) return null;
-  return { state: "upcoming", note: `${dayLabel(next.dayOffset, next.at)} с ${promo.recurrenceStartTime ?? cafeTime.format(next.at)}` };
+  return { state: "upcoming", note: `${dayLabel(next, now)} с ${cafeTime.format(next)}` };
 }
 
 /** «по будням 15:00–18:00», «каждый день», «каждое 5-е число» — для условий акции. */

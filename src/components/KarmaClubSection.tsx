@@ -4,12 +4,12 @@ import { db } from "@/lib/db";
 import { ASSETS } from "@/lib/assets";
 import { getCurrentCustomerId } from "@/lib/customerAuth";
 import { formatDiscount } from "@/lib/money";
+import { checkRewardEligibility } from "@/server/karmaRewards";
 import { BackgroundFootage } from "@/components/BackgroundFootage";
 import { KarmaClubShowcase } from "@/components/KarmaClubShowcase";
 
-/** Баллы вошедшего покупателя; null — гость (или сессия истекла). */
-async function currentCustomerPoints(): Promise<number | null> {
-  const userId = await getCurrentCustomerId();
+/** Баллы покупателя по сессии; null — гость (или сессия истекла). */
+async function customerPoints(userId: string | null): Promise<number | null> {
   if (!userId) return null;
   const agg = await db.karmaLedgerEntry.aggregate({ where: { userId }, _sum: { points: true } });
   return agg._sum.points ?? 0;
@@ -22,6 +22,7 @@ export async function KarmaClubSection({
   compact?: boolean;
   embedded?: boolean;
 }) {
+  const userId = await getCurrentCustomerId();
   const [levels, rewards, points] = await Promise.all([
     db.karmaLevel.findMany({ orderBy: { fromKarma: "asc" } }),
     db.karmaReward.findMany({
@@ -40,9 +41,14 @@ export async function KarmaClubSection({
     // Если покупатель вошёл — показываем его реальный прогресс прямо на
     // витрине, а не обезличенную схему: путь читается совсем иначе, когда
     // на нём видно своё место. Гостю просто не передаём баллы.
-    currentCustomerPoints(),
+    customerPoints(userId),
   ]);
   if (levels.length === 0) return null;
+
+  // Уровень ниже нужного или недельный лимит обменов — та же проверка, что в
+  // профиле и на чекауте (checkRewardEligibility). Без неё вошедший гость
+  // видел «Можно забрать» у подарка, который ему пока недоступен.
+  const eligibility = userId ? await Promise.all(rewards.map((r) => checkRewardEligibility(userId, r))) : null;
 
   const levelData = levels.map((l) => ({
     key: l.key,
@@ -54,8 +60,9 @@ export async function KarmaClubSection({
     discountPct: l.discountPct,
     discountsPerWeek: l.discountsPerWeek,
   }));
-  const rewardData = rewards.map((r) => {
+  const rewardData = rewards.map((r, index) => {
     const image = r.products[0]?.product.images[0] ?? null;
+    const check = eligibility?.[index];
     return {
       id: r.id,
       costPoints: r.costPoints,
@@ -68,6 +75,7 @@ export async function KarmaClubSection({
           ? formatDiscount(r.discountType, r.discountPct ?? 0, r.discountFixedCents ?? 0)
           : null,
       minLevelName: r.minLevel?.name ?? null,
+      restriction: check && !check.ok ? check.error : null,
     };
   });
 

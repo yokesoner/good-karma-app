@@ -1,14 +1,22 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-// Картинки из админки хранятся прямо на диске сервера, в public/uploads —
-// не в S3. Сайт живёт на одном VPS (не масштабируется на несколько
-// серверов), поэтому отдельное хранилище было бы лишней инфраструктурой;
-// next start сам отдаёт всё из public/ как статику, Nginx в DEPLOYMENT.md
-// ничего дополнительно настраивать не должен. Важно: эта папка не в git
-// (см. .gitignore) и не бэкапится вместе с кодом при деплое — при переносе
-// на новый сервер нужно переносить public/uploads так же, как базу.
-export const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads");
+// Картинки из админки хранятся прямо на диске сервера — не в S3. Сайт живёт
+// на одном VPS, отдельное хранилище было бы лишней инфраструктурой. Папка не
+// в git и не бэкапится вместе с кодом — при переносе сервера её переносят
+// так же, как базу.
+//
+// В проде путь задаёт UPLOADS_DIR — абсолютный каталог ВНЕ сборки
+// (например /var/www/good-karma-uploads). Раньше файлы писались в
+// process.cwd()/public/uploads, а standalone-сервер делает chdir в
+// .next/standalone: загрузки оказывались внутри сборки и стирались при
+// каждом `npm run build`. Отдаёт их маршрут app/uploads/[...path] (или
+// Nginx alias перед ним) — сразу после загрузки, без перезапуска: список
+// файлов public/ Next читает только при старте. Без UPLOADS_DIR (локальная
+// разработка) — прежний public/uploads.
+export const UPLOADS_DIR = process.env.UPLOADS_DIR?.trim()
+  ? path.resolve(process.env.UPLOADS_DIR.trim())
+  : path.join(process.cwd(), "public", "uploads");
 
 export type UploadFolder = "products" | "promotions" | "categories" | "wok" | "levels" | "banners" | "avatars";
 
