@@ -40,7 +40,7 @@ export function RevenueTrendChart({ data }: { data: DailyRevenuePoint[] }) {
                 rx={Math.min(6, barWidth / 3)}
                 fill={isBest ? "url(#revenueBarGradient)" : "var(--hair-soft, #ECE4DE)"}
               />
-              <text x={x + barWidth / 2} y={HEIGHT + 16} textAnchor="middle" className="fill-ink-3 text-[9px]">
+              <text x={x + barWidth / 2} y={HEIGHT + 16} textAnchor="middle" className="fill-ink-3 text-micro">
                 {d.label}
               </text>
             </g>

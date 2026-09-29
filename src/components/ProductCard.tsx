@@ -46,15 +46,15 @@ export function ProductCard({ product, categoryStopped = false, index = 0 }: Pro
         ) : null}
         <span className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#21151F]/60 to-transparent" />
         {unavailable ? (
-          <span className="absolute left-2.5 top-2.5 rounded-full bg-[var(--glass)] px-2 py-1 text-[8px] font-bold uppercase tracking-[0.14em] text-ink backdrop-blur-md md:left-4 md:top-4 md:px-3 md:py-1.5 md:text-[9px]">
+          <span className="absolute left-2.5 top-2.5 rounded-full bg-[var(--glass)] px-2 py-1 text-micro font-bold uppercase tracking-[0.14em] text-ink backdrop-blur-md md:left-4 md:top-4 md:px-3 md:py-1.5">
             Нет в наличии
           </span>
         ) : product.badge ? (
-          <span className="absolute left-2.5 top-2.5 rounded-full bg-[var(--glass)] px-2 py-1 text-[8px] font-medium uppercase tracking-[0.16em] text-ink backdrop-blur-md md:left-4 md:top-4 md:px-3 md:py-1.5 md:text-[9px] md:tracking-[0.18em]">
+          <span className="absolute left-2.5 top-2.5 rounded-full bg-[var(--glass)] px-2 py-1 text-micro font-medium uppercase tracking-[0.16em] text-ink backdrop-blur-md md:left-4 md:top-4 md:px-3 md:py-1.5 md:tracking-[0.18em]">
             {product.badge === "HIT" ? "Хит" : "Новинка"}
           </span>
         ) : null}
-        <span className="absolute bottom-2.5 left-2.5 rounded-full border border-white/20 bg-black/15 px-2 py-1 text-[8px] font-bold uppercase tracking-[0.1em] text-white/85 backdrop-blur-sm md:bottom-4 md:left-4 md:px-3 md:py-1.5 md:text-[8.5px] md:tracking-[0.13em]">
+        <span className="absolute bottom-2.5 left-2.5 rounded-full border border-white/20 bg-black/15 px-2 py-1 text-micro font-bold uppercase tracking-[0.1em] text-white/85 backdrop-blur-sm md:bottom-4 md:left-4 md:px-3 md:py-1.5 md:tracking-[0.13em]">
           {product.weight}
         </span>
       </Link>
@@ -66,7 +66,7 @@ export function ProductCard({ product, categoryStopped = false, index = 0 }: Pro
               {product.name}
             </h3>
           </Link>
-          <span className="shrink-0 text-[9px] font-semibold text-ink-3 sm:text-[10.5px]">
+          <span className="shrink-0 text-caption font-semibold text-ink-3">
             <span className="text-gold">★</span> {String(product.rating)}
           </span>
         </div>
@@ -76,7 +76,7 @@ export function ProductCard({ product, categoryStopped = false, index = 0 }: Pro
         <div className="mt-auto flex items-end gap-2 pt-2 md:pt-3">
           <div className="min-w-0 flex-1">
             <span className="block text-[14.5px] font-bold md:text-[15px]">{formatMoney(product.priceCents)}</span>
-            <span className="mt-0.5 block truncate text-[8px] font-bold uppercase tracking-[0.1em] text-ink-3 sm:text-[9px]">
+            <span className="mt-0.5 block truncate text-micro font-bold uppercase tracking-[0.1em] text-ink-3">
               +{product.karma} кармы
             </span>
           </div>

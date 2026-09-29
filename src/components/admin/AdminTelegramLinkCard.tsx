@@ -72,7 +72,7 @@ export function AdminTelegramLinkCard({ initialLinked }: { initialLinked: boolea
 
       {linked ? (
         <div className="mt-5">
-          <p className="inline-flex rounded-full bg-tint-mint px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.08em]">Подключено</p>
+          <p className="inline-flex rounded-full bg-tint-mint px-3 py-1.5 text-micro font-bold uppercase tracking-[0.08em]">Подключено</p>
           <button
             type="button"
             disabled={pending}

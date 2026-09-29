@@ -106,7 +106,7 @@ export function ProfileGate() {
       <section className="relative isolate order-2 flex min-w-0 flex-col justify-between overflow-hidden bg-gradient-to-br from-[#F7E9EC] via-[#F5EFE7] to-[#E6EFE9] p-5 text-[#3A2935] sm:p-8 lg:order-1 lg:p-11">
         <div aria-hidden className="profile-orbit absolute -right-24 -top-24 h-72 w-72 rounded-full border border-cherry/10" />
         <div className="relative">
-          <span className="text-[9.5px] font-bold uppercase tracking-[0.22em] text-cherry">
+          <span className="text-micro font-bold uppercase tracking-[0.22em] text-cherry">
             Good Karma Pass
           </span>
           <h2 className="mt-4 max-w-[14ch] text-[30px] font-bold leading-[1.05] tracking-[-0.045em] sm:text-[36px] lg:text-[42px]">
@@ -126,7 +126,7 @@ export function ProfileGate() {
           {["Заказы", "Карма", "Адреса"].map((item) => (
             <span
               key={item}
-              className="rounded-full border border-[#493044]/10 bg-white/40 px-2 py-2 text-center text-[8px] font-bold uppercase tracking-[0.12em] text-[#76636F] backdrop-blur-md"
+              className="rounded-full border border-[#493044]/10 bg-white/40 px-2 py-2 text-center text-micro font-bold uppercase tracking-[0.12em] text-[#76636F] backdrop-blur-md"
             >
               {item}
             </span>
@@ -135,7 +135,7 @@ export function ProfileGate() {
       </section>
 
       <form onSubmit={(event) => { event.preventDefault(); void submit(); }} className="order-1 flex min-w-0 flex-col justify-center p-5 sm:p-8 lg:order-2 lg:p-10">
-        <span className="mb-3 block text-[9.5px] font-bold uppercase tracking-[0.2em] text-cherry">
+        <span className="mb-3 block text-micro font-bold uppercase tracking-[0.2em] text-cherry">
           Личный кабинет
         </span>
         <h1 className="max-w-[15ch] text-[28px] font-bold leading-[1.08] tracking-[-0.035em] sm:text-[36px]">
@@ -149,7 +149,7 @@ export function ProfileGate() {
               : `Введите код, который прислал бот, на номер ${phone}. Код действует 5 минут.`}
         </p>
         <label className="mt-9 block">
-          <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-ink-3">Телефон</span>
+          <span className="text-micro font-bold uppercase tracking-[0.16em] text-ink-3">Телефон</span>
           <input
             className="mt-2 w-full rounded-[16px] border border-hair bg-paper px-4 py-4 text-[16px] outline-none transition focus:border-cherry/60 focus:ring-4 focus:ring-cherry/10"
             placeholder="+7 999 000-00-00"
@@ -177,7 +177,7 @@ export function ProfileGate() {
         )}
         {step === "code" && (
           <label className="mt-5 block">
-            <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-ink-3">Код из Telegram</span>
+            <span className="text-micro font-bold uppercase tracking-[0.16em] text-ink-3">Код из Telegram</span>
             <input
               className="mt-2 w-full rounded-[16px] border border-hair bg-paper px-4 py-4 text-center text-[22px] font-semibold tracking-[0.35em] outline-none transition focus:border-cherry/60 focus:ring-4 focus:ring-cherry/10"
               placeholder="0000"

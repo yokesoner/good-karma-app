@@ -34,6 +34,10 @@ const PromotionSchema = z.object({
   // мягкая валидация (см. imageUrlSchema).
   imageUrl: imageUrlSchema().nullable(),
   backgroundKey: z.enum(PROMO_BACKGROUND_KEYS).nullable(),
+  // Метка на витрине — короткая, чтобы влезать в чип на слайде карусели.
+  label: z.string().trim().max(32, "Метка — не длиннее 32 символов").nullable(),
+  showOnHome: z.boolean(),
+  sortOrder: z.number().int().min(0).max(999),
 }).superRefine((value, ctx) => {
   if (value.activeFrom && value.activeTo && value.activeTo <= value.activeFrom) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["activeTo"], message: "Дата окончания должна быть позже даты начала" });
@@ -76,6 +80,9 @@ function promotionData(input: AdminPromotionInput) {
     featuredImageProductId: input.featuredImageProductId,
     imageUrl: input.imageUrl,
     backgroundKey: input.backgroundKey,
+    label: input.label || null,
+    showOnHome: input.showOnHome,
+    sortOrder: input.sortOrder,
     // Любое сохранение (создание или правка) — это и есть "продлил
     // акцию" с точки зрения администратора, так что предупреждение об
     // истечении должно смочь прийти снова.

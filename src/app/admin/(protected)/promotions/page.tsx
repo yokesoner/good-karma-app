@@ -17,7 +17,8 @@ const STATUS_LABEL: Record<PromoStatus, string> = {
 
 const STATUS_CLASS: Record<PromoStatus, string> = {
   active: "bg-tint-mint",
-  scheduled: "bg-tint-cream",
+  // tint-cream почти не отличался от фона строки — бейдж терялся.
+  scheduled: "bg-tint-gold",
   expired: "bg-tint-blush",
   disabled: "bg-paper-3",
 };
@@ -37,7 +38,9 @@ function recurrenceSummary(promotion: { recurrence: string; recurrenceStartTime:
 }
 
 export default async function AdminPromotionsPage() {
-  const promotions = await db.promotion.findMany({ orderBy: [{ isActive: "desc" }, { code: "asc" }] });
+  // Тот же порядок, что на витрине (sortOrder), — список читается как
+  // превью карусели, а не как алфавитный справочник кодов.
+  const promotions = await db.promotion.findMany({ orderBy: [{ isActive: "desc" }, { sortOrder: "asc" }, { code: "asc" }] });
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-5"><div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cherry">Маркетинг</p><h1 className="mt-2 text-[28px] font-semibold tracking-tight md:text-4xl">Акции</h1><p className="mt-2 text-sm text-ink-2">{promotions.length} промокодов</p></div><div className="flex gap-3"><Link href="/admin/promotions/banner" className="rounded-full border border-hair px-6 py-3 text-xs font-bold uppercase tracking-[0.1em] hover:border-plum">Главный баннер</Link><Link href="/admin/promotions/new" className="rounded-full bg-plum-deep px-6 py-3 text-xs font-bold uppercase tracking-[0.1em] text-btn-fg">Добавить акцию</Link></div></div>
@@ -50,9 +53,14 @@ export default async function AdminPromotionsPage() {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="font-semibold">{promotion.title}</h2>
-                  <span className={`rounded-full px-2 py-1 text-[9px] font-bold ${STATUS_CLASS[status]}`}>{STATUS_LABEL[status]}</span>
+                  <span className={`rounded-full px-2 py-1 text-micro font-bold ${STATUS_CLASS[status]}`}>{STATUS_LABEL[status]}</span>
+                  {promotion.showOnHome && <span className="rounded-full bg-tint-lavender px-2 py-1 text-micro font-bold">НА ГЛАВНОЙ</span>}
                 </div>
-                <p className="mt-1 text-xs text-ink-3">{promotion.code}{recurrence ? ` · ${recurrence}` : ""}</p>
+                <p className="mt-1 text-xs text-ink-3">
+                  #{promotion.sortOrder} · {promotion.code}
+                  {promotion.label ? ` · «${promotion.label}»` : ""}
+                  {recurrence ? ` · ${recurrence}` : ""}
+                </p>
               </div>
               <p className="text-sm text-ink-2">{promotion.type === "PERCENT" ? `${promotion.discountPct}%` : formatMoney(promotion.discountFixedCents)}</p>
               <p className="text-sm text-ink-2">Заказ от {formatMoney(promotion.minOrderCents)}</p>

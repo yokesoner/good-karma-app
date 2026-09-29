@@ -4,6 +4,7 @@ import { FormEvent, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { adminFieldClass, adminLabelClass, adminPanelClass } from "@/components/admin/formStyles";
 import { AdminImageUploader } from "@/components/admin/AdminImageUploader";
+import { AdminSwitch } from "@/components/admin/AdminSwitch";
 import { centsToRubles, rublesToCents } from "@/lib/money";
 import { createAdminPromotion, type AdminPromotionInput, updateAdminPromotion } from "@/server/adminPromotions";
 import { PROMO_BACKGROUND_KEYS, PROMO_BACKGROUND_LABELS, DEFAULT_PROMO_BACKGROUND } from "@/lib/promoBackgrounds";
@@ -42,6 +43,7 @@ export function AdminPromotionForm({ initial, products }: { initial?: AdminPromo
   const [type, setType] = useState<AdminPromotionInput["type"]>(initial?.type ?? "PERCENT");
   const [recurrence, setRecurrence] = useState<AdminPromotionInput["recurrence"]>(initial?.recurrence ?? "NONE");
   const [weekdays, setWeekdays] = useState<number[]>(initial?.recurrenceWeekdays ?? []);
+  const [showOnHome, setShowOnHome] = useState(initial?.showOnHome ?? true);
 
   function toggleWeekday(value: number) {
     setWeekdays((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
@@ -77,6 +79,9 @@ export function AdminPromotionForm({ initial, products }: { initial?: AdminPromo
       featuredImageProductId: featured || null,
       imageUrl,
       backgroundKey: (String(form.get("backgroundKey") ?? "") || null) as AdminPromotionInput["backgroundKey"],
+      label: String(form.get("label") ?? "").trim() || null,
+      showOnHome,
+      sortOrder: Number(form.get("sortOrder") ?? 0),
     };
     setError("");
     startTransition(async () => {
@@ -102,6 +107,32 @@ export function AdminPromotionForm({ initial, products }: { initial?: AdminPromo
         <label className="md:col-span-2"><span className={adminLabelClass}>Описание</span><textarea name="description" required maxLength={600} rows={5} defaultValue={initial?.description} className={adminFieldClass} /></label>
         <label><span className={adminLabelClass}>Начало кампании</span><input name="activeFrom" type="datetime-local" defaultValue={localDateTime(initial?.activeFrom ?? null)} className={adminFieldClass} /></label>
         <label><span className={adminLabelClass}>Окончание кампании</span><input name="activeTo" type="datetime-local" defaultValue={localDateTime(initial?.activeTo ?? null)} className={adminFieldClass} /></label>
+      </section>
+
+      <section className={adminPanelClass}>
+        <div className="md:col-span-2">
+          <span className={adminLabelClass}>Витрина</span>
+          <p className="text-xs text-ink-3">
+            Как акция выглядит на сайте: слайд карусели на главной и талон на странице «Акции».
+          </p>
+        </div>
+        <label>
+          <span className={adminLabelClass}>Метка</span>
+          <input name="label" maxLength={32} defaultValue={initial?.label ?? ""} placeholder="Счастливые часы" className={adminFieldClass} />
+          <span className="mt-1 block text-xs text-ink-3">Короткий чип над скидкой. Пусто — без чипа.</span>
+        </label>
+        <label>
+          <span className={adminLabelClass}>Порядок</span>
+          <input name="sortOrder" type="number" min={0} max={999} step={1} required defaultValue={initial?.sortOrder ?? 0} className={adminFieldClass} />
+          <span className="mt-1 block text-xs text-ink-3">Меньше — раньше. Идущие прямо сейчас акции всё равно показываются перед анонсами.</span>
+        </label>
+        <div className="flex items-center justify-between gap-4 rounded-2xl border border-hair bg-paper px-4 py-3 md:col-span-2">
+          <span>
+            <span className="block text-sm font-semibold">Показывать в карусели на главной</span>
+            <span className="block text-xs text-ink-3">На странице «Акции» акция видна в любом случае, пока действует.</span>
+          </span>
+          <AdminSwitch checked={showOnHome} onChange={setShowOnHome} label="Показывать в карусели на главной" />
+        </div>
       </section>
 
       <section className={adminPanelClass}>

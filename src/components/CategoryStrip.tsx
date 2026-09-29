@@ -51,7 +51,7 @@ export function CategoryStrip({ categories }: { categories: CategoryWithMeta[] }
               {c.name}
             </span>
             {c.meta?.jpTagline ? (
-              <span className="mt-1 hidden truncate text-[8.5px] tracking-[0.14em] text-ink-3/65 md:block">
+              <span className="mt-1 hidden truncate text-caption tracking-[0.14em] text-ink-3/65 md:block">
                 {c.meta.jpTagline}
               </span>
             ) : null}

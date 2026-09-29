@@ -153,6 +153,41 @@ export function Close(props: IconProps) {
   );
 }
 
+export function Pause(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M9 6v12M15 6v12" />
+    </Svg>
+  );
+}
+
+export function Play(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M8 5.5v13l10.5-6.5L8 5.5Z" />
+    </Svg>
+  );
+}
+
+export function Lock(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="5.5" y="10.5" width="13" height="9" rx="2" />
+      <path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" />
+    </Svg>
+  );
+}
+
+export function Gift(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="4" y="9" width="16" height="4" rx="1" />
+      <path d="M5.5 13v6.5h13V13M12 9v10.5" />
+      <path d="M12 9c-1.5-3.5-5.5-3.5-5.5-1S10 9 12 9Zm0 0c1.5-3.5 5.5-3.5 5.5-1S14 9 12 9Z" />
+    </Svg>
+  );
+}
+
 // ---- админка ----
 
 export type AdminIconName =

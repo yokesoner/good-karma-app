@@ -106,7 +106,7 @@ export default async function ProductPage({ params }: Params) {
               />
             )}
             <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#21151F]/65 to-transparent" />
-            <div className="absolute bottom-4 left-4 flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.14em] text-white/80 md:bottom-6 md:left-6">
+            <div className="absolute bottom-4 left-4 flex items-center gap-2 text-micro font-bold uppercase tracking-[0.14em] text-white/80 md:bottom-6 md:left-6">
               <span className="rounded-full border border-white/20 bg-black/10 px-3 py-1.5 backdrop-blur-sm md:py-2">
                 {product.weight}
               </span>
@@ -138,7 +138,7 @@ export default async function ProductPage({ params }: Params) {
           </span>
           <div className="relative">
           <div className="flex flex-wrap items-center gap-4">
-            <span className="text-[9.5px] font-bold uppercase tracking-[0.2em] text-cherry">
+            <span className="text-micro font-bold uppercase tracking-[0.2em] text-cherry">
               {product.category.name}
             </span>
             <span className="text-[12.5px] text-ink-3">

@@ -69,7 +69,7 @@ export async function CulinaryWorlds() {
 
             <div className="relative flex min-h-[250px] flex-col justify-between p-5 text-[#F8F0EA] md:min-h-[420px] md:p-9">
               <div className="flex items-center justify-between gap-4">
-                <span className="text-[9.5px] font-bold uppercase tracking-[0.18em] text-[#F8F0EA]/75 md:text-[10px] md:tracking-[0.2em]">
+                <span className="text-micro font-bold uppercase tracking-[0.18em] text-[#F8F0EA]/75 md:tracking-[0.2em]">
                   {banner.eyebrow}
                 </span>
                 <span
@@ -91,7 +91,7 @@ export async function CulinaryWorlds() {
                   {world.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-full border border-white/20 bg-black/10 px-3 py-1.5 text-[8.5px] font-bold uppercase tracking-[0.12em] text-[#F8F0EA]/85 backdrop-blur-sm md:px-3.5 md:py-2 md:text-[9px] md:tracking-[0.13em]"
+                      className="rounded-full border border-white/20 bg-black/10 px-3 py-1.5 text-micro font-bold uppercase tracking-[0.12em] text-[#F8F0EA]/85 backdrop-blur-sm md:px-3.5 md:py-2 md:tracking-[0.13em]"
                     >
                       {tag}
                     </span>

@@ -261,6 +261,16 @@ model Promotion {
   // когда activeTo меньше чем через 24 часа — чтобы уведомление в Telegram
   // ушло администратору один раз, а не при каждом заходе в /admin.
   expiryWarnedAt         DateTime?
+  // Короткая метка акции на витрине («Счастливые часы», «Первый заказ»).
+  // Раньше подпись выбиралась в коде по самому промокоду (code === "HAPPY20"),
+  // и у любой новой акции из админки она молча была «Первый заказ».
+  label                  String?
+  // Показывать ли акцию в карусели на главной. Страница /promotions
+  // показывает все действующие акции независимо от этого флага.
+  showOnHome             Boolean   @default(true)
+  // Порядок в карусели и на /promotions — меньше = раньше. При равных
+  // значениях акции идут по размеру скидки, как было до появления поля.
+  sortOrder              Int       @default(0)
   orders                 Order[]
 
   @@map("promotions")
@@ -289,6 +299,32 @@ model PromoHeroBanner {
 enum PromoType {
   PERCENT
   FIXED
+}
+
+// Слайды главного экрана (/admin/banners/hero) — раньше это был один
+// баннер-слот "home-hero". Список, а не фиксированный набор слотов: админ
+// сам решает, сколько их и в каком порядке. Нет ни одного активного —
+// главная рисует бренд-слайд из значений в коде (src/lib/heroSlides.ts),
+// первый экран не должен остаться пустым.
+model HeroSlide {
+  id             String   @id @default(cuid())
+  // Короткое имя на вкладке прогресса внизу героя («Два мира», «Свой вок»).
+  tabLabel       String
+  eyebrow        String
+  title          String
+  text           String
+  buttonLabel    String
+  buttonHref     String
+  // Вторая, тихая кнопка — необязательна.
+  secondaryLabel String?
+  secondaryHref  String?
+  // null — бренд-фотография из реестра ассетов.
+  imageUrl       String?
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  updatedAt      DateTime @updatedAt
+
+  @@map("hero_slides")
 }
 
 // Редактируемые из админки тексты и картинки баннеров сайта (главная,

@@ -80,6 +80,110 @@ export function isPromotionCurrentlyActive(promo: PromoScheduleFields, now: Date
   return true;
 }
 
+// ---------- витрина: «идёт сейчас» / «начнётся» ----------
+//
+// Раньше акция вне своего окна просто исчезала с сайта: «Счастливые часы»
+// были видны только с 15 до 18, и в остальное время гость не узнавал, что
+// они вообще существуют. Рестораны делают наоборот — анонсируют заранее.
+// promoTiming отвечает, показывать ли акцию на витрине и с какой подписью;
+// применимость промокода по-прежнему решает только isPromotionCurrentlyActive.
+
+/** Насколько вперёд анонсируем ближайшее окно повторяющейся акции. */
+const ANNOUNCE_AHEAD_DAYS = 7;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export type PromoTiming =
+  | { state: "live"; note: string | null }
+  | { state: "upcoming"; note: string };
+
+const WEEKDAY_ACCUSATIVE = ["в воскресенье", "в понедельник", "во вторник", "в среду", "в четверг", "в пятницу", "в субботу"];
+const WEEKDAY_SHORT = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
+
+const cafeTime = new Intl.DateTimeFormat("ru-RU", { timeZone: CAFE_TIMEZONE, hour: "2-digit", minute: "2-digit" });
+const cafeDate = new Intl.DateTimeFormat("ru-RU", { timeZone: CAFE_TIMEZONE, day: "numeric", month: "long" });
+
+function pluralDays(n: number) {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${n} день`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${n} дня`;
+  return `${n} дней`;
+}
+
+function dayMatches(promo: PromoScheduleFields, weekday: number, dayOfMonth: number) {
+  if (promo.recurrence === "WEEKLY") return promo.recurrenceWeekdays.includes(weekday);
+  if (promo.recurrence === "MONTHLY") return promo.recurrenceDayOfMonth === dayOfMonth;
+  return true;
+}
+
+/** Ближайшее начало окна повторяющейся акции в пределах недели, либо null. */
+function nextWindowStart(promo: PromoScheduleFields, now: Date): { at: Date; dayOffset: number } | null {
+  const start = parseTimeToMinutes(promo.recurrenceStartTime) ?? 0;
+  const today = cafeNow(now);
+  for (let d = 0; d <= ANNOUNCE_AHEAD_DAYS; d++) {
+    if (d === 0 && start <= today.minutesSinceMidnight) continue;
+    const day = cafeNow(new Date(now.getTime() + d * DAY_MS));
+    if (!dayMatches(promo, day.weekday, day.dayOfMonth)) continue;
+    const at = new Date(now.getTime() + d * DAY_MS + (start - today.minutesSinceMidnight) * 60_000);
+    if (promo.activeFrom && at < promo.activeFrom) continue;
+    if (promo.activeTo && at >= promo.activeTo) return null;
+    return { at, dayOffset: d };
+  }
+  return null;
+}
+
+function dayLabel(dayOffset: number, at: Date) {
+  if (dayOffset === 0) return "сегодня";
+  if (dayOffset === 1) return "завтра";
+  return WEEKDAY_ACCUSATIVE[cafeNow(at).weekday] ?? "";
+}
+
+/** null — акцию на витрине не показываем (выключена, истекла, далеко в будущем). */
+export function promoTiming(promo: PromoScheduleFields, now: Date = new Date()): PromoTiming | null {
+  if (!promo.isActive) return null;
+  if (promo.activeTo && promo.activeTo < now) return null;
+
+  if (isPromotionCurrentlyActive(promo, now)) {
+    if (promo.recurrence !== "NONE" && promo.recurrenceEndTime) {
+      return { state: "live", note: `до ${promo.recurrenceEndTime}` };
+    }
+    if (promo.activeTo) {
+      const left = promo.activeTo.getTime() - now.getTime();
+      if (left < DAY_MS) return { state: "live", note: `до ${cafeTime.format(promo.activeTo)}` };
+      if (left < ANNOUNCE_AHEAD_DAYS * DAY_MS) return { state: "live", note: `ещё ${pluralDays(Math.ceil(left / DAY_MS))}` };
+      return { state: "live", note: `до ${cafeDate.format(promo.activeTo)}` };
+    }
+    return { state: "live", note: null };
+  }
+
+  if (promo.recurrence === "NONE") {
+    if (promo.activeFrom && promo.activeFrom.getTime() - now.getTime() <= ANNOUNCE_AHEAD_DAYS * DAY_MS) {
+      return { state: "upcoming", note: `с ${cafeDate.format(promo.activeFrom)}` };
+    }
+    return null;
+  }
+
+  const next = nextWindowStart(promo, now);
+  if (!next) return null;
+  return { state: "upcoming", note: `${dayLabel(next.dayOffset, next.at)} с ${promo.recurrenceStartTime ?? cafeTime.format(next.at)}` };
+}
+
+/** «по будням 15:00–18:00», «каждый день», «каждое 5-е число» — для условий акции. */
+export function recurrenceText(promo: PromoScheduleFields): string | null {
+  const time =
+    promo.recurrenceStartTime && promo.recurrenceEndTime ? ` ${promo.recurrenceStartTime}–${promo.recurrenceEndTime}` : "";
+  if (promo.recurrence === "DAILY") return `каждый день${time}`;
+  if (promo.recurrence === "MONTHLY" && promo.recurrenceDayOfMonth) return `каждое ${promo.recurrenceDayOfMonth}-е число${time}`;
+  if (promo.recurrence === "WEEKLY") {
+    const days = [...promo.recurrenceWeekdays].sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7));
+    const key = days.join(",");
+    const label =
+      key === "1,2,3,4,5" ? "по будням" : key === "6,0" ? "по выходным" : days.length === 7 ? "каждый день" : days.map((d) => WEEKDAY_SHORT[d]).join(", ");
+    return `${label}${time}`;
+  }
+  return null;
+}
+
 export type PromoStatus = "active" | "scheduled" | "expired" | "disabled";
 
 // Для бейджа в /admin/promotions — отличает "выключена вручную" от

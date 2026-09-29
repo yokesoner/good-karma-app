@@ -5,22 +5,23 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getProfileData, addAddress, removeAddress } from "@/server/profile";
 import { redeemDiscountReward } from "@/server/karmaRewards";
 import { formatDiscount, formatMoney } from "@/lib/money";
-import { karmaSnapshot } from "@/lib/karma";
+import { karmaSnapshot, timesPerWeek } from "@/lib/karma";
 import { useCart } from "@/lib/cart";
 import { useToast } from "@/lib/toast";
 import { ORDER_STATUS_LABELS } from "@/lib/orderLabels";
 import { LevelIcon } from "@/components/LevelIcon";
+import { LevelPath } from "@/components/LevelPath";
+import { RewardPath, type PathReward } from "@/components/RewardPath";
 import { KarmaPass } from "@/components/KarmaPass";
 import { AvatarUploader } from "@/components/AvatarUploader";
 import { ProfileLoading } from "@/components/ProfileLoading";
-import { ArrowUpRight } from "@/components/icons";
+import { ArrowUpRight, Check, ChevronDown, Gift } from "@/components/icons";
 import { ShowMore } from "@/components/Collapsible";
 
-// Сколько заказов и подарков показывать сразу — остальное за «Показать
-// ещё», чтобы длинная история не растягивала профиль на телефоне на
-// несколько экранов вниз ради данных, которые нужны не с первого взгляда.
+// Сколько заказов показывать сразу — остальное за «Показать ещё», чтобы
+// длинная история не растягивала профиль на телефоне на несколько экранов
+// вниз. Подарки теперь — лента-путь, она не растёт вниз при любом числе.
 const ORDERS_PREVIEW_COUNT = 3;
-const REWARDS_PREVIEW_COUNT = 3;
 
 type ProfileData = NonNullable<Awaited<ReturnType<typeof getProfileData>>>;
 
@@ -93,12 +94,14 @@ export function ProfileView({
       </nav>
 
       {snap && (
-        // items-start — без него grid растягивает обе колонки по высоте
-        // более высокой (правая выросла, когда добавилась LevelPerkCard),
-        // а внутренний flex justify-between в KarmaPass раздвигал контент
-        // карты под эту высоту огромным пустым отступом.
-        <section className="grid items-start gap-6 lg:grid-cols-[1.14fr_0.86fr]">
+        // Карта — во всю колонку и высоту ряда (fill). Раньше у неё был
+        // max-w-[560px] в колонке шире 630px и items-start у сетки: справа и
+        // снизу от карты оставались пустые поля. Правая колонка собрана так,
+        // чтобы по высоте совпадать с картой: «следующий уровень» переехал
+        // шкалой в карточку уровня и путём уровней ниже.
+        <section className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
           <KarmaPass
+            fill
             name={data.user.name || "Гость Гуд Кармы"}
             phone={data.user.phone}
             points={snap.points}
@@ -107,38 +110,53 @@ export function ProfileView({
             progressPct={snap.progressPct}
           />
 
-          <div className="grid grid-cols-2 gap-3">
-            <LevelDiscountCard level={snap.level} levelDiscount={data.levelDiscount} />
-            <article className="col-span-2 rounded-[28px] border border-white/70 bg-gradient-to-br from-tint-sakura via-paper-2 to-tint-lavender p-6 shadow-[0_22px_54px_-38px_rgba(73,48,68,.55)]">
-              <span className="text-[8.5px] font-bold uppercase tracking-[0.18em] text-ink-3">Следующий уровень</span>
-              <div className="mt-3 flex items-center gap-3">
-                <span className="grid h-11 w-11 place-items-center rounded-[16px] bg-white/60 text-cherry shadow-s">
-                  <LevelIcon name={snap.nextLevel?.icon ?? snap.level.icon} className="h-5 w-5" />
-                </span>
-                <div>
-                  <b className="block text-[18px] uppercase tracking-[0.08em]">{snap.nextLevel?.name ?? "Karma"}</b>
-                  <span className="text-[11px] text-ink-3">
-                    {snap.nextLevel ? `ещё ${snap.pointsToNext} баллов` : "максимальный уровень"}
-                  </span>
-                </div>
-              </div>
-            </article>
-            <article className="rounded-[25px] border border-white/70 bg-paper-2/85 p-5 shadow-[0_18px_44px_-34px_rgba(73,48,68,.52)]">
-              <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-ink-3">Заказы</span>
-              <b className="mt-2 block text-[30px] leading-none tracking-[-0.04em]">{data.orders.length}</b>
-              <span className="mt-2 block text-[10px] text-ink-3">в истории</span>
-            </article>
-            <article className="rounded-[25px] border border-white/70 bg-paper-2/85 p-5 shadow-[0_18px_44px_-34px_rgba(73,48,68,.52)]">
-              <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-ink-3">Адреса</span>
-              <b className="mt-2 block text-[30px] leading-none tracking-[-0.04em]">{data.addresses.length}</b>
-              <span className="mt-2 block text-[10px] text-ink-3">сохранено</span>
-            </article>
-            <Link href="/promotions#karma-club" className="col-span-2 flex items-center justify-between rounded-full bg-[#3A2338] px-6 py-3.5 text-[9.5px] font-bold uppercase tracking-[0.11em] text-[#FFF8F2] shadow-[0_16px_32px_-20px_rgba(58,35,56,.7)] transition hover:-translate-y-0.5">
-              Все привилегии клуба <ArrowUpRight className="text-[14px]" />
-            </Link>
+          <div className="flex min-w-0 flex-col gap-3">
+            <LevelDiscountCard
+              level={snap.level}
+              levelDiscount={data.levelDiscount}
+              nextLevelName={snap.nextLevel?.name ?? null}
+              pointsToNext={snap.pointsToNext}
+              progressPct={snap.progressPct}
+            />
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                ["Заказы", data.orders.length, "в истории"],
+                ["Адреса", data.addresses.length, "сохранено"],
+              ].map(([label, value, caption]) => (
+                <article key={label} className="rounded-[22px] border border-white/70 bg-paper-2/85 px-5 py-4 shadow-[0_18px_44px_-34px_rgba(73,48,68,.52)]">
+                  <span className="text-micro font-bold uppercase tracking-[0.16em] text-ink-3">{label}</span>
+                  <b className="mt-1.5 block text-[28px] leading-none tracking-[-0.04em]">{value}</b>
+                  <span className="mt-1.5 block text-caption text-ink-3">{caption}</span>
+                </article>
+              ))}
+            </div>
+            <a
+              href="#profile-journey"
+              className="flex min-h-12 items-center justify-between rounded-full bg-[#3A2338] px-6 text-micro font-bold uppercase tracking-[0.11em] text-[#FFF8F2] shadow-[0_16px_32px_-20px_rgba(58,35,56,.7)] transition hover:-translate-y-0.5"
+            >
+              Мой путь в клубе <ChevronDown className="text-[14px]" />
+            </a>
           </div>
         </section>
       )}
+
+      <section id="profile-journey" className="scroll-mt-24 rounded-[30px] border border-gold/20 bg-paper-2/90 p-5 shadow-m sm:p-8">
+        <p className="mb-3 text-micro font-bold uppercase tracking-[0.18em] text-cherry">Karma Club</p>
+        <LevelPath
+          title="Ваш путь в клубе"
+          headingAs="h2"
+          points={data.points}
+          levels={data.levels.map((level) => ({
+            key: level.key,
+            name: level.name,
+            fromKarma: level.fromKarma,
+            icon: level.icon,
+            perk: level.perk,
+            discountPct: level.discountPct,
+            discountsPerWeek: level.discountsPerWeek,
+          }))}
+        />
+      </section>
 
       <RewardsSection data={data} onChanged={load} />
 
@@ -186,30 +204,59 @@ type LevelDiscount = ProfileData["levelDiscount"];
 // в профиле и реальный расчёт на чекауте не могли разойтись. У стартового
 // уровня скидки нет, и тогда показываем базовое правило начисления: karma
 // каждого товара в каталоге посчитана как round(цена/10), см. seed.json.
-function LevelDiscountCard({ level, levelDiscount }: { level: SnapLevel; levelDiscount: LevelDiscount }) {
+function LevelDiscountCard({
+  level,
+  levelDiscount,
+  nextLevelName,
+  pointsToNext,
+  progressPct,
+}: {
+  level: SnapLevel;
+  levelDiscount: LevelDiscount;
+  nextLevelName: string | null;
+  pointsToNext: number;
+  progressPct: number;
+}) {
   const exhausted = levelDiscount !== null && levelDiscount.left === 0;
 
   return (
-    <article className="col-span-2 rounded-[25px] border border-gold/25 bg-gradient-to-br from-[#3A2338] to-[#4A2C46] p-5 text-[#FFF8F2] shadow-[0_18px_44px_-34px_rgba(58,35,56,.7)]">
-      <div className="flex items-center gap-2.5">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[13px] bg-white/10"><LevelIcon name={level.icon} className="h-[18px] w-[18px] text-[#F7D9A6]" /></span>
-        <div className="min-w-0">
-          <span className="block text-[8px] font-bold uppercase tracking-[0.18em] text-white/50">Уровень «{level.name}»</span>
-          <p className="mt-0.5 text-[13px] font-semibold leading-snug">
-            {levelDiscount
-              ? `−${levelDiscount.pct}% на заказ · ${levelDiscount.perWeek} раз(а) в неделю`
-              : "10 ₽ покупок = 1 балл кармы"}
-          </p>
+    // flex-1: карточка забирает свободную высоту колонки, а шкала до
+    // следующего уровня прижата к низу — без пустоты внутри и под картой.
+    <article className="flex flex-1 flex-col justify-between gap-5 rounded-[25px] border border-gold/25 bg-gradient-to-br from-[#3A2338] to-[#4A2C46] p-5 text-[#FFF8F2] shadow-[0_18px_44px_-34px_rgba(58,35,56,.7)]">
+      <div>
+        <div className="flex items-center gap-2.5">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[14px] bg-white/10"><LevelIcon name={level.icon} className="h-5 w-5 text-[#F7D9A6]" /></span>
+          <div className="min-w-0">
+            <span className="block text-micro font-bold uppercase tracking-[0.16em] text-white/55">Уровень «{level.name}»</span>
+            <p className="mt-0.5 text-[14px] font-semibold leading-snug">
+              {levelDiscount
+                ? `−${levelDiscount.pct}% на заказ · ${timesPerWeek(levelDiscount.perWeek)}`
+                : "10 ₽ покупок = 1 балл кармы"}
+            </p>
+          </div>
         </div>
+
+        {levelDiscount && (
+          <p className={`mt-3 text-[12px] leading-snug ${exhausted ? "text-[#FFD8D8]" : "text-white/70"}`}>
+            {exhausted
+              ? "Скидки на этой неделе закончились — применятся снова, когда обновится неделя."
+              : `Осталось ${levelDiscount.left} из ${levelDiscount.perWeek} на этой неделе. Применяется на чекауте сама.`}
+          </p>
+        )}
       </div>
 
-      {levelDiscount && (
-        <p className={`mt-3 text-[11.5px] ${exhausted ? "text-[#FFD8D8]" : "text-white/70"}`}>
-          {exhausted
-            ? "Скидки на этой неделе закончились — применятся снова, когда обновится неделя."
-            : `Осталось ${levelDiscount.left} из ${levelDiscount.perWeek} на этой неделе. Применяется на чекауте сама.`}
-        </p>
-      )}
+      <div>
+        <div className="mb-2 flex items-baseline justify-between gap-3 text-[12px]">
+          <span className="font-semibold text-[#F7D9A6]">{nextLevelName ? `До «${nextLevelName}»` : "Высший уровень клуба"}</span>
+          {nextLevelName && <span className="tabular-nums text-white/70">{pointsToNext.toLocaleString("ru-RU")} баллов</span>}
+        </div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-white/15">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-[#F0AFC3] to-[#F7D9A6] transition-[width] duration-700 ease-out"
+            style={{ width: `${nextLevelName ? Math.min(100, Math.max(3, progressPct)) : 100}%` }}
+          />
+        </div>
+      </div>
     </article>
   );
 }
@@ -239,120 +286,115 @@ function RewardsSection({ data, onChanged }: { data: ProfileData; onChanged: () 
     }
   }
 
+  const rewardById = new Map(data.rewards.map((r) => [r.id, r]));
+  const pathRewards: PathReward[] = data.rewards.map((r) => {
+    const product = r.products.find((p) => p.imageUrl) ?? null;
+    return {
+      id: r.id,
+      costPoints: r.costPoints,
+      title: r.title,
+      description: r.description,
+      image: product?.imageUrl ? { url: product.imageUrl, alt: product.name } : null,
+      discountLabel:
+        r.kind === "DISCOUNT" && r.discountType ? formatDiscount(r.discountType, r.discountPct ?? 0, r.discountFixedCents ?? 0) : null,
+      minLevelName: r.minLevelName,
+      // Уровень ниже нужного или недельный лимит обменов — не про баланс,
+      // считает сервер (checkRewardEligibility).
+      restriction: r.restrictionError,
+    };
+  });
+
+  // Действие открытого подарка. Награды переиспользуемые — доступность решает
+  // только текущий баланс, без разового «получено навсегда»; баллы за
+  // товарный подарок списываются при оформлении заказа, а не по клику.
+  function renderAction(reward: PathReward) {
+    const r = rewardById.get(reward.id);
+    if (!r) return null;
+    const cartLine = lines.find((l) => l.rewardId === r.id);
+    const primary =
+      "inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full bg-btn px-4 text-[12px] font-bold text-btn-fg shadow-s transition duration-200 active:scale-95 disabled:opacity-50";
+
+    function addProduct(product: RewardProduct) {
+      add(
+        {
+          productId: product.id,
+          name: product.name,
+          imageUrl: product.imageUrl,
+          unitPriceCents: product.priceCents,
+          addons: [],
+          wokConfig: null,
+          rewardId: r!.id,
+        },
+        1,
+      );
+      showToast(`Добавлено в корзину: ${product.name} · подарок за баллы`);
+    }
+
+    if (cartLine) {
+      return (
+        <div className="flex min-h-10 items-center justify-between gap-2 rounded-full bg-tint-mint px-4">
+          <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-ink">
+            <Check className="text-[14px] text-mint-deep" strokeWidth={2.2} /> В корзине
+          </span>
+          <button type="button" onClick={() => remove(cartLine.key)} className="text-caption font-semibold text-ink-3 hover:text-cherry">
+            Убрать
+          </button>
+        </div>
+      );
+    }
+    if (r.kind === "DISCOUNT") {
+      return (
+        <button type="button" disabled={redeemingId === r.id} onClick={() => redeemDiscount(r.id, r.title)} className={primary}>
+          {redeemingId === r.id ? "Обмениваем…" : `Получить ${reward.discountLabel ?? "скидку"}`}
+        </button>
+      );
+    }
+    if (r.products.length === 0) return <p className="text-[12px] text-ink-3">Скоро подберём блюдо для этого подарка</p>;
+    if (r.products.length === 1) {
+      return (
+        <button type="button" onClick={() => addProduct(r.products[0]!)} className={primary}>
+          <Gift className="text-[15px]" /> В корзину
+        </button>
+      );
+    }
+    return (
+      <div>
+        <p className="mb-2 text-caption text-ink-3">Выберите вариант:</p>
+        <div className="flex flex-wrap gap-1.5">
+          {r.products.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => addProduct(p)}
+              className="min-h-9 rounded-full border border-hair bg-paper px-3 text-caption font-semibold transition active:scale-95 hover:border-cherry/40"
+            >
+              {p.name}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <section id="profile-rewards" className="scroll-mt-24 rounded-[30px] border border-gold/20 bg-paper-2/90 p-5 shadow-m sm:p-8">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-        <div><span className="text-[10px] font-bold uppercase tracking-[0.18em] text-cherry">От кухни с любовью</span><h2 className="mt-2 text-[23px] font-bold tracking-tight">Ваши подарки</h2></div>
-        <Link href="/karma-club/rules" className="text-[11px] font-semibold text-ink-3 hover:text-cherry hover:underline">Правила использования</Link>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <span className="text-micro font-bold uppercase tracking-[0.18em] text-cherry">От кухни с любовью</span>
+        <Link href="/karma-club/rules" className="text-caption font-semibold text-ink-3 hover:text-cherry hover:underline">Правила использования</Link>
       </div>
-      {data.rewards.length === 0 && <p className="text-[13px] text-ink-2">Готовим новые подарки. Загляните чуть позже.</p>}
       {redeemError && <p role="alert" className="mb-4 text-[12.5px] text-cherry">{redeemError}</p>}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <ShowMore
-          items={data.rewards}
-          initialCount={REWARDS_PREVIEW_COUNT}
-          moreLabel={(n) => `Показать ещё ${n} подарков`}
-          className="col-span-full justify-self-center"
-          render={(r) => {
-          // Награды переиспользуемые — доступность решает только текущий
-          // баланс, без разового «получено навсегда» (иначе, например,
-          // однажды полученный напиток нельзя было бы получить снова).
-          // restrictionError — отдельная причина (минимальный уровень или
-          // недельный лимит обменов), не про баланс вообще.
-          const available = data.points >= r.costPoints && !r.restrictionError;
-          const cartLine = lines.find((l) => l.rewardId === r.id);
-
-          function addProduct(product: RewardProduct) {
-            add(
-              {
-                productId: product.id,
-                name: product.name,
-                imageUrl: product.imageUrl,
-                unitPriceCents: product.priceCents,
-                addons: [],
-                wokConfig: null,
-                rewardId: r.id,
-              },
-              1,
-            );
-            showToast(`Добавлено в корзину: ${product.name} · подарок за баллы`);
-          }
-
-          return (
-            <article
-              key={r.id}
-              className={`club-reward relative flex min-w-0 flex-col overflow-hidden rounded-[24px] border p-5 ${
-                !available ? "border-hair bg-paper/55" : "border-gold/30 bg-gradient-to-br from-tint-sakura to-paper-2 shadow-s"
-              }`}
-            >
-              <div className="flex flex-wrap items-baseline gap-2"><b className="text-[24px] font-bold tracking-tight">{r.costPoints.toLocaleString("ru-RU")}</b><span className="text-[11px] text-ink-2">баллов</span></div>
-              <p className="mt-2 text-[14px] font-semibold">{r.title}</p>
-              <p className="mt-2 text-[12px] leading-relaxed text-ink-2">{r.description}</p>
-              {r.kind === "DISCOUNT" && (
-                <p className="mt-1 text-[12px] font-bold text-mint-deep">{formatDiscount(r.discountType!, r.discountPct ?? 0, r.discountFixedCents ?? 0)} на заказ</p>
-              )}
-              {r.minLevelName && (
-                <p className="mt-1 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-ink-3">Доступно с уровня «{r.minLevelName}»</p>
-              )}
-              <div className="mb-5 mt-2 flex-1" />
-              {cartLine ? (
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-mint-deep">В корзине ✓</span>
-                  <button type="button" onClick={() => remove(cartLine.key)} className="text-[11px] text-ink-3 hover:text-cherry">
-                    Убрать
-                  </button>
-                </div>
-              ) : r.restrictionError && data.points >= r.costPoints ? (
-                <span className="text-[11px] text-cherry">{r.restrictionError}</span>
-              ) : available ? (
-                r.kind === "DISCOUNT" ? (
-                  <button
-                    type="button"
-                    disabled={redeemingId === r.id}
-                    onClick={() => redeemDiscount(r.id, r.title)}
-                    className="min-h-11 rounded-full bg-btn px-5 py-3 text-[11px] font-bold text-btn-fg shadow-s transition duration-200 active:scale-95 disabled:opacity-50"
-                  >
-                    {redeemingId === r.id ? "Обмениваем…" : "Получить скидку"}
-                  </button>
-                ) : r.products.length === 0 ? (
-                  <span className="text-[11px] text-ink-3">Скоро подберём товар для этого подарка</span>
-                ) : r.products.length === 1 ? (
-                  <button
-                    type="button"
-                    onClick={() => addProduct(r.products[0]!)}
-                    className="min-h-11 rounded-full bg-btn px-5 py-3 text-[11px] font-bold text-btn-fg shadow-s transition duration-200 active:scale-95"
-                  >
-                    Добавить в корзину
-                  </button>
-                ) : (
-                  <div>
-                    <p className="mb-2 text-[11px] text-ink-3">Выберите один вариант:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {r.products.map((p) => (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() => addProduct(p)}
-                          className="rounded-full border border-hair bg-paper px-3.5 py-2 text-[11px] font-semibold transition active:scale-95 hover:border-cherry/40"
-                        >
-                          {p.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )
-              ) : (
-                <div><div aria-hidden className="mb-3 h-1 overflow-hidden rounded-full bg-hair-soft"><div className="h-full rounded-full bg-gradient-to-r from-cherry/60 to-gold/80 transition-[width] duration-[900ms] ease-[cubic-bezier(.2,.8,.2,1)]" style={{width: `${Math.min(100, Math.max(0, data.points / Math.max(1, r.costPoints) * 100))}%`}} /></div><span className="text-[11px] text-ink-2">Ещё {(r.costPoints - data.points).toLocaleString("ru-RU")} баллов до подарка</span></div>
-              )}
-            </article>
-          );
-          }}
-        />
-      </div>
+      {data.rewards.length === 0 ? (
+        <>
+          <h2 className="text-[22px] font-bold tracking-tight">Ваши подарки</h2>
+          <p className="mt-2 text-[13px] text-ink-2">Готовим новые подарки. Загляните чуть позже.</p>
+        </>
+      ) : (
+        <RewardPath rewards={pathRewards} points={data.points} title="Ваши подарки" headingAs="h2" renderAction={renderAction} />
+      )}
 
       {data.discountGrants.length > 0 && (
         <div className="mt-8 border-t border-hair pt-6">
-          <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-3">Мои скидки</span>
+          <span className="text-micro font-bold uppercase tracking-[0.16em] text-ink-3">Мои скидки</span>
           <div className="mt-3 flex flex-wrap gap-2">
             {data.discountGrants.map((g) => (
               <span key={g.id} className="rounded-full border border-mint-deep/30 bg-tint-mint px-4 py-2 text-[11.5px] font-semibold text-ink">

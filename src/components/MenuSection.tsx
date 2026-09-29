@@ -51,7 +51,7 @@ export async function MenuSection() {
 
       <div className="mb-1 mt-7 flex items-end justify-between gap-4 md:mb-3 md:mt-12">
         <div>
-          <span className="text-[9.5px] font-bold uppercase tracking-[0.18em] text-ink-3 md:text-[10px]">
+          <span className="text-micro font-bold uppercase tracking-[0.18em] text-ink-3">
             Быстрый выбор
           </span>
           <h3 className="mt-0.5 text-[18px] font-bold tracking-tight md:mt-1 md:text-[20px]">Все категории</h3>
@@ -61,7 +61,7 @@ export async function MenuSection() {
 
       <div className="mb-4 mt-7 flex items-end justify-between gap-4 md:mb-6 md:mt-12">
         <div>
-          <span className="text-[9.5px] font-bold uppercase tracking-[0.18em] text-ink-3 md:text-[10px]">
+          <span className="text-micro font-bold uppercase tracking-[0.18em] text-ink-3">
             Выбор гостей
           </span>
           <h3 className="mt-0.5 text-[20px] font-bold tracking-tight md:mt-1 md:text-[28px]">Хиты кухни</h3>

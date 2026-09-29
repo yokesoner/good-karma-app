@@ -36,9 +36,10 @@ export default async function WokBuilderPage() {
           <p className="max-w-[42ch] text-[13px] leading-relaxed text-ink-2 md:text-right">
             Основа, начинка и соус — вы задаёте характер, мы отвечаем за баланс, свежесть и правильный огонь.
           </p>
-          <div className="flex gap-2">
+          {/* Переносится пилюля целиком, а не текст внутри неё. */}
+          <div className="flex flex-wrap gap-2">
             {["3 минуты на огне", "готовим после заказа"].map((item) => (
-              <span key={item} className="rounded-full border border-white/70 bg-paper-2/65 px-3 py-2 text-[8px] font-bold uppercase tracking-[0.11em] text-ink-3 shadow-s backdrop-blur-md">
+              <span key={item} className="whitespace-nowrap rounded-full border border-white/70 bg-paper-2/65 px-3 py-2 text-micro font-bold uppercase tracking-[0.08em] text-ink-3 shadow-s backdrop-blur-md">
                 {item}
               </span>
             ))}

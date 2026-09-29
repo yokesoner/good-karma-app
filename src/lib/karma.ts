@@ -16,6 +16,14 @@ export type KarmaReward = {
 
 export type RewardState = "LOCKED" | "AVAILABLE" | "CLAIMED";
 
+/** «1 раз», «2 раза», «5 раз», «22 раза» в неделю — вместо «раз(а)». */
+export function timesPerWeek(n: number): string {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  const word = mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14) ? "раза" : "раз";
+  return `${n} ${word} в неделю`;
+}
+
 export type KarmaSnapshot<L extends KarmaLevel = KarmaLevel> = {
   points: number;
   level: L;

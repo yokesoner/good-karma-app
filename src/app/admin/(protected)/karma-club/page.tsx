@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AdminDeleteButton } from "@/components/admin/AdminDeleteButton";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
+import { timesPerWeek } from "@/lib/karma";
 import { deleteAdminKarmaLevel, deleteAdminKarmaReward } from "@/server/adminKarmaClub";
 
 export const metadata: Metadata = { title: "Karma Club — админка Гуд Карма" };
@@ -28,10 +29,10 @@ export default async function AdminKarmaClubPage() {
                 <div><h3 className="font-semibold">{level.name}</h3><p className="mt-1 text-xs text-ink-3">{level.key} · иконка: {level.icon}</p></div>
                 <p className="text-sm text-ink-2">{level.fromKarma}–{level.toKarma} баллов</p>
                 <div>
-                  <span className={`inline-block rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.06em] ${hasDiscount ? "bg-tint-mint" : "bg-paper-3 text-ink-3"}`}>
+                  <span className={`inline-block rounded-full px-2.5 py-1 text-micro font-bold uppercase tracking-[0.06em] ${hasDiscount ? "bg-tint-mint" : "bg-paper-3 text-ink-3"}`}>
                     {hasDiscount ? `−${level.discountPct}%` : "Без скидки"}
                   </span>
-                  {hasDiscount && <p className="mt-1.5 text-xs text-ink-3">{level.discountsPerWeek} раз(а) в неделю</p>}
+                  {hasDiscount && <p className="mt-1.5 text-xs text-ink-3">{timesPerWeek(level.discountsPerWeek ?? 0)}</p>}
                 </div>
                 <div className="flex items-center justify-end gap-4"><Link href={`/admin/karma-club/levels/${level.key}/edit`} className="text-[10px] font-bold uppercase tracking-[0.1em] text-plum hover:underline">Изменить</Link><AdminDeleteButton identifier={level.key} label={level.name} action={deleteAdminKarmaLevel} /></div>
               </article>
@@ -53,7 +54,7 @@ export default async function AdminKarmaClubPage() {
             const limits = [reward.minLevel ? `от уровня «${reward.minLevel.name}»` : null, reward.maxRedemptionsPerWeek ? `до ${reward.maxRedemptionsPerWeek}/нед.` : null].filter(Boolean).join(" · ");
             return (
               <article key={reward.id} className="grid gap-3 border-b border-hair p-5 last:border-b-0 md:grid-cols-[1fr_130px_1fr_170px] md:items-center">
-                <div><div className="flex items-center gap-2"><h3 className="font-semibold">{reward.title}</h3><span className={`rounded-full px-2 py-1 text-[9px] font-bold ${reward.isActive ? "bg-tint-mint" : "bg-paper-3"}`}>{reward.isActive ? "АКТИВНА" : "ВЫКЛ"}</span></div>{limits && <p className="mt-1 text-xs text-ink-3">{limits}</p>}</div>
+                <div><div className="flex items-center gap-2"><h3 className="font-semibold">{reward.title}</h3><span className={`rounded-full px-2 py-1 text-micro font-bold ${reward.isActive ? "bg-tint-mint" : "bg-paper-3"}`}>{reward.isActive ? "АКТИВНА" : "ВЫКЛ"}</span></div>{limits && <p className="mt-1 text-xs text-ink-3">{limits}</p>}</div>
                 <p className="text-sm font-semibold">{reward.costPoints} баллов</p>
                 <div><p className="text-sm text-ink-2">{reward.description}</p><p className={`mt-1 text-xs ${reward.kind === "PRODUCT" && reward.products.length === 0 ? "text-cherry" : "text-ink-3"}`}>{details}</p></div>
                 <div className="flex items-center justify-end gap-4"><Link href={`/admin/karma-club/rewards/${reward.id}/edit`} className="text-[10px] font-bold uppercase tracking-[0.1em] text-plum hover:underline">Изменить</Link><AdminDeleteButton identifier={reward.id} label={reward.title} action={deleteAdminKarmaReward} /></div>

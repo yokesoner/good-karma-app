@@ -15,6 +15,12 @@ type KarmaPassProps = {
   className?: string;
   compact?: boolean;
   preview?: boolean;
+  /**
+   * Карта во всю ширину и высоту своей ячейки (профиль). Без этого у карты
+   * max-w-[560px], и в широкой колонке сетки справа и снизу от неё
+   * оставались пустые поля.
+   */
+  fill?: boolean;
 };
 
 const maskedPhone = (phone?: string | null) => {
@@ -32,6 +38,7 @@ export function KarmaPass({
   className,
   compact = false,
   preview = false,
+  fill = false,
 }: KarmaPassProps) {
   // Наклон следует за курсором, а не фиксированный угол на :hover — эффект
   // карты в Apple Wallet. JS включается только там, где уже разрешён CSS-
@@ -62,7 +69,8 @@ export function KarmaPass({
           : undefined
       }
       className={cn(
-        "karma-pass group relative isolate w-full min-w-0 max-w-[560px] overflow-hidden rounded-[30px] border border-[#D6BA85]/40 p-5 text-[#FFF9F3] shadow-[0_38px_80px_-32px_rgba(48,24,43,.75)] md:p-8",
+        "karma-pass group relative isolate w-full min-w-0 overflow-hidden rounded-[30px] border border-[#D6BA85]/40 p-5 text-[#FFF9F3] shadow-[0_38px_80px_-32px_rgba(48,24,43,.75)] md:p-8",
+        fill ? "flex h-full flex-col" : "max-w-[560px]",
         compact && "max-w-[470px] rounded-[26px] p-5 md:p-6",
         className,
       )}
@@ -74,7 +82,7 @@ export function KarmaPass({
         <path d="M410 0 385 67 422 104 386 161 446 214 433 263 478 350M422 104 492 87 560 108M446 214 515 206 560 230" stroke="currentColor" strokeWidth="1" />
       </svg>
 
-      <div className={cn("relative flex min-h-[240px] flex-col justify-between gap-6", compact && "min-h-[215px]")}>
+      <div className={cn("relative flex min-h-[240px] flex-col justify-between gap-6", compact && "min-h-[215px]", fill && "flex-1 lg:min-h-[300px]")}>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/20 bg-white/10 backdrop-blur-md">
@@ -82,19 +90,19 @@ export function KarmaPass({
             </span>
             <div>
               <b className="block text-[10px] font-bold uppercase tracking-[0.12em]">Good Karma</b>
-              <span className="mt-0.5 block text-[7.5px] font-semibold uppercase tracking-[0.25em] text-white/50">
+              <span className="mt-0.5 block text-micro font-semibold uppercase tracking-[0.2em] text-white/55">
                 {preview ? "Образец карты" : "Club Pass"}
               </span>
             </div>
           </div>
-          <span className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-2 text-[8px] font-bold uppercase tracking-[0.14em] backdrop-blur-md">
+          <span className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-2 text-micro font-bold uppercase tracking-[0.12em] backdrop-blur-md">
             <LevelIcon name={levelIcon} className="h-3.5 w-3.5 text-[#F7D9A6]" />
             {preview ? "Club" : level}
           </span>
         </div>
 
         <div>
-          <span className="text-[8px] font-bold uppercase tracking-[0.22em] text-white/50">
+          <span className="text-micro font-bold uppercase tracking-[0.18em] text-white/55">
             {preview ? "Маленькие ритуалы. Большая любовь." : "Баланс кармы"}
           </span>
           <div className={cn("mt-1 font-bold leading-none tracking-[-0.055em]", compact ? "text-[42px]" : "text-[52px] md:text-[62px]") }>
@@ -114,7 +122,7 @@ export function KarmaPass({
               <b className={cn("block text-[10px] font-bold uppercase tracking-[0.12em]", !preview && "max-w-[22ch] truncate")}>
                 {preview ? "Ваша карта — в профиле" : name || "Гость Гуд Кармы"}
               </b>
-              <span className="mt-1 block text-[8px] tracking-[0.12em] text-white/70">{preview ? "Баллы · уровни · подарки" : maskedPhone(phone)}</span>
+              <span className="mt-1 block text-caption tracking-[0.1em] text-white/70">{preview ? "Баллы · уровни · подарки" : maskedPhone(phone)}</span>
             </div>
             <span className="text-[13px] tracking-[0.22em] text-[#F7D9A6]">良いカルマ</span>
           </div>

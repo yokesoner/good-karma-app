@@ -92,7 +92,7 @@ export default async function CategoryPage({ params }: Params) {
             <p className="mt-1 text-[12.5px] text-ink-2 md:mt-1.5 md:text-[13px]">{category.meta.tagline}</p>
           )}
           {category.isStopList && (
-            <p className="mt-2 inline-block rounded-full bg-tint-gold px-3 py-1 text-[9px] font-bold uppercase tracking-[0.12em]">
+            <p className="mt-2 inline-block rounded-full bg-tint-gold px-3 py-1 text-micro font-bold uppercase tracking-[0.12em]">
               Сегодня недоступно
             </p>
           )}

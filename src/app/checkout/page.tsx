@@ -11,7 +11,7 @@ export default function CheckoutPage() {
     <main className="checkout-page mx-auto max-w-wrap px-5 py-8 md:px-16 md:py-12">
       <div className="mb-9 grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
         <div>
-          <span className="text-[9.5px] font-bold uppercase tracking-[0.2em] text-cherry">
+          <span className="text-micro font-bold uppercase tracking-[0.2em] text-cherry">
             Последний шаг · ご注文
           </span>
           <h1 className="mt-3 text-[38px] font-bold leading-none tracking-[-0.04em] md:text-[52px]">
@@ -29,7 +29,7 @@ export default function CheckoutPage() {
           ["03", "Готово"],
         ].map(([number, label], index) => (
           <div key={number} className={`rounded-[16px] px-4 py-3 ${index === 1 ? "bg-tint-sakura shadow-s" : ""}`}>
-            <span className="block text-[8px] font-bold tracking-[0.16em] text-ink-3">{number}</span>
+            <span className="block text-micro font-bold tracking-[0.16em] text-ink-3">{number}</span>
             <b className="mt-1 block text-[10px] uppercase tracking-[0.09em]">{label}</b>
           </div>
         ))}

@@ -170,7 +170,7 @@ export function OrderStatusLive({
               ))}
             </span>
             <span className="min-w-0 flex-1 text-left">
-              <span className="block text-[9px] font-bold uppercase tracking-[0.14em] text-ink-3">
+              <span className="block text-micro font-bold uppercase tracking-[0.14em] text-ink-3">
                 Этапы заказа
               </span>
               <b className="block truncate text-[13.5px] font-bold">

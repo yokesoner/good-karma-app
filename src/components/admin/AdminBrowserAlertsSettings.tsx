@@ -57,16 +57,16 @@ export function AdminBrowserAlertsSettings() {
         <div className="flex items-center justify-between gap-4 rounded-2xl bg-paper-3 px-4 py-3">
           <span className="text-sm">Системные уведомления</span>
           {permission === "granted" && (
-            <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-ink-2">Включены</span>
+            <span className="text-micro font-bold uppercase tracking-[0.08em] text-ink-2">Включены</span>
           )}
           {permission === "unsupported" && !iosNotInstalled && (
-            <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-ink-3">Не поддерживается</span>
+            <span className="text-micro font-bold uppercase tracking-[0.08em] text-ink-3">Не поддерживается</span>
           )}
           {iosNotInstalled && (
-            <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-ink-3">Нужна установка</span>
+            <span className="text-micro font-bold uppercase tracking-[0.08em] text-ink-3">Нужна установка</span>
           )}
           {permission === "denied" && (
-            <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-cherry">Заблокированы в браузере</span>
+            <span className="text-micro font-bold uppercase tracking-[0.08em] text-cherry">Заблокированы в браузере</span>
           )}
           {permission === "default" && (
             <button

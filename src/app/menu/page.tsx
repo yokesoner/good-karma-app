@@ -54,7 +54,7 @@ export default async function MenuPage() {
       >
         <span aria-hidden className="text-[26px] leading-none">🥢</span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[8.5px] font-bold uppercase tracking-[0.18em] text-cherry">{wokCard.eyebrow}</span>
+          <span className="block text-micro font-bold uppercase tracking-[0.18em] text-cherry">{wokCard.eyebrow}</span>
           <span className="mt-0.5 block text-[15px] font-bold leading-tight">{wokCard.title}</span>
         </span>
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-btn text-btn-fg">
@@ -86,7 +86,7 @@ export default async function MenuPage() {
           <div className="mt-8 max-w-[520px] rounded-[26px] border border-white/80 bg-white/50 p-6 shadow-[0_20px_46px_-30px_rgba(73,48,68,.5)] backdrop-blur-xl">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <span className="text-[8.5px] font-bold uppercase tracking-[0.2em] text-[#9A536E]">
+                <span className="text-micro font-bold uppercase tracking-[0.2em] text-[#9A536E]">
                   {wokCard.eyebrow}
                 </span>
                 <h2 className="mt-1 text-[18px] font-bold">{wokCard.title}</h2>
@@ -99,7 +99,7 @@ export default async function MenuPage() {
               {["Основа", "Начинка", "Соус"].map((step, index) => (
                 <span
                   key={step}
-                  className="rounded-full border border-[#493044]/10 bg-[#FBF8F2]/55 px-2 py-2 text-center text-[8.5px] font-bold uppercase tracking-[0.1em] text-[#76636F]"
+                  className="rounded-full border border-[#493044]/10 bg-[#FBF8F2]/55 px-2 py-2 text-center text-micro font-bold uppercase tracking-[0.1em] text-[#76636F]"
                 >
                   {index + 1}. {step}
                 </span>
@@ -107,7 +107,7 @@ export default async function MenuPage() {
             </div>
             <Link
               href={wokCard.href}
-              className="mt-5 flex items-center justify-between rounded-full bg-[#3A2338] px-5 py-3.5 text-[9.5px] font-bold uppercase tracking-[0.12em] text-[#FFF8F2] shadow-[0_14px_30px_-18px_rgba(58,35,56,.7)] transition hover:-translate-y-0.5 hover:bg-[#513347]"
+              className="mt-5 flex items-center justify-between rounded-full bg-[#3A2338] px-5 py-3.5 text-micro font-bold uppercase tracking-[0.12em] text-[#FFF8F2] shadow-[0_14px_30px_-18px_rgba(58,35,56,.7)] transition hover:-translate-y-0.5 hover:bg-[#513347]"
             >
               {wokCard.buttonLabel} <ArrowUpRight className="text-[14px]" />
             </Link>
@@ -118,7 +118,7 @@ export default async function MenuPage() {
       <section className="hidden rounded-[30px] border border-white/70 bg-paper-2/70 p-6 shadow-[0_18px_60px_-42px_rgba(73,48,68,.5)] backdrop-blur-xl md:block">
         <div className="mb-4 flex items-end justify-between gap-4 px-1">
           <div>
-            <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-cherry">Быстрый выбор</span>
+            <span className="text-micro font-bold uppercase tracking-[0.18em] text-cherry">Быстрый выбор</span>
             <h2 className="mt-1 text-[20px] font-bold tracking-tight">Куда сегодня?</h2>
           </div>
           <span className="hidden text-[11px] text-ink-3 sm:block">Листайте категории →</span>
@@ -135,7 +135,7 @@ export default async function MenuPage() {
           >
             <div className="mb-3.5 flex flex-wrap items-end justify-between gap-x-4 gap-y-1 border-b border-hair pb-3 md:mb-6 md:pb-5">
               <div>
-                <span className="hidden text-[9px] font-bold uppercase tracking-[0.18em] text-ink-3 md:block">
+                <span className="hidden text-micro font-bold uppercase tracking-[0.18em] text-ink-3 md:block">
                   {String(categoryIndex + 1).padStart(2, "0")} · Категория
                 </span>
                 <div className="flex flex-wrap items-baseline gap-x-3 md:mt-1">
@@ -153,7 +153,7 @@ export default async function MenuPage() {
                 </div>
               </div>
               {category.isStopList ? (
-                <span className="rounded-full bg-tint-gold px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.12em]">
+                <span className="rounded-full bg-tint-gold px-3 py-1.5 text-micro font-bold uppercase tracking-[0.12em]">
                   Сегодня недоступно
                 </span>
               ) : (

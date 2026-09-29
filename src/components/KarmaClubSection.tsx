@@ -3,6 +3,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { ASSETS } from "@/lib/assets";
 import { getCurrentCustomerId } from "@/lib/customerAuth";
+import { formatDiscount } from "@/lib/money";
 import { BackgroundFootage } from "@/components/BackgroundFootage";
 import { KarmaClubShowcase } from "@/components/KarmaClubShowcase";
 
@@ -23,7 +24,19 @@ export async function KarmaClubSection({
 }) {
   const [levels, rewards, points] = await Promise.all([
     db.karmaLevel.findMany({ orderBy: { fromKarma: "asc" } }),
-    db.karmaReward.findMany({ where: { isActive: true }, orderBy: { costPoints: "asc" } }),
+    db.karmaReward.findMany({
+      where: { isActive: true },
+      orderBy: { costPoints: "asc" },
+      // Фото подарка — первое фото первого привязанного товара: карточка на
+      // пути подарков показывает то, что гость реально получит.
+      include: {
+        minLevel: { select: { name: true } },
+        products: {
+          take: 1,
+          include: { product: { select: { images: { take: 1, orderBy: { sortOrder: "asc" }, select: { url: true, alt: true } } } } },
+        },
+      },
+    }),
     // Если покупатель вошёл — показываем его реальный прогресс прямо на
     // витрине, а не обезличенную схему: путь читается совсем иначе, когда
     // на нём видно своё место. Гостю просто не передаём баллы.
@@ -41,12 +54,22 @@ export async function KarmaClubSection({
     discountPct: l.discountPct,
     discountsPerWeek: l.discountsPerWeek,
   }));
-  const rewardData = rewards.map((r) => ({
-    id: r.id,
-    costPoints: r.costPoints,
-    title: r.title,
-    description: r.description,
-  }));
+  const rewardData = rewards.map((r) => {
+    const image = r.products[0]?.product.images[0] ?? null;
+    return {
+      id: r.id,
+      costPoints: r.costPoints,
+      title: r.title,
+      description: r.description,
+      image,
+      // У награды-скидки нет товара и фото — карточка рисует саму скидку.
+      discountLabel:
+        r.kind === "DISCOUNT" && r.discountType
+          ? formatDiscount(r.discountType, r.discountPct ?? 0, r.discountFixedCents ?? 0)
+          : null,
+      minLevelName: r.minLevel?.name ?? null,
+    };
+  });
 
   // На главной — только тизер, полный клуб живёт на своей странице.
   if (compact) {
@@ -95,7 +118,7 @@ export async function KarmaClubSection({
     <div className="flex flex-col gap-6">
       {/* ── HERO ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden rounded-[32px] border border-hair bg-gradient-to-br from-tint-cream via-tint-sakura to-tint-lavender px-6 py-10 md:px-14 md:py-14">
-        <BackgroundFootage src={ASSETS.animations.sakuraPetals} opacity={0.4} priority />
+        <BackgroundFootage src={ASSETS.animations.sakuraPetals} opacity={0.4} />
 
         <div className="relative grid grid-cols-1 items-center gap-8 md:grid-cols-[auto_1fr_auto]">
           {/* Вертикальная японская надпись и печать — слева, тихо */}

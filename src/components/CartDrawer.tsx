@@ -150,7 +150,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
           <span aria-hidden className="mx-auto mb-2 block h-1 w-10 rounded-full bg-ink-3/40 md:hidden" />
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-[8px] font-bold uppercase tracking-[0.19em] text-cherry">Ваш выбор</span>
+              <span className="text-micro font-bold uppercase tracking-[0.19em] text-cherry">Ваш выбор</span>
               <h2 className="mt-0.5 text-[20px] font-bold tracking-[-0.03em] md:mt-1 md:text-[21px]">Корзина</h2>
             </div>
             <button
@@ -175,7 +175,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
             <span className="relative mb-6 grid h-24 w-24 place-items-center rounded-full border border-white/70 bg-gradient-to-br from-tint-sakura via-paper-2 to-tint-mint text-cherry shadow-[0_28px_60px_-35px_rgba(73,48,68,.6)] md:h-28 md:w-28">
               <BrandMark className="h-12 w-12 md:h-14 md:w-14" />
             </span>
-            <span className="relative text-[9px] font-bold uppercase tracking-[0.2em] text-cherry">
+            <span className="relative text-micro font-bold uppercase tracking-[0.2em] text-cherry">
               Пока здесь тихо
             </span>
             <p className="relative mt-3 max-w-[10ch] text-[25px] font-bold leading-[1.05] tracking-[-0.035em] md:text-[27px]">

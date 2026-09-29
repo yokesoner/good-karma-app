@@ -90,7 +90,7 @@ export function AdminLoyaltyPanel({ code, initial }: { code: string; initial: Cu
         </div>
         <div className="mt-5 flex items-end justify-between gap-3 border-t border-white/15 pt-5">
           <div>
-            <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/50">Баланс</span>
+            <span className="text-micro font-bold uppercase tracking-[0.16em] text-white/50">Баланс</span>
             <b className="mt-1 block text-[36px] font-bold leading-none tracking-[-0.03em]">{new Intl.NumberFormat("ru-RU").format(data.points)}</b>
           </div>
           <span className="text-[11px] text-white/50">баллов</span>

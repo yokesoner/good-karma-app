@@ -5,24 +5,15 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/adminAuth";
 import { BANNER_KEYS, getBannerSlot } from "@/lib/bannerSlots";
 import { db } from "@/lib/db";
+import { optionalSiteHrefSchema } from "@/lib/hrefSchema";
 import { imageUrlSchema } from "@/lib/imageUrlSchema";
-
-// Ссылка баннера — либо путь внутри сайта, либо https. Голое "javascript:"
-// и прочее отсекаются здесь, а не полагаются на то, что админ не ошибётся.
-const hrefSchema = z
-  .string()
-  .trim()
-  .max(300)
-  .refine((value) => value === "" || /^\/(?!\/)[^\s]*$/.test(value) || /^https:\/\/[^\s]+$/i.test(value), {
-    message: "Ссылка: путь на сайте (/menu) или адрес https://…",
-  });
 
 const BannerSchema = z.object({
   eyebrow: z.string().trim().max(120),
   title: z.string().trim().max(120),
   text: z.string().trim().max(500),
   buttonLabel: z.string().trim().max(40),
-  href: hrefSchema,
+  href: optionalSiteHrefSchema,
   imageUrl: imageUrlSchema().nullable(),
   isActive: z.boolean(),
 });

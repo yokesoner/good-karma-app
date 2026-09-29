@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CafeMap } from "@/components/CafeMap";
 import { CulturalAccent } from "@/components/CulturalAccent";
-import { CAFE_ADDRESS } from "@/lib/delivery";
+import { CAFE_ADDRESS, CAFE_EMAIL, CAFE_PHONE, telHref } from "@/lib/contacts";
 
 // Контент здесь пока статичный (адрес, часы, телефон) — как и в прототипе.
 // Если это должно меняться из админки без деплоя, вынести в отдельную
@@ -36,14 +36,14 @@ export function Footer() {
             </Link>
           </nav>
           <div className="flex flex-wrap gap-5">
-            <a href="tel:+78120000000" className="text-[13.5px] text-[#EFE6EC]/80 hover:text-white">
-              +7 (812) 000-00-00
+            <a href={telHref(CAFE_PHONE)} className="text-[13.5px] text-[#EFE6EC]/80 hover:text-white">
+              {CAFE_PHONE}
             </a>
             <a
-              href="mailto:hi@goodkarma.cafe"
+              href={`mailto:${CAFE_EMAIL}`}
               className="text-[13.5px] text-[#EFE6EC]/80 hover:text-white"
             >
-              hi@goodkarma.cafe
+              {CAFE_EMAIL}
             </a>
             <span className="text-[13.5px] text-[#EFE6EC]/80">{CAFE_ADDRESS}</span>
           </div>

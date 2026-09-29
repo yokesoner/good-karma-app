@@ -165,7 +165,7 @@ export function ProductPurchasePanel({
       {/* Десктоп: цена за порцию + количество + кнопка в одном ряду */}
       <div className="hidden flex-wrap items-center gap-4 md:flex">
         <div className="overflow-hidden">
-          <span className="block text-[8.5px] font-bold uppercase tracking-[0.16em] text-ink-3">Цена за порцию</span>
+          <span className="block text-micro font-bold uppercase tracking-[0.16em] text-ink-3">Цена за порцию</span>
           <span key={unitPrice} className="wok-value-in mt-1 block text-[26px] font-bold tracking-[-0.04em]">
             {formatMoney(unitPrice)}
           </span>

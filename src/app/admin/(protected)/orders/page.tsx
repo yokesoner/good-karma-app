@@ -125,7 +125,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams?:
                   <div className="shrink-0 text-right">
                     <p className="text-[16px] font-bold tabular-nums">{formatMoney(order.totalCents)}</p>
                     <span
-                      className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.08em] ${statusTone(order.status)}`}
+                      className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-micro font-bold uppercase tracking-[0.08em] ${statusTone(order.status)}`}
                     >
                       {ORDER_STATUS_LABELS[order.status]}
                     </span>

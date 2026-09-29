@@ -6,18 +6,21 @@ import { cn } from "@/lib/cn";
  * Правила из ТЗ, зашитые в компонент, чтобы их нельзя было случайно нарушить:
  * — не перехватывает клики и скрыт от скринридеров;
  * — не больше одного-двух слоёв на секцию (следим при использовании);
- * — при prefers-reduced-motion не показывается вовсе (класс motion-safe).
+ * — при prefers-reduced-motion не показывается вовсе (класс motion-safe);
+ * — всегда грузится лениво и никогда не предзагружается. Раньше был проп
+ *   priority: он добавлял <link rel="preload">, и полупрозрачный декор
+ *   весом до 1,5 МБ конкурировал за сеть с LCP-фотографией первого экрана,
+ *   а при reduced motion скачивался впустую. Ленивое изображение внутри
+ *   display:none браузер не запрашивает вовсе.
  */
 export function BackgroundFootage({
   src,
   className,
   opacity = 0.5,
-  priority = false,
 }: {
   src: string;
   className?: string;
   opacity?: number;
-  priority?: boolean;
 }) {
   return (
     <div
@@ -34,8 +37,7 @@ export function BackgroundFootage({
         fill
         sizes="100vw"
         unoptimized
-        priority={priority}
-        loading={priority ? undefined : "lazy"}
+        loading="lazy"
         className="object-cover"
       />
     </div>

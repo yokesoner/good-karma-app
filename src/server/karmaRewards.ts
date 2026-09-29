@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentCustomerId } from "@/lib/customerAuth";
-import { pickLevel } from "@/lib/karma";
+import { pickLevel, timesPerWeek } from "@/lib/karma";
 
 const WEEKLY_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -43,7 +43,7 @@ export async function checkRewardEligibility(
       where: { userId, rewardId: reward.id, reason: "REWARD_REDEEMED", createdAt: { gte: since } },
     });
     if (count >= reward.maxRedemptionsPerWeek) {
-      return { ok: false, error: `Эту награду можно получать не чаще ${reward.maxRedemptionsPerWeek} раз(а) в неделю` };
+      return { ok: false, error: `Эту награду можно получать не чаще ${timesPerWeek(reward.maxRedemptionsPerWeek)}` };
     }
   }
 

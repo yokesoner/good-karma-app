@@ -337,6 +337,31 @@ html {
   .hero-stagger-2 { animation: hero-text-in 640ms cubic-bezier(.2,.8,.2,1) 230ms both; }
   .hero-stagger-3 { animation: hero-text-in 640ms cubic-bezier(.2,.8,.2,1) 340ms both; }
   .hero-stagger-4 { animation: hero-text-in 640ms cubic-bezier(.2,.8,.2,1) 460ms both; }
+
+  /* Золотой шов на служебных страницах: чаша появляется, и только потом
+     трещина заливается золотом — медленнее остального интерфейса, как
+     сам ремонт. pathLength=1 в SVG, поэтому dasharray один на любые кривые. */
+  .kintsugi-seam {
+    stroke-dasharray: 1;
+    animation: kintsugi-draw 1400ms cubic-bezier(.65,0,.35,1) 520ms both;
+  }
+  .kintsugi-seam--late { animation-delay: 1250ms; animation-duration: 900ms; }
+
+  .kintsugi-shard {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: kintsugi-float 5.5s ease-in-out 900ms infinite alternate both;
+  }
+}
+
+@keyframes kintsugi-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes kintsugi-float {
+  from { transform: translate3d(0, 0, 0) rotate(-2deg); }
+  to { transform: translate3d(3px, -7px, 0) rotate(2.5deg); }
 }
 
 .wok-stage::after {
@@ -645,22 +670,9 @@ select,
     animation: anim-pop 420ms var(--ease-spring) both;
   }
 
-  /* Дорожка Karma Club (KarmaJourney.tsx). Заливка и метка «вы здесь»
-     едут к своей позиции уже после монтирования — прогресс читается как
-     движение, а не как заранее нарисованная полоска. Остановки всплывают
-     по очереди: задержку каждой задаёт инлайновая --stop-delay, потому
-     что порядок остановок знает только компонент. */
-  .journey-fill,
-  .journey-marker {
-    transition: left 900ms var(--ease-out), width 900ms var(--ease-out);
-  }
-
-  .journey-stop {
-    animation: journey-stop-in 520ms var(--ease-spring) var(--stop-delay, 0ms) backwards;
-  }
-
-  /* Пульс вокруг текущей остановки — тот же приём, что у точки «вы здесь»
-     на картах: показывает своё место на пути, ничего не двигая в макете. */
+  /* Пульс вокруг узла текущей остановки пути (PathRail.tsx) — тот же приём,
+     что у точки «вы здесь» на картах: показывает своё место, ничего не
+     двигая в макете. */
   .journey-here::after {
     content: "";
     position: absolute;
@@ -693,6 +705,396 @@ select,
   background-color: rgb(var(--paper-3));
 }
 
+/* ---------- Слайдер главного экрана (HeroSlider.tsx) ----------
+   Уходящий слайд держится целиком, пока новый проявляется поверх, и
+   только потом прячется: при встречном растворении двух слайдов в
+   середине смены проступал бы светлый фон — «провал» яркости. */
+.hero-slide {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0s linear 950ms, visibility 0s linear 950ms;
+}
+.hero-slide.is-active {
+  z-index: 1;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 900ms var(--ease-out);
+}
+/* Фото уходящего слайда держится ради плавной смены кадра, а его текст
+   гаснет сразу — иначе он просвечивал бы сквозь проявляющееся новое фото. */
+.hero-slide:not(.is-active) .hero-slide__content {
+  opacity: 0;
+  transition: opacity 250ms ease-out;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Фото нового слайда медленно «оседает» — камера, а не смена картинки. */
+  .hero-slide__img {
+    transform: scale(1.06);
+    transition: transform 8s cubic-bezier(.2, .6, .2, 1);
+  }
+  .hero-slide.is-active .hero-slide__img {
+    transform: scale(1);
+  }
+
+  /* Текст выходит лесенкой: надпись → заголовок → абзац → кнопки. */
+  .hero-slide.is-active .hero-slide__copy > * {
+    animation: hero-text-in 680ms var(--ease-out) backwards;
+  }
+  .hero-slide.is-active .hero-slide__copy > :nth-child(2) { animation-delay: 90ms; }
+  .hero-slide.is-active .hero-slide__copy > :nth-child(3) { animation-delay: 170ms; }
+  .hero-slide.is-active .hero-slide__copy > :nth-child(4) { animation-delay: 250ms; }
+}
+
+/* ---------- Карусель акций (PromoCarousel.tsx) ----------
+   .promo-seg — полоса прогресса автолистания; её же используют вкладки
+   слайдера главного экрана. transform: scaleX, а не width: анимация
+   целиком на композиторе и не пересчитывает раскладку 60 раз в секунду. */
+.promo-seg {
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.promo-seg[data-state="done"],
+.promo-seg[data-state="static"] {
+  transform: scaleX(1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .promo-seg[data-state="run"] {
+    animation: promo-seg-fill linear forwards;
+  }
+
+  /* Медленный наезд камеры на фото активного слайда — ощущение живого
+     кадра без видео. Уход со слайда возвращает масштаб за кадром. */
+  .promo-slide__photo {
+    transition: transform 7s cubic-bezier(.25, .1, .25, 1);
+  }
+  .promo-slide.is-active .promo-slide__photo {
+    transform: scale(1.06);
+  }
+
+  /* Текст активного слайда выходит лесенкой: чипы → цифра → смысл → действие. */
+  .promo-slide.is-active .promo-slide__content > * {
+    animation: promo-rise 720ms var(--ease-out) backwards;
+  }
+  .promo-slide.is-active .promo-slide__content > :nth-child(2) { animation-delay: 70ms; }
+  .promo-slide.is-active .promo-slide__content > :nth-child(3) { animation-delay: 140ms; }
+  .promo-slide.is-active .promo-slide__content > :nth-child(4) { animation-delay: 200ms; }
+  .promo-slide.is-active .promo-slide__content > :nth-child(5) { animation-delay: 250ms; }
+  .promo-slide.is-active .promo-slide__content > :nth-child(6) { animation-delay: 300ms; }
+
+  /* «Идёт сейчас»: расходящееся кольцо вокруг зелёной точки. */
+  .promo-live-dot[data-live]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    background: inherit;
+    animation: promo-live 1.8s ease-out infinite;
+  }
+}
+
+/* ---------- Талон акции (PromoTicket.tsx) ----------
+   Вырезы по краям линии отрыва — маска из двух радиальных градиентов,
+   пересечённых друг с другом: сквозь вырез виден настоящий фон страницы,
+   а не круг «под цвет фона». На телефоне шов горизонтальный (под лицом
+   талона высотой 200px), с sm — вертикальный на границе колонок 9fr/11fr. */
+.promo-ticket {
+  --notch: 12px;
+  --seam-y: 200px;
+  -webkit-mask-image:
+    radial-gradient(circle at 0 var(--seam-y), transparent var(--notch), #000 calc(var(--notch) + .5px)),
+    radial-gradient(circle at 100% var(--seam-y), transparent var(--notch), #000 calc(var(--notch) + .5px));
+  -webkit-mask-composite: source-in;
+  mask-image:
+    radial-gradient(circle at 0 var(--seam-y), transparent var(--notch), #000 calc(var(--notch) + .5px)),
+    radial-gradient(circle at 100% var(--seam-y), transparent var(--notch), #000 calc(var(--notch) + .5px));
+  mask-composite: intersect;
+}
+
+.promo-ticket-wrap {
+  container-type: inline-size;
+}
+
+/* На телефоне лицо талона во всю ширину; с sm — 45% ширины талона. */
+.promo-ticket__discount {
+  font-size: clamp(52px, 19cqi, 84px);
+}
+.promo-ticket__discount[data-long] {
+  font-size: clamp(44px, 14cqi, 72px);
+}
+
+/* Шов — контейнер (он «прорисовывается» при появлении), пунктир — его
+   ::before (он «бежит» при наведении), сплошное золото — ::after (оно
+   проступает, когда код применён). Три слоя, чтобы анимации одного
+   элемента не перебивали друг друга. Направления заданы переменными:
+   на телефоне шов горизонтальный, с sm — вертикальный. */
+.promo-ticket {
+  --seam-dir: to right;
+  --seam-flow: 10px 0;
+  --seam-from: scaleX(0);
+  --face-from: translate3d(0, -14px, 0) rotate(-0.8deg);
+  --stub-from: translate3d(0, 22px, 0) rotate(0.8deg);
+}
+
+.promo-ticket__seam {
+  left: 20px;
+  right: 20px;
+  top: calc(var(--seam-y) - .75px);
+  height: 1.5px;
+  transform-origin: left center;
+}
+.promo-ticket__seam::before,
+.promo-ticket__seam::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+}
+.promo-ticket__seam::before {
+  background: repeating-linear-gradient(var(--seam-dir), rgb(var(--gold)) 0 4px, transparent 4px 10px);
+}
+.promo-ticket__seam::after {
+  background: rgb(var(--gold));
+  box-shadow: 0 0 10px rgb(var(--gold) / .75), 0 0 2px rgb(var(--gold));
+  transform: var(--seam-from);
+  transform-origin: inherit;
+}
+/* Код применён (на корешке печать) — талон «починен золотом». */
+.promo-ticket:has(.promo-stamp) .promo-ticket__seam::after {
+  transform: none;
+}
+
+@media (min-width: 640px) {
+  .promo-ticket {
+    --seam-x: 45%;
+    --seam-dir: to bottom;
+    --seam-flow: 0 10px;
+    --seam-from: scaleY(0);
+    --face-from: translate3d(-22px, 0, 0) rotate(-1.2deg);
+    --stub-from: translate3d(30px, 0, 0) rotate(1.4deg);
+    -webkit-mask-image:
+      radial-gradient(circle at var(--seam-x) 0, transparent var(--notch), #000 calc(var(--notch) + .5px)),
+      radial-gradient(circle at var(--seam-x) 100%, transparent var(--notch), #000 calc(var(--notch) + .5px));
+    mask-image:
+      radial-gradient(circle at var(--seam-x) 0, transparent var(--notch), #000 calc(var(--notch) + .5px)),
+      radial-gradient(circle at var(--seam-x) 100%, transparent var(--notch), #000 calc(var(--notch) + .5px));
+  }
+
+  .promo-ticket__seam {
+    top: 20px;
+    bottom: 20px;
+    left: calc(var(--seam-x) - .75px);
+    right: auto;
+    width: 1.5px;
+    height: auto;
+    transform-origin: center top;
+  }
+
+  .promo-ticket__discount {
+    font-size: clamp(44px, 10cqi, 88px);
+  }
+  .promo-ticket__discount[data-long] {
+    font-size: clamp(34px, 7cqi, 64px);
+  }
+}
+
+/* Тень тонкая и близкая, как у бумаги на столе: большое смещение и
+   размытие заливали бы тенью сами вырезы, и они читались бы серыми
+   выпуклостями, а не отверстиями. */
+.promo-ticket-wrap {
+  filter: drop-shadow(0 6px 10px rgb(58 35 56 / .08)) drop-shadow(0 1px 1.5px rgb(58 35 56 / .1));
+}
+
+.promo-stamp {
+  transform: rotate(-14deg);
+  mix-blend-mode: multiply;
+}
+[data-theme="dark"] .promo-stamp {
+  mix-blend-mode: screen;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Появление: сама обёртка только проявляется, движение — у частей.
+     Лицо и корешок съезжаются к шву, шов прорисовывается золотом, цифра
+     выезжает из-под маски строки, текст корешка выходит лесенкой. */
+  [data-reveal="ticket"].is-in {
+    animation: reveal-fade 420ms var(--ease-out) var(--reveal-delay, 0ms) backwards;
+  }
+  [data-reveal="ticket"].is-in .promo-ticket__face {
+    animation: ticket-face-in 760ms var(--ease-out) var(--reveal-delay, 0ms) backwards;
+  }
+  [data-reveal="ticket"].is-in .promo-ticket__stub {
+    animation: ticket-stub-in 820ms cubic-bezier(.2, .9, .3, 1.12) calc(var(--reveal-delay, 0ms) + 60ms) backwards;
+  }
+  [data-reveal="ticket"].is-in .promo-ticket__seam {
+    animation: ticket-seam-draw 900ms var(--ease-out) calc(var(--reveal-delay, 0ms) + 420ms) backwards;
+  }
+  [data-reveal="ticket"].is-in .promo-ticket__discount {
+    animation: ticket-number-rise 900ms cubic-bezier(.2, .9, .3, 1.08) calc(var(--reveal-delay, 0ms) + 280ms) backwards;
+  }
+  [data-reveal="ticket"].is-in .promo-ticket__stub > :not(.promo-stamp) {
+    animation: promo-rise 640ms var(--ease-out) calc(var(--reveal-delay, 0ms) + 340ms) backwards;
+  }
+  [data-reveal="ticket"].is-in .promo-ticket__stub > :nth-child(2) { animation-delay: calc(var(--reveal-delay, 0ms) + 400ms); }
+  [data-reveal="ticket"].is-in .promo-ticket__stub > :nth-child(3) { animation-delay: calc(var(--reveal-delay, 0ms) + 460ms); }
+  [data-reveal="ticket"].is-in .promo-ticket__stub > :nth-child(4) { animation-delay: calc(var(--reveal-delay, 0ms) + 520ms); }
+
+  /* Штамп падает сверху и «впечатывается» с доворотом. */
+  .promo-stamp {
+    animation: promo-stamp 560ms cubic-bezier(.2, .9, .3, 1.25) both;
+  }
+
+  /* Золото «затекает» в шов вслед за печатью. */
+  .promo-ticket__seam::after {
+    transition: transform 900ms var(--ease-out) 250ms;
+  }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .promo-ticket-wrap {
+    transition: transform 500ms var(--ease-out);
+  }
+  .promo-ticket-wrap:hover {
+    transform: translate3d(0, -4px, 0);
+  }
+
+  /* Наклон за курсором: переменные пишет TicketTilt. Пока курсор над
+     талоном — быстрый отклик, уход — мягкое возвращение. */
+  .promo-tilt {
+    transform: perspective(1100px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition: transform 650ms var(--ease-out);
+  }
+  .promo-tilt[data-tilting] {
+    transition-duration: 140ms;
+  }
+
+  .promo-ticket__glare {
+    background: radial-gradient(380px circle at var(--gx, 50%) var(--gy, 50%), rgb(255 250 240 / .18), transparent 62%);
+    opacity: 0;
+    transition: opacity 450ms ease;
+  }
+  .promo-tilt[data-tilting] .promo-ticket__glare {
+    opacity: 1;
+  }
+
+  .promo-ticket__photo {
+    transition: transform 1100ms var(--ease-out);
+  }
+  .promo-ticket-wrap:hover .promo-ticket__photo {
+    transform: scale(1.05);
+  }
+
+  /* Пунктир линии отрыва «бежит», пока курсор над талоном. */
+  .promo-ticket-wrap:hover .promo-ticket__seam::before {
+    animation: seam-flow 900ms linear infinite;
+  }
+}
+
+@keyframes promo-stamp {
+  from { opacity: 0; transform: rotate(-2deg) scale(1.8); }
+  55% { opacity: 1; }
+  to { opacity: 1; transform: rotate(-14deg) scale(1); }
+}
+
+@keyframes ticket-face-in {
+  from { opacity: 0; transform: var(--face-from); }
+}
+
+@keyframes ticket-stub-in {
+  from { opacity: 0; transform: var(--stub-from); }
+}
+
+@keyframes ticket-seam-draw {
+  from { transform: var(--seam-from); }
+}
+
+@keyframes ticket-number-rise {
+  from { transform: translate3d(0, 105%, 0); }
+}
+
+@keyframes seam-flow {
+  to { background-position: var(--seam-flow); }
+}
+
+/* ---------- Пути Karma Club (PathRail.tsx: LevelPath, RewardPath) ----------
+   Итоговое состояние (заполненная нить и шкала) — базовое: при reduced
+   motion RevealOnScroll не ставит .is-in, и путь должен быть виден сразу.
+   Анимация «от нуля» включается только вместе с .reveal-ready. */
+.path-thread__fill {
+  transform: scaleX(var(--progress, 0));
+  transform-origin: left center;
+}
+
+.path-bar {
+  transform: scaleX(var(--p, 0));
+  transform-origin: left center;
+}
+
+/* Затухание краёв ленты — только с той стороны, куда ещё можно листать. */
+.path-scroller {
+  --fade-start: 0px;
+  --fade-end: 0px;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fade-start), #000 calc(100% - var(--fade-end)), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 var(--fade-start), #000 calc(100% - var(--fade-end)), transparent);
+}
+.path-scroller[data-fade-start] { --fade-start: 32px; }
+.path-scroller[data-fade-end] { --fade-end: 32px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .path-thread__fill {
+    transition: transform 1.4s var(--ease-out) .25s;
+  }
+  .reveal-ready .path-rail:not(.is-in) .path-thread__fill {
+    transform: scaleX(0);
+  }
+
+  .path-bar {
+    transition: transform 1.1s var(--ease-out) .55s;
+  }
+  .reveal-ready .path-stop:not(.is-in) .path-bar {
+    transform: scaleX(0);
+  }
+
+  /* Открытый подарок и пройденный уровень один раз «вспыхивают» бликом,
+     когда появляются, — награда ощущается полученной. */
+  .path-stop:is([data-state="reached"], [data-state="current"]).is-in .path-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background: linear-gradient(105deg, transparent 38%, rgb(255 246 222 / .55) 50%, transparent 62%);
+    transform: translateX(-120%);
+    animation: path-sheen 1.3s var(--ease-out) .5s forwards;
+  }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .path-stop:hover .path-card {
+    transform: translate3d(0, -4px, 0);
+    box-shadow: 0 18px 44px -26px rgb(58 35 56 / .45);
+  }
+}
+
+@keyframes path-sheen {
+  to { transform: translateX(120%); }
+}
+
+@keyframes promo-seg-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes promo-rise {
+  from { opacity: 0; transform: translate3d(0, 14px, 0); }
+}
+
+@keyframes promo-live {
+  from { opacity: .7; transform: scale(1); }
+  to { opacity: 0; transform: scale(2.8); }
+}
+
 /* Только opacity, без transform: transform на обёртке страницы превратил бы её
    в containing block для position: fixed внутри (панели на телефоне) и на
    время анимации сдвинул бы их. Движение блокам даёт data-reveal. */
@@ -714,11 +1116,6 @@ select,
 
 @keyframes anim-pop {
   from { opacity: 0; transform: translate3d(0, 8px, 0) scale(.96); }
-  to { opacity: 1; transform: none; }
-}
-
-@keyframes journey-stop-in {
-  from { opacity: 0; transform: translate3d(0, 10px, 0) scale(.72); }
   to { opacity: 1; transform: none; }
 }
 

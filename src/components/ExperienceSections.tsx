@@ -37,7 +37,7 @@ export async function ExperienceSections() {
         />
 
         <div className="relative flex min-h-[380px] flex-col justify-between p-5 md:min-h-[610px] md:p-12 lg:p-16">
-          <div className="flex items-center gap-3 text-[9px] font-bold uppercase tracking-[0.2em] text-[#F8F0EA]/65 md:text-[9.5px] md:tracking-[0.22em]">
+          <div className="flex items-center gap-3 text-micro font-bold uppercase tracking-[0.2em] text-[#F8F0EA]/65 md:tracking-[0.22em]">
             <GoldHairline width={32} />
             {wok.eyebrow}
           </div>
@@ -61,7 +61,7 @@ export async function ExperienceSections() {
               ].map(([value, label]) => (
                 <div key={label} className="border-r border-white/15 pr-3 last:border-r-0 last:pl-4 md:px-5 md:first:pl-0">
                   <strong className="block text-[15px] font-bold md:text-[22px]">{value}</strong>
-                  <span className="mt-1 block text-[7.5px] font-bold uppercase tracking-[0.14em] text-[#F8F0EA]/45 md:text-[9px] md:tracking-[0.16em]">
+                  <span className="mt-1 block text-micro font-bold uppercase tracking-[0.14em] text-[#F8F0EA]/45 md:tracking-[0.16em]">
                     {label}
                   </span>
                 </div>
@@ -90,7 +90,7 @@ export async function ExperienceSections() {
             sizes="(min-width: 1024px) 54vw, 100vw"
             className="object-cover object-[42%_center] transition duration-[1000ms] hover:scale-[1.025]"
           />
-          <div className="absolute left-4 top-4 rounded-full border border-white/25 bg-[#21151F]/35 px-3.5 py-1.5 text-[8.5px] font-bold uppercase tracking-[0.16em] text-white backdrop-blur-md md:left-6 md:top-6 md:px-4 md:py-2 md:text-[9px] md:tracking-[0.18em]">
+          <div className="absolute left-4 top-4 rounded-full border border-white/25 bg-[#21151F]/35 px-3.5 py-1.5 text-micro font-bold uppercase tracking-[0.16em] text-white backdrop-blur-md md:left-6 md:top-6 md:px-4 md:py-2 md:tracking-[0.18em]">
             С кухни — к вашему столу
           </div>
         </div>
@@ -120,7 +120,7 @@ export async function ExperienceSections() {
             {["До 20 км", "Статусы заказа", "Самовывоз без ожидания"].map((item) => (
               <span
                 key={item}
-                className="rounded-full border border-plum/15 bg-paper-2/55 px-3 py-2 text-[8.5px] font-bold uppercase tracking-[0.1em] text-ink-2 backdrop-blur-sm md:px-4 md:py-2.5 md:text-[9px] md:tracking-[0.12em]"
+                className="rounded-full border border-plum/15 bg-paper-2/55 px-3 py-2 text-micro font-bold uppercase tracking-[0.1em] text-ink-2 backdrop-blur-sm md:px-4 md:py-2.5 md:tracking-[0.12em]"
               >
                 {item}
               </span>

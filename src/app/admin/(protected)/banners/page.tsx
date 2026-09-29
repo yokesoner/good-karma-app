@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight } from "@/components/icons";
 import { BANNER_SLOTS } from "@/lib/bannerSlots";
+import { db } from "@/lib/db";
 import { getBanner, getBannerOverrideKeys } from "@/server/siteBanners";
 
 export const metadata: Metadata = { title: "Баннеры сайта — админка Гуд Карма" };
@@ -9,10 +10,12 @@ export const metadata: Metadata = { title: "Баннеры сайта — адм
 // Список всех баннеров сайта в одном месте: тексты и картинки, которые
 // видит покупатель на главной и в меню, меняются здесь, а не в коде.
 export default async function AdminBannersPage() {
-  const [customized, banners] = await Promise.all([
+  const [customized, banners, heroSlides] = await Promise.all([
     getBannerOverrideKeys(),
     Promise.all(BANNER_SLOTS.map((slot) => getBanner(slot.key))),
+    db.heroSlide.findMany({ select: { title: true, isActive: true }, orderBy: { sortOrder: "asc" } }),
   ]);
+  const activeHero = heroSlides.filter((slide) => slide.isActive);
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -23,6 +26,25 @@ export default async function AdminBannersPage() {
       </p>
 
       <div className="mt-5 space-y-3">
+        <Link
+          href="/admin/banners/hero"
+          className="flex items-center gap-3 rounded-[22px] border border-gold/30 bg-paper-2 p-4 transition-colors active:bg-paper-3 hover:bg-paper-3/60"
+        >
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-[15px] font-bold">Главный экран · слайдер</h2>
+              <span className="rounded-full bg-tint-lavender px-2 py-0.5 text-micro font-bold uppercase tracking-[0.08em]">
+                {activeHero.length > 0 ? `${activeHero.length} в показе` : "исходные слайды"}
+              </span>
+            </div>
+            <p className="mt-0.5 text-[12px] text-ink-3">Главная — самый первый блок: слайды, их порядок и фотографии</p>
+            {activeHero.length > 0 && (
+              <p className="mt-2 line-clamp-1 text-[13px] leading-snug text-ink-2">{activeHero.map((slide) => slide.title).join(" · ")}</p>
+            )}
+          </div>
+          <ChevronRight className="h-4 w-4 shrink-0 text-ink-3" />
+        </Link>
+
         {BANNER_SLOTS.map((slot, index) => {
           const banner = banners[index]!;
           const isCustom = customized.has(slot.key);
@@ -37,12 +59,12 @@ export default async function AdminBannersPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-[15px] font-bold">{slot.name}</h2>
                   {hidden && (
-                    <span className="rounded-full bg-paper-3 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.08em] text-ink-3">
+                    <span className="rounded-full bg-paper-3 px-2 py-0.5 text-micro font-bold uppercase tracking-[0.08em] text-ink-3">
                       выключен
                     </span>
                   )}
                   {isCustom && !hidden && (
-                    <span className="rounded-full bg-tint-mint px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.08em]">
+                    <span className="rounded-full bg-tint-mint px-2 py-0.5 text-micro font-bold uppercase tracking-[0.08em]">
                       изменён
                     </span>
                   )}

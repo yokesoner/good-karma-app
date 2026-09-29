@@ -29,7 +29,7 @@ export function TrackOrderForm() {
   return (
     <form onSubmit={submit} className="mx-auto max-w-[440px] rounded-l border border-hair bg-paper-2 p-6 md:p-10">
       <label className="block">
-        <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-ink-3">Номер заказа</span>
+        <span className="text-micro font-bold uppercase tracking-[0.16em] text-ink-3">Номер заказа</span>
         <input
           className="mt-2 w-full rounded-[16px] border border-hair bg-paper px-4 py-4 text-[16px] outline-none transition focus:border-cherry/60 focus:ring-4 focus:ring-cherry/10"
           placeholder="GK-00001"
@@ -39,7 +39,7 @@ export function TrackOrderForm() {
         />
       </label>
       <label className="mt-5 block">
-        <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-ink-3">Телефон</span>
+        <span className="text-micro font-bold uppercase tracking-[0.16em] text-ink-3">Телефон</span>
         <input
           type="tel"
           inputMode="tel"

@@ -36,7 +36,7 @@ export function Header({ onCartClick }: { onCartClick: () => void }) {
             <span className="block text-[15px] font-bold uppercase tracking-[0.085em]">
               Гуд Карма
             </span>
-            <span className="mt-1 block text-[7.5px] font-medium uppercase tracking-[0.27em] text-ink-3">
+            <span className="mt-1 block text-micro font-medium uppercase tracking-[0.16em] text-ink-3">
               Pan Asian Café
             </span>
           </span>
@@ -71,7 +71,7 @@ export function Header({ onCartClick }: { onCartClick: () => void }) {
           >
             <NavIcon name="cart" className="h-[19px] w-[19px]" strokeWidth={1.5} />
             {count > 0 && (
-              <span key={count} className="icon-pop absolute -right-0.5 top-0 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-cherry px-1 text-[9px] font-bold text-white">
+              <span key={count} className="icon-pop absolute -right-0.5 top-0 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-cherry px-1 text-micro font-bold text-white">
                 {count}
               </span>
             )}

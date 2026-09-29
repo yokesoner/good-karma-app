@@ -60,6 +60,15 @@ const config: Config = {
           rose: withAlpha("--t-rose"),
         },
       },
+      // Нижние ступени шкалы кегля. Раньше мелкий текст задавался
+      // произвольными 7.5–9.5px — на телефоне это нечитаемо. Меньше этих
+      // двух ступеней на сайте ничего нет:
+      //   micro   — 10px, подписи капсом с трекингом, бейджи, чипы;
+      //   caption — 11px, мелкий обычный текст (подписи, пояснения).
+      fontSize: {
+        micro: ["10px", { lineHeight: "1.35" }],
+        caption: ["11px", { lineHeight: "1.4" }],
+      },
       fontFamily: {
         sans: ["var(--font-montserrat)", "Helvetica Neue", "Helvetica", "Arial", "sans-serif"],
         serif: ["var(--font-cormorant)", "Georgia", "serif"],

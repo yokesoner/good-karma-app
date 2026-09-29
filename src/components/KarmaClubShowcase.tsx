@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { KarmaPass } from "@/components/KarmaPass";
-import { KarmaJourney } from "@/components/KarmaJourney";
+import { KarmaJourney, type JourneyReward } from "@/components/KarmaJourney";
 import { ArrowUpRight } from "@/components/icons";
-import type { KarmaLevel, KarmaReward } from "@/lib/karma";
+import type { KarmaLevel } from "@/lib/karma";
 
 type ShowcaseLevel = KarmaLevel & { discountPct: number | null; discountsPerWeek: number | null };
 
@@ -12,7 +12,7 @@ export function KarmaClubShowcase({
   points,
 }: {
   levels: ShowcaseLevel[];
-  rewards: KarmaReward[];
+  rewards: JourneyReward[];
   /** Баллы вошедшего покупателя; null — гость. */
   points?: number | null;
 }) {
@@ -53,7 +53,7 @@ export function KarmaClubShowcase({
           discountPct: l.discountPct,
           discountsPerWeek: l.discountsPerWeek,
         }))}
-        rewards={rewards.map((r) => ({ id: r.id, costPoints: r.costPoints, title: r.title }))}
+        rewards={rewards}
         points={typeof points === "number" ? points : undefined}
       />
     </section>

@@ -1,6 +1,7 @@
 import { PrismaClient, Badge } from "@prisma/client";
 import seed from "../data/seed.json";
 import design from "../data/design-data.json";
+import { DEFAULT_HERO_SLIDES, withLegacyHero } from "../src/lib/heroSlides";
 
 const db = new PrismaClient();
 
@@ -97,6 +98,21 @@ async function main() {
   }
 
   console.log("Сеем промокоды (без скидки на самовывоз — она отменена)…");
+  // Метка и расписание — только при создании: это то, что админ обычно
+  // правит под себя, и повторный сид не должен молча откатывать его правки.
+  // Расписание HAPPY20 взято из его же описания («каждый будний день с
+  // 15:00 до 18:00») — без него «счастливые часы» действовали круглосуточно.
+  const promoCreateExtras: Record<string, object> = {
+    KARMA15: { label: "Первый заказ", sortOrder: 1 },
+    HAPPY20: {
+      label: "Счастливые часы",
+      sortOrder: 0,
+      recurrence: "WEEKLY" as const,
+      recurrenceWeekdays: [1, 2, 3, 4, 5],
+      recurrenceStartTime: "15:00",
+      recurrenceEndTime: "18:00",
+    },
+  };
   for (const promo of seed.promotions) {
     if (promo.type === "pickup") continue; // PICKUP больше не даёт скидку, оставлять акцией незачем
     const promoData = {
@@ -110,7 +126,7 @@ async function main() {
     await db.promotion.upsert({
       where: { code: promo.code },
       update: promoData,
-      create: { code: promo.code, ...promoData },
+      create: { code: promo.code, ...promoData, ...promoCreateExtras[promo.code] },
     });
   }
 
@@ -231,6 +247,19 @@ async function main() {
     await db.karmaReward.create({
       data: { ...rest, products: { create: productIds.map((productId) => ({ productId })) } },
     });
+  }
+
+  console.log("Сеем слайды главного экрана (только если их ещё нет)…");
+  // Слайды — редакционный контент: после первого запуска ими владеет
+  // админ, повторный сид их не трогает. Правки старого баннера-слота
+  // «Главный экран» (site_banners, key = home-hero) переносятся в первый слайд.
+  if ((await db.heroSlide.count()) === 0) {
+    const legacy = await db.siteBanner.findUnique({ where: { key: "home-hero" } });
+    for (const [index, slide] of DEFAULT_HERO_SLIDES.entries()) {
+      await db.heroSlide.create({
+        data: { ...(index === 0 ? withLegacyHero(slide, legacy) : slide), sortOrder: index },
+      });
+    }
   }
 
   console.log("Сеем зоны доставки…");

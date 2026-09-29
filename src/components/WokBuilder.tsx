@@ -284,10 +284,10 @@ export function WokBuilder({
             className="absolute inset-0 opacity-70 transition-colors duration-700"
             style={{ background: `radial-gradient(circle at 60% 38%, ${sauceTone}38, transparent 46%)` }}
           />
-          <BackgroundFootage src={ASSETS.animations.steam} opacity={0.16} priority />
+          <BackgroundFootage src={ASSETS.animations.steam} opacity={0.16} />
           <div className="relative flex items-center justify-between px-4 pt-4">
-            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#9A536E]">Ваша миска</span>
-            <span className="rounded-full border border-[#493044]/10 bg-white/55 px-2.5 py-1.5 text-[8px] font-bold tracking-[0.14em] text-[#76636F] shadow-s backdrop-blur-md">
+            <span className="text-micro font-bold uppercase tracking-[0.2em] text-[#9A536E]">Ваша миска</span>
+            <span className="rounded-full border border-[#493044]/10 bg-white/55 px-2.5 py-1.5 text-micro font-bold tracking-[0.14em] text-[#76636F] shadow-s backdrop-blur-md">
               0{step + 1} / 03
             </span>
           </div>
@@ -309,7 +309,7 @@ export function WokBuilder({
             {[base.name, protein.name, sauce.name].map((value) => (
               <span
                 key={value}
-                className="whitespace-nowrap rounded-full border border-white/70 bg-white/65 px-2.5 py-1.5 text-[8px] font-bold uppercase tracking-[0.08em] text-[#4A3542] shadow-s backdrop-blur-md"
+                className="whitespace-nowrap rounded-full border border-white/70 bg-white/65 px-2.5 py-1.5 text-micro font-bold uppercase tracking-[0.08em] text-[#4A3542] shadow-s backdrop-blur-md"
               >
                 {value}
               </span>
@@ -330,13 +330,13 @@ export function WokBuilder({
             <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
               <span
                 key={baseId}
-                className="wok-value-in inline-flex max-w-full items-center truncate rounded-full border border-hair bg-paper-2/70 px-2.5 py-1 text-[9.5px] font-semibold text-ink-2"
+                className="wok-value-in inline-flex max-w-full items-center truncate rounded-full border border-hair bg-paper-2/70 px-2.5 py-1 text-caption font-semibold text-ink-2"
               >
                 {base.name}
               </span>
               <span
                 key={proteinId}
-                className="wok-value-in inline-flex max-w-full items-center gap-1.5 truncate rounded-full border border-hair bg-paper-2/70 px-2.5 py-1 text-[9.5px] font-semibold text-ink-2"
+                className="wok-value-in inline-flex max-w-full items-center gap-1.5 truncate rounded-full border border-hair bg-paper-2/70 px-2.5 py-1 text-caption font-semibold text-ink-2"
               >
                 <span
                   className="grid h-3.5 w-3.5 flex-none place-items-center rounded-full text-white"
@@ -348,7 +348,7 @@ export function WokBuilder({
               </span>
               <span
                 key={sauceId}
-                className="wok-value-in inline-flex max-w-full items-center gap-1.5 truncate rounded-full border border-hair bg-paper-2/70 px-2.5 py-1 text-[9.5px] font-semibold text-ink-2"
+                className="wok-value-in inline-flex max-w-full items-center gap-1.5 truncate rounded-full border border-hair bg-paper-2/70 px-2.5 py-1 text-caption font-semibold text-ink-2"
               >
                 <span
                   className="grid h-3.5 w-3.5 flex-none place-items-center rounded-full text-white"
@@ -379,7 +379,7 @@ export function WokBuilder({
                 onClick={() => setStep(index)}
                 aria-pressed={index === step}
                 className={cn(
-                  "relative z-10 min-h-11 rounded-[12px] px-2 text-center text-[9.5px] font-bold uppercase tracking-[0.06em] transition-colors",
+                  "relative z-10 min-h-11 rounded-[12px] px-2 text-center text-micro font-bold uppercase tracking-[0.06em] transition-colors",
                   index === step ? "text-[#FFF8F2]" : "text-ink-3",
                 )}
               >
@@ -390,7 +390,7 @@ export function WokBuilder({
         </div>
 
         <div key={step} className="builder-step-enter pb-4 pt-5">
-          <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-cherry">{currentStep.eyebrow}</span>
+          <span className="text-micro font-bold uppercase tracking-[0.22em] text-cherry">{currentStep.eyebrow}</span>
           <h2 className="mt-2 text-[22px] font-bold leading-[1.1] tracking-[-0.03em]">{currentStep.title}</h2>
           <p className="mt-2 text-[12px] leading-[1.6] text-ink-2">{currentStep.description}</p>
         </div>
@@ -420,7 +420,7 @@ export function WokBuilder({
                 </span>
                 <span className="flex flex-1 flex-col justify-center p-3">
                   <span className="line-clamp-2 block text-[11px] font-bold leading-[1.25]">{option.name}</span>
-                  <span className="mt-1 block text-[8.5px] font-bold uppercase tracking-[0.08em] text-cherry">
+                  <span className="mt-1 block text-micro font-bold uppercase tracking-[0.08em] text-cherry">
                     {priceDelta(option.extraCents)}
                   </span>
                 </span>
@@ -448,7 +448,7 @@ export function WokBuilder({
           ) : null}
           <div className="flex items-center gap-3 px-4 py-2.5">
             <div className="min-w-0 flex-none">
-              <span className="block text-[7px] font-bold uppercase tracking-[0.14em] text-ink-3">Итого</span>
+              <span className="block text-micro font-bold uppercase tracking-[0.14em] text-ink-3">Итого</span>
               <span key={unitPriceCents * qty} className="wok-value-in block text-[15px] font-bold tracking-[-0.02em]">
                 {formatMoney(unitPriceCents * qty)}
               </span>
@@ -484,18 +484,18 @@ export function WokBuilder({
           className="wok-heat absolute inset-0 opacity-65 transition-colors duration-700"
           style={{ background: `radial-gradient(circle at 66% 46%, ${sauceTone}35, transparent 42%)` }}
         />
-        <BackgroundFootage src={ASSETS.animations.steam} opacity={0.18} priority />
+        <BackgroundFootage src={ASSETS.animations.steam} opacity={0.18} />
 
         <div className="relative flex items-start justify-between gap-5 px-6 pb-2 pt-7 md:px-9 md:pt-9">
           <div>
-            <span className="text-[9px] font-bold uppercase tracking-[0.24em] text-[#9A536E]">
+            <span className="text-micro font-bold uppercase tracking-[0.24em] text-[#9A536E]">
               Ваша авторская миска
             </span>
             <h2 className="mt-2 text-[25px] font-bold leading-none tracking-[-0.035em] text-[#3A2935] md:text-[31px]">
               Уже хочется попробовать
             </h2>
           </div>
-          <span className="rounded-full border border-[#493044]/10 bg-white/55 px-3 py-2 text-[9px] font-bold tracking-[0.15em] text-[#76636F] shadow-s backdrop-blur-md">
+          <span className="rounded-full border border-[#493044]/10 bg-white/55 px-3 py-2 text-micro font-bold tracking-[0.15em] text-[#76636F] shadow-s backdrop-blur-md">
             0{step + 1} / 03
           </span>
         </div>
@@ -517,7 +517,7 @@ export function WokBuilder({
             {[base.name, protein.name, sauce.name].map((value, index) => (
               <span
                 key={value}
-                className="whitespace-nowrap rounded-full border border-white/70 bg-white/60 px-3 py-2 text-[8px] font-bold uppercase tracking-[0.1em] text-[#4A3542] shadow-[0_12px_28px_-18px_rgba(58,35,56,.6)] backdrop-blur-xl"
+                className="whitespace-nowrap rounded-full border border-white/70 bg-white/60 px-3 py-2 text-micro font-bold uppercase tracking-[0.1em] text-[#4A3542] shadow-[0_12px_28px_-18px_rgba(58,35,56,.6)] backdrop-blur-xl"
               >
                 {index + 1}. {value}
               </span>
@@ -527,7 +527,7 @@ export function WokBuilder({
 
         <div className="relative grid grid-cols-[1fr_auto] items-center gap-5 border-t border-[#493044]/10 bg-white/40 px-6 py-5 backdrop-blur-xl md:px-9">
           <div>
-            <span className="block text-[8px] font-bold uppercase tracking-[0.2em] text-[#8A7783]">Ваш вок</span>
+            <span className="block text-micro font-bold uppercase tracking-[0.2em] text-[#8A7783]">Ваш вок</span>
             <b className="mt-1 block text-[25px] tracking-[-0.04em] text-[#3A2935]">{formatMoney(unitPriceCents)}</b>
           </div>
           <div className="flex items-center rounded-full border border-[#493044]/10 bg-white/60 p-1 shadow-s">
@@ -552,7 +552,7 @@ export function WokBuilder({
                   : "border-hair bg-paper/55 text-ink-3 hover:-translate-y-0.5 hover:border-cherry/25 hover:bg-paper",
               )}
             >
-              <span className="block text-[8px] font-bold uppercase tracking-[0.16em] opacity-55">0{index + 1}</span>
+              <span className="block text-micro font-bold uppercase tracking-[0.16em] opacity-55">0{index + 1}</span>
               <span className="mt-1 block text-[10px] font-bold md:text-[11px]">{label}</span>
               {index === step ? <span aria-hidden className="absolute inset-x-3 bottom-1 h-0.5 rounded-full bg-[#E7B0C0]" /> : null}
             </button>
@@ -560,7 +560,7 @@ export function WokBuilder({
         </div>
 
         <div key={step} className="builder-step-enter mb-6 mt-8">
-          <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-cherry">{currentStep.eyebrow}</span>
+          <span className="text-micro font-bold uppercase tracking-[0.22em] text-cherry">{currentStep.eyebrow}</span>
           <h3 className="mt-2 text-[27px] font-bold leading-[1.05] tracking-[-0.035em] md:text-[34px]">{currentStep.title}</h3>
           <p className="mt-3 max-w-[48ch] text-[12.5px] leading-[1.7] text-ink-2">{currentStep.description}</p>
         </div>
@@ -591,7 +591,7 @@ export function WokBuilder({
                 </span>
                 <span className="flex flex-1 flex-col justify-center p-4">
                   <span className="block text-[13px] font-bold leading-tight">{option.name}</span>
-                  <span className="mt-1.5 block text-[9px] font-bold uppercase tracking-[0.1em] text-cherry">{priceDelta(option.extraCents)}</span>
+                  <span className="mt-1.5 block text-micro font-bold uppercase tracking-[0.1em] text-cherry">{priceDelta(option.extraCents)}</span>
                 </span>
                 {selected ? (
                   <span className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-[#3A2338] text-[11px] text-white shadow-s">✓</span>
@@ -603,7 +603,7 @@ export function WokBuilder({
 
         <div className="mt-8 flex items-center gap-2 border-t border-hair pt-6">
           {step > 0 ? (
-            <button type="button" onClick={() => setStep((value) => value - 1)} className="rounded-full border border-hair px-5 py-4 text-[9.5px] font-bold uppercase tracking-[0.1em] text-ink-2 transition duration-200 active:scale-95 hover:bg-paper">Назад</button>
+            <button type="button" onClick={() => setStep((value) => value - 1)} className="rounded-full border border-hair px-5 py-4 text-micro font-bold uppercase tracking-[0.1em] text-ink-2 transition duration-200 active:scale-95 hover:bg-paper">Назад</button>
           ) : null}
           {step < STEPS.length - 1 ? (
             <button type="button" onClick={() => setStep((value) => value + 1)} className="btn-sheen flex-1 rounded-full bg-[#3A2338] px-6 py-4 text-[10px] font-bold uppercase tracking-[0.11em] text-[#FFF8F2] shadow-[0_18px_34px_-20px_rgba(58,35,56,.72)] transition duration-300 active:scale-[0.98] hover:-translate-y-0.5 hover:bg-[#533649]">Далее · {STEPS[step + 1]}</button>

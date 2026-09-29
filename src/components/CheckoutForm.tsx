@@ -192,12 +192,12 @@ export function CheckoutForm() {
             className="object-cover object-[38%_center]"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#21151F]/45 to-transparent" />
-          <span className="absolute bottom-6 left-6 rounded-full border border-white/20 bg-black/15 px-4 py-2 text-[9px] font-bold uppercase tracking-[0.14em] text-white backdrop-blur-sm">
+          <span className="absolute bottom-6 left-6 rounded-full border border-white/20 bg-black/15 px-4 py-2 text-micro font-bold uppercase tracking-[0.14em] text-white backdrop-blur-sm">
             С кухни — к вашему столу
           </span>
         </div>
         <div className="flex flex-col justify-center bg-gradient-to-br from-tint-sakura via-paper-2 to-tint-mint p-8 md:p-12">
-          <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-cherry">Пока здесь тихо</span>
+          <span className="text-micro font-bold uppercase tracking-[0.2em] text-cherry">Пока здесь тихо</span>
           <h2 className="mt-3 max-w-[9ch] text-[34px] font-bold leading-[1.04] tracking-[-0.04em]">
             Корзина ждёт вашего выбора
           </h2>
