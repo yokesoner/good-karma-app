@@ -27,20 +27,37 @@ npx eslint src --ext .ts,.tsx
 
 ## Важные особенности окружения (не потерять)
 
-**Локальная база для разработки на этой машине (с 2026-09-29).** Supabase
-отстал от схемы (там ещё старые колонки `perk*` у `karma_levels`, а новых
-`discountPct/discountsPerWeek` нет), и пароль в `.env` к нему перестал
-подходить. Поэтому `npm run dev` ходит в локальный PostgreSQL 17:
-бинарники в `D:\dev\pgsql`, данные в `D:\dev\pgdata`, порт **5433**, база
-`goodkarma`. Строка подключения — в `.env.development.local` (в `.gitignore`;
-Next в dev-режиме берёт его приоритетнее `.env`, а `npm run build/start` —
-по-прежнему `.env`). Там же логин тестового админа локальной базы.
-Сервер БД не служба Windows — после перезагрузки ПК запустить вручную:
-`D:\dev\pgsql\bin\pg_ctl.exe -D D:\dev\pgdata -l D:\dev\pgdata\server.log start`.
-Prisma CLI читает только `.env`, поэтому для `db push`/`db:seed` в локальную
-базу передавайте `DATABASE_URL`/`DIRECT_URL` из `.env.development.local`
-переменными окружения. Supabase перед использованием нужно привести к
-текущей схеме (`prisma db push` удалит устаревшие `perk*`).
+**Рабочая машина — Fedora 44 KDE (с 2026-10-04, раньше была Windows).**
+Проект лежит в `/home/yoke/dev/good-karma-app`, большой диск с данными (NTFS)
+смонтирован в `/mnt/data` через `/etc/fstab` (`ntfs-3g`, `nofail`). Node и npm
+из `dnf`, бэкап со старой Windows — `/mnt/data/backup-windows`.
+
+**Локальная база для разработки.** Supabase отстал от схемы (там ещё старые
+колонки `perk*` у `karma_levels`, а новых `discountPct/discountsPerWeek` нет),
+и пароль в `.env` к нему перестал подходить. Поэтому `npm run dev` ходит в
+локальный PostgreSQL 18 (`postgresql-server` из `dnf`): это системная служба
+`postgresql`, она включена в автозапуск — после перезагрузки ничего
+запускать вручную не нужно. Порт **5432** (стандартный), база `goodkarma`,
+пользователь `postgres`. Строка подключения — в `.env.development.local`
+(в `.gitignore`; Next в dev-режиме берёт его приоритетнее `.env`, а
+`npm run build/start` — по-прежнему `.env`). Там же логин тестового админа
+локальной базы. Prisma CLI читает только `.env`, поэтому для `db push`/
+`db:seed` в локальную базу передавайте `DATABASE_URL`/`DIRECT_URL` из
+`.env.development.local` переменными окружения. Supabase перед
+использованием нужно привести к текущей схеме (`prisma db push` удалит
+устаревшие `perk*`).
+
+Что на Fedora устроено не по умолчанию (не потерять при переустановке):
+- **Порт не менять на нестандартный (раньше на Windows был 5433).** SELinux
+  на Fedora пускает PostgreSQL только на стандартные порты — сервер просто не
+  стартует после `systemctl restart`.
+- В `/var/lib/pgsql/data/pg_hba.conf` для TCP-подключений (`127.0.0.1`, `::1`)
+  стоит `scram-sha-256` вместо `ident`, который Fedora ставит по умолчанию:
+  с `ident` Prisma не сможет войти по паролю.
+- Данные из старой Windows-базы (PostgreSQL 17.8) перенесены не копированием
+  файлов, а дампом: `pg_restore -h localhost -U postgres -d goodkarma
+  --no-owner /mnt/data/backup-windows/goodkarma.dump`. Файлы данных
+  PostgreSQL между Windows и Linux несовместимы.
 **Порт базы 5432, не 6543.** Supabase выдаёт строку с пулером на порту
 6543 — на машине владельца проекта он зависает намертво (проверяли: TCP
 проходит, но соединение не устанавливается). Прямое подключение на 5432
@@ -74,7 +91,8 @@ Codex работают одновременно (или просто остав�
 На боевой базе (не Supabase-пулер с лимитом 15) это не обязательно, но не
 мешает — оставить как разумный дефолт.
 
-**После правки `schema.prisma` на Windows сначала остановите `npm run dev`.**
+**(Только Windows; на Linux этой проблемы нет.) После правки `schema.prisma`
+на Windows сначала остановите `npm run dev`.**
 `npx prisma db push`/`generate` перезаписывает
 `node_modules\.prisma\client\query_engine-windows.dll.node`, а этот файл
 залочен, пока его держит открытым работающий dev-сервер — падает с
