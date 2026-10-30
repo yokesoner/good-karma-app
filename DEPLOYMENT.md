@@ -192,8 +192,7 @@ standalone-сервер писал бы файлы внутрь `.next/standalon
 ```nginx
 location /uploads/ {
     alias /var/www/good-karma-uploads/;
-    expires 1y;
-    add_header Cache-Control "public, immutable";
+    add_header Cache-Control "public, max-age=31536000, immutable";
 }
 ```
 
@@ -266,8 +265,7 @@ certbot упадёт на проверке второго имени) и отк�
     # Хешированные бандлы — кэш навсегда, Node их больше не трогает.
     location /_next/static/ {
         alias /var/www/good-karma/.next/standalone/.next/static/;
-        expires 1y;
-        add_header Cache-Control "public, immutable";
+        add_header Cache-Control "public, max-age=31536000, immutable";
     }
 ```
 
