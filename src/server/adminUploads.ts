@@ -3,7 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/adminAuth";
-import { saveUploadedFile, type UploadFolder } from "@/lib/uploadStorage";
+import { normalizeUploadedImage, saveUploadedFile, type UploadFolder } from "@/lib/uploadStorage";
 
 const MAX_SIZE_BYTES = 12 * 1024 * 1024;
 
@@ -13,13 +13,6 @@ const MetaSchema = z.object({
   // чтобы не расползались случайные префиксы в public/uploads.
   folder: z.enum(["products", "promotions", "categories", "wok", "levels", "banners"]).default("products"),
 });
-
-const extensionByType: Record<z.infer<typeof MetaSchema>["contentType"], string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "image/avif": "avif",
-};
 
 // Загрузка в один шаг: клиент шлёт сам файл в FormData, сервер пишет его на
 // диск (public/uploads) и сразу отдаёт публичный URL. Раньше здесь было два
@@ -48,8 +41,8 @@ export async function uploadProductImage(formData: FormData) {
   }
 
   try {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const fileName = `${randomUUID()}.${extensionByType[parsed.data.contentType]}`;
+    const { buffer, extension } = await normalizeUploadedImage(Buffer.from(await file.arrayBuffer()));
+    const fileName = `${randomUUID()}.${extension}`;
     const { publicUrl } = await saveUploadedFile({
       folder: parsed.data.folder as UploadFolder,
       fileName,

@@ -4,20 +4,13 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentCustomerId } from "@/lib/customerAuth";
-import { saveUploadedFile } from "@/lib/uploadStorage";
+import { normalizeUploadedImage, saveUploadedFile } from "@/lib/uploadStorage";
 
 const MAX_SIZE_BYTES = 6 * 1024 * 1024;
 
 const MetaSchema = z.object({
   contentType: z.enum(["image/jpeg", "image/png", "image/webp", "image/avif"]),
 });
-
-const extensionByType: Record<z.infer<typeof MetaSchema>["contentType"], string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "image/avif": "avif",
-};
 
 // Отдельный (не admin) загрузчик: папка жёстко "avatars" — клиент не может
 // подставить произвольный folder, как в админской uploadProductImage. Сразу
@@ -36,8 +29,8 @@ export async function uploadCustomerAvatar(formData: FormData) {
   if (!parsed.success) return { ok: false as const, error: "Поддерживаются JPG, PNG, WEBP, AVIF" };
 
   try {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const fileName = `${userId}-${randomUUID()}.${extensionByType[parsed.data.contentType]}`;
+    const { buffer, extension } = await normalizeUploadedImage(Buffer.from(await file.arrayBuffer()));
+    const fileName = `${userId}-${randomUUID()}.${extension}`;
     const { publicUrl } = await saveUploadedFile({ folder: "avatars", fileName, buffer });
     await db.user.update({ where: { id: userId }, data: { avatarUrl: publicUrl } });
     return { ok: true as const, avatarUrl: publicUrl };

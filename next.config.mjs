@@ -24,6 +24,24 @@ const nextConfig = {
       { protocol: "https", hostname: "images.unsplash.com" },
       ...(s3RemotePattern ? [s3RemotePattern] : []),
     ],
+    // Файлы из public/ Next отдаёт с max-age=0, поэтому оптимизированная
+    // копия по умолчанию «протухает» через 60 секунд и sharp пережимает её
+    // заново — на VPS это постоянная нагрузка на CPU и память. Ассеты не
+    // меняются без пересборки, загрузки из админки — новые UUID-имена,
+    // так что месяц кэша безопасен.
+    minimumCacheTTL: 60 * 60 * 24 * 30,
+    // Самый широкий исходник — ~1800px; ступени 2048/3840 по умолчанию
+    // не давали чётче, а только плодили лишние копии в .next/cache/images.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+  },
+  experimental: {
+    serverActions: {
+      // Загрузка картинок идёт server action'ом, а его лимит по умолчанию —
+      // 1 МБ: фото с телефона (3–8 МБ) отклонялось раньше, чем доходило до
+      // проверки в adminUploads (12 МБ). Держим в паре с client_max_body_size
+      // в Nginx (DEPLOYMENT.md).
+      bodySizeLimit: "13mb",
+    },
   },
   // Самодостаточная сборка в .next/standalone — на VPS не нужно тащить
   // node_modules целиком, только public/, .next/static и сам standalone.

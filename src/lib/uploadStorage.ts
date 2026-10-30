@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import sharp from "sharp";
 
 // Картинки из админки хранятся прямо на диске сервера — не в S3. Сайт живёт
 // на одном VPS, отдельное хранилище было бы лишней инфраструктурой. Папка не
@@ -18,7 +19,33 @@ export const UPLOADS_DIR = process.env.UPLOADS_DIR?.trim()
   ? path.resolve(process.env.UPLOADS_DIR.trim())
   : path.join(process.cwd(), "public", "uploads");
 
-export type UploadFolder = "products" | "promotions" | "categories" | "wok" | "levels" | "banners" | "avatars";
+// Сторона, больше которой хранить нет смысла: самые широкие места сайта
+// (слайдер, баннеры) не просят больше 1920px.
+const MAX_UPLOAD_SIDE = 2000;
+
+/**
+ * Приводит загруженную картинку к разумному виду до записи на диск: фото с
+ * телефона весит 5–10 МБ и 4000+ px, а на сайте нужно в разы меньше — каждый
+ * такой оригинал занимал бы диск и заставлял sharp в next/image декодировать
+ * его заново на каждый размер. Заодно поворачиваем по EXIF (иначе фото
+ * «лежит на боку») и выкидываем метаданные — в EXIF телефона бывают GPS-
+ * координаты. Если sharp не смог прочитать файл — это не картинка, что бы ни
+ * заявлял браузер в contentType.
+ */
+export async function normalizeUploadedImage(buffer: Buffer): Promise<{ buffer: Buffer; extension: "webp" }> {
+  try {
+    const output = await sharp(buffer, { animated: true })
+      .rotate()
+      .resize({ width: MAX_UPLOAD_SIDE, height: MAX_UPLOAD_SIDE, fit: "inside", withoutEnlargement: true })
+      .webp({ quality: 85 })
+      .toBuffer();
+    return { buffer: output, extension: "webp" };
+  } catch {
+    throw new Error("Не удалось прочитать изображение — попробуйте другой файл");
+  }
+}
+
+export type UploadFolder ="products" | "promotions" | "categories" | "wok" | "levels" | "banners" | "avatars";
 
 export async function saveUploadedFile(params: {
   folder: UploadFolder;

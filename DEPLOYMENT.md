@@ -233,6 +233,49 @@ certbot --nginx -d ваш-домен.ru -d www.ваш-домен.ru
 Certbot сам допишет в конфиг `listen 443 ssl` и настроит автопродление
 (проверить: `certbot renew --dry-run`).
 
+**Без HTTPS не работают входы.** Cookie сессий (`gk_admin_session`,
+`gk_customer_session`, доступ к `/order/[number]`) в проде ставятся с
+флагом `Secure` — по голому `http://` браузер их молча отбрасывает: вход в
+`/admin` и `/profile` «проходит», но тут же снова просит войти. Это не баг,
+а повод сразу выпускать сертификат.
+
+### 7.1 Кириллический домен (гуд-карма.рф, сервер на aeza.ru)
+
+Nginx и certbot понимают только punycode: `гуд-карма.рф` =
+`xn----8sbajf1bp5aw.xn--p1ai`. В `server_name` и в `certbot -d` пишем его:
+
+```bash
+certbot --nginx -d xn----8sbajf1bp5aw.xn--p1ai -d www.xn----8sbajf1bp5aw.xn--p1ai
+```
+
+Перед этим — A-записи `@` и `www` на IP сервера (у `www` тоже, иначе
+certbot упадёт на проверке второго имени) и открытые 80/443 в `ufw`.
+`SITE_URL` в `.env` — `https://гуд-карма.рф`.
+
+### 7.2 Что ещё обязательно в server-блоке
+
+```nginx
+    # Загрузка фото из админки — до 12 МБ (лимит в adminUploads.ts и
+    # serverActions.bodySizeLimit в next.config). По умолчанию у Nginx 1 МБ —
+    # фото с телефона падало бы с 413.
+    client_max_body_size 13m;
+
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+
+    # Хешированные бандлы — кэш навсегда, Node их больше не трогает.
+    location /_next/static/ {
+        alias /var/www/good-karma/.next/standalone/.next/static/;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+```
+
+Картинки по-прежнему идут через `/_next/image` (sharp пережимает PNG в WebP
+по ширине экрана). Его кэш — `.next/standalone/.next/cache/images`; срок
+задан `images.minimumCacheTTL` в `next.config.mjs`. Если диск начнёт
+заполняться, папку можно просто удалить — она пересоздастся.
+
 ## 8. DNS
 
 В панели reg.ru у домена — A-запись на публичный IP VPS (и отдельная A-
