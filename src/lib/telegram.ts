@@ -14,7 +14,7 @@ let cachedUsername: string | null = null;
 
 export async function getBotUsername(): Promise<string> {
   if (cachedUsername) return cachedUsername;
-  const res = await fetch(`${TELEGRAM_API}/bot${botToken()}/getMe`, { cache: "no-store" });
+  const res = await tgFetch(`${TELEGRAM_API}/bot${botToken()}/getMe`, { cache: "no-store" });
   const data = (await res.json()) as { ok: boolean; result?: { username?: string }; description?: string };
   if (!data.ok || !data.result?.username) throw new Error(data.description || "Telegram getMe отклонил запрос");
   cachedUsername = data.result.username;
@@ -22,7 +22,7 @@ export async function getBotUsername(): Promise<string> {
 }
 
 export async function sendTelegramMessage(chatId: string, text: string) {
-  const res = await fetch(`${TELEGRAM_API}/bot${botToken()}/sendMessage`, {
+  const res = await tgFetch(`${TELEGRAM_API}/bot${botToken()}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ chat_id: chatId, text }),
@@ -42,7 +42,7 @@ export type TelegramUpdate = {
 // внутри обычного запроса к сайту, а не из фонового процесса (вебхуку нужен
 // публичный HTTPS, которого пока нет ни в dev, ни до переезда на боевой хостинг).
 export async function getTelegramUpdates(offset: number): Promise<TelegramUpdate[]> {
-  const res = await fetch(`${TELEGRAM_API}/bot${botToken()}/getUpdates?offset=${offset}&timeout=0`, {
+  const res = await tgFetch(`${TELEGRAM_API}/bot${botToken()}/getUpdates?offset=${offset}&timeout=0`, {
     cache: "no-store",
   });
   const data = (await res.json()) as { ok: boolean; result?: TelegramUpdate[]; description?: string };
