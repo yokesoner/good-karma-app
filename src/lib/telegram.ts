@@ -78,3 +78,15 @@ export async function resolveTelegramStart(matchPayload: string): Promise<string
   }
   return chatId;
 }
+
+async function tgFetch(url: string, init: RequestInit = {}, tries = 3): Promise<Response> {
+  let lastErr: unknown;
+  for (let i = 0; i < tries; i++) {
+    try {
+      return await fetch(url, { ...init, cache: "no-store", signal: AbortSignal.timeout(4_000) });
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr;
+}
